@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - AUTOMOTIVE RELAY OPERATION DIAGNOSTIC SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This software forms part of the RRainbow Learning Hub.
+
+The source code, interactive learning resources, simulations,
+graphics, diagnostic scenarios and associated educational
+content may not be copied, reproduced, redistributed,
+republished or commercially exploited without permission,
+except where permitted by law.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base target="_top">
+<title>Automotive Relay Operation Diagnostic Simulator</title>
+
+<style>
+:root{
+  --bg:#eef2f6;
+  --panel:#ffffff;
+  --line:#d8e0e8;
+  --text:#1e293b;
+  --muted:#64748b;
+  --navy:#0f172a;
+  --blue:#2563eb;
+  --green:#16a34a;
+  --red:#dc2626;
+  --amber:#d97706;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+header{
+  background:#101820;
+  color:#fff;
+  padding:16px 20px;
+}
+header h1{margin:0;font-size:24px}
+header p{margin:5px 0 0;color:#cbd5e1;font-size:13px}
+.wrap{max-width:1500px;margin:auto;padding:14px}
+.topbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+}
+.group{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+label{font-size:12px;font-weight:800;color:#475569}
+select,button{
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  padding:9px 11px;
+  font-weight:700;
+  background:#fff;
+  color:#17212b;
+}
+button{cursor:pointer}
+button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+button.success{background:#15803d;color:#fff;border-color:#15803d}
+button.warn{background:#b45309;color:#fff;border-color:#b45309}
+
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 360px;
+  gap:14px;
+}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 3px 12px rgba(15,23,42,.06);
+}
+.card-title{
+  padding:11px 14px;
+  background:#f8fafc;
+  border-bottom:1px solid var(--line);
+  font-size:14px;
+  font-weight:900;
+}
+.main-pad{padding:14px}
+.sim-board{
+  background:#111827;
+  border-radius:12px;
+  overflow:hidden;
+}
+svg{display:block;width:100%;height:auto}
+
+.wire-red{stroke:#ef4444;stroke-width:8;fill:none;stroke-linecap:round}
+.wire-black{stroke:#111;stroke-width:8;fill:none;stroke-linecap:round}
+.wire-blue{stroke:#2563eb;stroke-width:6;fill:none;stroke-linecap:round}
+.wire-green{stroke:#22c55e;stroke-width:6;fill:none;stroke-linecap:round}
+
+.test-point{cursor:pointer}
+.test-point .hit{fill:transparent;pointer-events:all}
+.test-point .dot{fill:#f8fafc;stroke:#2563eb;stroke-width:4;pointer-events:none}
+.test-point:hover .dot{fill:#dbeafe;stroke:#60a5fa;stroke-width:6}
+.test-point.red-selected .dot{fill:#fecaca;stroke:#ef4444;stroke-width:6}
+.test-point.black-selected .dot{fill:#d1d5db;stroke:#111827;stroke-width:6}
+.test-point text{
+  pointer-events:none;
+  font-size:13px;
+  font-weight:900;
+  fill:#111827;
+  text-anchor:middle;
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.info-box{
+  padding:11px;
+  border-radius:10px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  font-size:13px;
+  line-height:1.45;
+}
+.status{
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  font-size:13px;
+  line-height:1.5;
+}
+.status.good{background:#ecfdf3;border-color:#86efac}
+.status.warn{background:#fffbeb;border-color:#fcd34d}
+.status.bad{background:#fef2f2;border-color:#fca5a5}
+
+.side{display:flex;flex-direction:column;gap:14px}
+.meter-wrap{padding:16px}
+.meter{
+  background:#2f3740;
+  border:5px solid #68727d;
+  border-radius:22px;
+  padding:18px;
+}
+.meter-screen{
+  background:#d7f4dc;
+  border:4px solid #151b20;
+  border-radius:8px;
+  padding:10px;
+  min-height:86px;
+  font-family:"Courier New",monospace;
+  color:#13351b;
+}
+.screen-mode{font-size:12px;font-weight:bold}
+.reading-row{text-align:right}
+.meter-reading{font-size:35px;font-weight:900}
+.meter-unit{font-size:15px;margin-left:4px}
+.mode-select{margin-top:12px}
+.mode-select select{width:100%}
+.probes{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:12px;
+}
+.probe{
+  border-radius:9px;
+  padding:9px;
+  text-align:center;
+  font-size:12px;
+  font-weight:800;
+}
+.probe.red{border:2px solid #ef4444;background:#fef2f2;color:#991b1b}
+.probe.black{border:2px solid #111827;background:#f3f4f6}
+.probe-location{margin-top:4px;font-size:12px;color:#334155}
+.side-content{padding:14px}
+.side-content h3{margin:0 0 10px;font-size:15px}
+.side-content select{width:100%}
+.result{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  border-radius:9px;
+  background:#eef2ff;
+  border:1px solid #c7d2fe;
+  font-size:13px;
+  line-height:1.5;
+}
+.result.show{display:block}
+
+.copyright-footer{
+  margin-top:22px;
+  padding:18px 15px 8px;
+  border-top:1px solid var(--line);
+  text-align:center;
+}
+.copyright-main{font-size:13px;font-weight:900}
+.copyright-sub{margin-top:5px;font-size:12px;color:var(--muted);font-weight:600}
+
+@media(max-width:1000px){
+  .layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Automotive Relay Operation Diagnostic Simulator</h1>
+  <p>See how an automotive relay works internally, test each terminal and diagnose control-side and load-side faults.</p>
+</header>
+
+<div class="wrap">
+
+<div class="topbar">
+
+  <div class="group">
+    <label>Relay condition</label>
+
+    <select id="faultSelect">
+      <option value="good">Known good relay circuit</option>
+      <option value="openCoil">Open relay coil</option>
+      <option value="shortCoil">Shorted relay coil</option>
+      <option value="no30">No supply at terminal 30</option>
+      <option value="no86">No supply at terminal 86</option>
+      <option value="no85Earth">Missing earth at terminal 85</option>
+      <option value="highContactResistance">High resistance contacts 30–87</option>
+      <option value="stuckOpen">Relay contacts stuck open</option>
+      <option value="stuckClosed">Relay contacts stuck closed</option>
+      <option value="failedLoad">Failed load / lamp</option>
+    </select>
+  </div>
+
+  <button class="primary" id="energiseBtn">⚡ Energise Relay</button>
+  <button class="primary" id="hiddenBtn">🎲 New Hidden Fault</button>
+  <button id="resetBtn">Reset</button>
+  <button class="success" id="submitBtn">Submit Diagnosis</button>
+
+</div>
+
+<div class="layout">
+
+<div class="card">
+
+  <div class="card-title">4-Pin Normally Open Automotive Relay — Terminals 30 / 85 / 86 / 87</div>
+
+  <div class="main-pad">
+
+    <div class="sim-board">
+
+      <svg viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+
+        <rect width="1200" height="720" fill="#111827"/>
+
+        <!-- BATTERY -->
+        <rect x="40" y="255" width="150" height="160" rx="14"
+              fill="#374151" stroke="#94a3b8" stroke-width="6"/>
+        <rect x="62" y="235" width="34" height="20" rx="4" fill="#cbd5e1"/>
+        <rect x="132" y="235" width="34" height="20" rx="4" fill="#cbd5e1"/>
+        <text x="115" y="315" fill="#fff" font-size="24" font-weight="bold" text-anchor="middle">BATTERY</text>
+        <text x="115" y="355" fill="#86efac" font-size="24" font-weight="bold" text-anchor="middle">12.6 V</text>
+        <text x="75" y="285" fill="#ef4444" font-size="26" font-weight="bold">+</text>
+        <text x="145" y="285" fill="#fff" font-size="26" font-weight="bold">−</text>
+
+        <!-- RELAY BODY -->
+        <rect x="360" y="100" width="420" height="470" rx="20"
+              fill="#1f2937" stroke="#94a3b8" stroke-width="7"/>
+        <text x="570" y="138" fill="#fff" font-size="26" font-weight="bold" text-anchor="middle">AUTOMOTIVE RELAY</text>
+
+        <!-- TERMINALS -->
+        <rect x="335" y="175" width="65" height="55" rx="8" fill="#4b5563" stroke="#cbd5e1" stroke-width="4"/>
+        <rect x="740" y="175" width="65" height="55" rx="8" fill="#4b5563" stroke="#cbd5e1" stroke-width="4"/>
+        <rect x="335" y="455" width="65" height="55" rx="8" fill="#4b5563" stroke="#cbd5e1" stroke-width="4"/>
+        <rect x="740" y="455" width="65" height="55" rx="8" fill="#4b5563" stroke="#cbd5e1" stroke-width="4"/>
+
+        <text x="367" y="210" fill="#fff" font-size="24" font-weight="bold" text-anchor="middle">30</text>
+        <text x="772" y="210" fill="#fff" font-size="24" font-weight="bold" text-anchor="middle">87</text>
+        <text x="367" y="490" fill="#fff" font-size="24" font-weight="bold" text-anchor="middle">85</text>
+        <text x="772" y="490" fill="#fff" font-size="24" font-weight="bold" text-anchor="middle">86</text>
+
+        <!-- CONTACTS -->
+        <circle cx="455" cy="220" r="10" fill="#f8fafc"/>
+        <circle cx="685" cy="220" r="10" fill="#f8fafc"/>
+
+        <!-- moving armature/contact -->
+        <line id="armature"
+              x1="465" y1="218"
+              x2="635" y2="180"
+              stroke="#22c55e"
+              stroke-width="12"
+              stroke-linecap="round"
+              style="transform-origin:465px 218px;transition:transform .25s ease"/>
+
+        <text x="565" y="185" fill="#cbd5e1" font-size="15" text-anchor="middle">MOVING ARMATURE</text>
+
+        <!-- fixed contact extension -->
+        <line x1="685" y1="220" x2="740" y2="202" stroke="#cbd5e1" stroke-width="8"/>
+
+        <!-- coil -->
+        <path d="
+          M455 470
+          C475 430 495 510 515 470
+          C535 430 555 510 575 470
+          C595 430 615 510 635 470
+          C655 430 675 510 695 470
+        "
+        fill="none"
+        stroke="#60a5fa"
+        stroke-width="8"/>
+
+        <text x="575" y="410" fill="#93c5fd" font-size="17" font-weight="bold" text-anchor="middle">RELAY COIL</text>
+
+        <!-- magnetic field lines -->
+        <g id="magneticField" opacity="0">
+          <ellipse cx="575" cy="470" rx="150" ry="70" fill="none" stroke="#38bdf8" stroke-width="3"/>
+          <ellipse cx="575" cy="470" rx="120" ry="52" fill="none" stroke="#38bdf8" stroke-width="3"/>
+          <ellipse cx="575" cy="470" rx="90" ry="35" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        </g>
+
+        <!-- spring -->
+        <path d="M460 285 C485 270 505 305 530 285 C555 265 575 305 600 285"
+              fill="none" stroke="#f59e0b" stroke-width="5"/>
+        <text x="530" y="320" fill="#fbbf24" font-size="14" text-anchor="middle">RETURN SPRING</text>
+
+        <!-- internal links -->
+        <line x1="400" y1="202" x2="455" y2="220" class="wire-red"/>
+        <line x1="695" y1="470" x2="740" y2="482" class="wire-blue"/>
+        <line x1="400" y1="482" x2="455" y2="470" class="wire-black"/>
+
+        <!-- EXTERNAL WIRING -->
+        <!-- terminal 30 feed -->
+        <path d="M95 255 V155 H335" class="wire-red"/>
+
+        <!-- terminal 87 to lamp -->
+        <path d="M805 202 H955 V300" class="wire-red"/>
+
+        <!-- terminal 86 feed via switch -->
+        <path d="M95 255 V610 H265" class="wire-blue"/>
+
+        <rect x="265" y="575" width="150" height="70" rx="10"
+              fill="#334155" stroke="#94a3b8" stroke-width="5"/>
+        <text x="340" y="602" fill="#fff" font-size="16" font-weight="bold" text-anchor="middle">CONTROL</text>
+        <text x="340" y="625" fill="#fff" font-size="16" font-weight="bold" text-anchor="middle">SWITCH</text>
+
+        <path d="M415 610 H772 V510" class="wire-blue"/>
+
+        <!-- terminal 85 earth -->
+        <path d="M367 510 V650 H275" class="wire-black"/>
+        <line x1="275" y1="650" x2="275" y2="675" stroke="#cbd5e1" stroke-width="4"/>
+        <line x1="247" y1="675" x2="303" y2="675" stroke="#cbd5e1" stroke-width="4"/>
+        <line x1="255" y1="688" x2="295" y2="688" stroke="#cbd5e1" stroke-width="4"/>
+        <line x1="265" y1="701" x2="285" y2="701" stroke="#cbd5e1" stroke-width="4"/>
+
+        <!-- LAMP -->
+        <circle id="lampOuter" cx="955" cy="370" r="70" fill="#fef3c7" stroke="#facc15" stroke-width="8"/>
+        <circle id="lampInner" cx="955" cy="370" r="44" fill="#fff7c2" stroke="#f59e0b" stroke-width="5"/>
+        <path id="lampFilament" d="M927 370 Q955 330 983 370 Q955 410 927 370"
+              fill="none" stroke="#f59e0b" stroke-width="6"/>
+        <text x="955" y="465" fill="#e2e8f0" font-size="18" font-weight="bold" text-anchor="middle">LOAD / LAMP</text>
+
+        <path d="M955 440 V600 H1080" class="wire-black"/>
+        <line x1="1080" y1="600" x2="1080" y2="625" stroke="#cbd5e1" stroke-width="4"/>
+        <line x1="1052" y1="625" x2="1108" y2="625" stroke="#cbd5e1" stroke-width="4"/>
+        <line x1="1060" y1="638" x2="1100" y2="638" stroke="#cbd5e1" stroke-width="4"/>
+        <line x1="1070" y1="651" x2="1090" y2="651" stroke="#cbd5e1" stroke-width="4"/>
+
+        <!-- Labels -->
+        <text x="210" y="143" fill="#cbd5e1" font-size="14">LOAD SUPPLY</text>
+        <text x="560" y="598" fill="#93c5fd" font-size="14">COIL SUPPLY</text>
+        <text x="285" y="535" fill="#cbd5e1" font-size="14">COIL EARTH</text>
+
+        <!-- TEST POINTS -->
+        <g class="test-point" data-point="batteryPlus" transform="translate(95 220)">
+          <circle class="hit" r="28"/><circle class="dot" r="17"/><text y="5">1</text>
+        </g>
+
+        <g class="test-point" data-point="t30" transform="translate(325 202)">
+          <circle class="hit" r="28"/><circle class="dot" r="17"/><text y="5">2</text>
+        </g>
+
+        <g class="test-point" data-point="t87" transform="translate(815 202)">
+          <circle class="hit" r="28"/><circle class="dot" r="17"/><text y="5">3</text>
+        </g>
+
+        <g class="test-point" data-point="lampPlus" transform="translate(955 290)">
+          <circle class="hit" r="28"/><circle class="dot" r="17"/><text y="5">4</text>
+        </g>
+
+        <g class="test-point" data-point="t86" transform="translate(815 482)">
+          <circle class="hit" r="28"/><circle class="dot" r="17"/><text y="5">5</text>
+        </g>
+
+        <g class="test-point" data-point="t85" transform="translate(325 482)">
+          <circle class="hit" r="28"/><circle class="dot" r="17"/><text y="5">6</text>
+        </g>
+
+        <g class="test-point" data-point="chassis" transform="translate(275 650)">
+          <circle class="hit" r="28"/><circle class="dot" r="17"/><text y="5">7</text>
+        </g>
+
+        <g class="test-point" data-point="batteryNeg" transform="translate(155 455)">
+          <circle class="hit" r="28"/><circle class="dot" r="17"/><text y="5">8</text>
+        </g>
+
+      </svg>
+
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box"><b>30</b><br>Battery/load supply input.</div>
+      <div class="info-box"><b>87</b><br>Normally open switched output to the load.</div>
+      <div class="info-box"><b>85</b><br>One side of the relay coil — typically earth in this trainer.</div>
+      <div class="info-box"><b>86</b><br>Coil positive/control supply in this trainer.</div>
+    </div>
+
+    <div id="statusBox" class="status">
+      Select a relay condition or use Hidden Fault mode, then energise the relay and test the numbered points.
+    </div>
+
+  </div>
+</div>
+
+<div class="side">
+
+  <div class="card">
+    <div class="card-title">Digital Multimeter</div>
+    <div class="meter-wrap">
+      <div class="meter">
+
+        <div class="meter-screen">
+          <div class="screen-mode" id="screenMode">DC VOLTAGE</div>
+          <div class="reading-row">
+            <span class="meter-reading" id="meterReading">0.00</span>
+            <span class="meter-unit" id="meterUnit">V</span>
+          </div>
+        </div>
+
+        <div class="mode-select">
+          <label>Meter mode</label>
+          <select id="meterMode">
+            <option value="voltage">DC Voltage</option>
+            <option value="resistance">Resistance Ω</option>
+            <option value="continuity">Continuity / Buzzer</option>
+          </select>
+        </div>
+
+        <div class="probes">
+          <div class="probe red">🔴 RED PROBE<div class="probe-location" id="redLocation">Not connected</div></div>
+          <div class="probe black">⚫ BLACK PROBE<div class="probe-location" id="blackLocation">Not connected</div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Diagnosis</div>
+    <div class="side-content">
+
+      <h3>Most likely fault</h3>
+
+      <select id="diagnosisSelect">
+        <option value="">Select diagnosis</option>
+        <option value="good">Relay circuit operating correctly</option>
+        <option value="openCoil">Open relay coil</option>
+        <option value="shortCoil">Shorted relay coil</option>
+        <option value="no30">No supply at terminal 30</option>
+        <option value="no86">No supply at terminal 86</option>
+        <option value="no85Earth">Missing earth at terminal 85</option>
+        <option value="highContactResistance">High resistance contacts 30–87</option>
+        <option value="stuckOpen">Relay contacts stuck open</option>
+        <option value="stuckClosed">Relay contacts stuck closed</option>
+        <option value="failedLoad">Failed load / lamp</option>
+      </select>
+
+      <div class="result" id="resultBox"></div>
+
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+<footer class="copyright-footer">
+  <div class="copyright-main">© 2026 RRainbow. All Rights Reserved.</div>
+  <div class="copyright-sub">Automotive Relay Operation Diagnostic Simulator · RRainbow Learning Hub</div>
+</footer>
+
+</div>
+
+<!--
+============================================================
+RRainbow - PROTECTED INTERACTIVE SIMULATOR CODE
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+The JavaScript logic, relay behaviour, simulated electrical
+measurements, fault scenarios, interactive test points and
+educational explanations below form part of the RRainbow
+Learning Hub and are protected content.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation is prohibited
+except where permitted by law or expressly authorised by
+the rights holder.
+
+============================================================
+-->
+
+<script>
+(function(){
+"use strict";
+
+var selectedFault="good";
+var relayCommanded=false;
+var redProbe=null;
+var blackProbe=null;
+var selectingRed=true;
+
+var faultSelect=document.getElementById("faultSelect");
+var energiseBtn=document.getElementById("energiseBtn");
+var meterMode=document.getElementById("meterMode");
+var meterReading=document.getElementById("meterReading");
+var meterUnit=document.getElementById("meterUnit");
+var screenMode=document.getElementById("screenMode");
+var redLocation=document.getElementById("redLocation");
+var blackLocation=document.getElementById("blackLocation");
+var diagnosisSelect=document.getElementById("diagnosisSelect");
+var resultBox=document.getElementById("resultBox");
+var statusBox=document.getElementById("statusBox");
+
+var armature=document.getElementById("armature");
+var magneticField=document.getElementById("magneticField");
+var lampOuter=document.getElementById("lampOuter");
+var lampInner=document.getElementById("lampInner");
+var lampFilament=document.getElementById("lampFilament");
+
+var pointNames={
+  batteryPlus:"Battery +",
+  t30:"Terminal 30",
+  t87:"Terminal 87",
+  lampPlus:"Lamp positive",
+  t86:"Terminal 86",
+  t85:"Terminal 85",
+  chassis:"Chassis earth",
+  batteryNeg:"Battery negative"
+};
+
+function coilHasSupply(){
+  return selectedFault!=="no86";
+}
+
+function coilHasEarth(){
+  return selectedFault!=="no85Earth";
+}
+
+function coilContinuityOk(){
+  return selectedFault!=="openCoil";
+}
+
+function coilCanEnergise(){
+  if(selectedFault==="shortCoil")return false;
+  return relayCommanded && coilHasSupply() && coilHasEarth() && coilContinuityOk();
+}
+
+function contactsClosed(){
+
+  if(selectedFault==="stuckClosed")return true;
+
+  if(selectedFault==="stuckOpen")return false;
+
+  if(selectedFault==="openCoil" ||
+     selectedFault==="shortCoil" ||
+     selectedFault==="no86" ||
+     selectedFault==="no85Earth"){
+    return false;
+  }
+
+  return coilCanEnergise();
+}
+
+function pointVoltage(p){
+
+  var t30=(selectedFault==="no30")?0:12.6;
+
+  var t86=coilHasSupply()?12.6:0;
+
+  var t85=coilHasEarth()?0:12.6;
+
+  var t87=0;
+
+  if(contactsClosed()){
+
+    if(selectedFault==="highContactResistance"){
+      t87=7.4;
+    }else{
+      t87=t30;
+    }
+
+  }
+
+  var lampPlus=t87;
+
+  return {
+    batteryPlus:12.6,
+    t30:t30,
+    t87:t87,
+    lampPlus:lampPlus,
+    t86:t86,
+    t85:t85,
+    chassis:0,
+    batteryNeg:0
+  }[p];
+}
+
+function pairKey(a,b){
+  return [a,b].sort().join("|");
+}
+
+function resistanceBetween(a,b){
+
+  var k=pairKey(a,b);
+
+  if(k==="t85|t86"){
+    if(selectedFault==="openCoil")return Infinity;
+    if(selectedFault==="shortCoil")return 0.2;
+    return 75;
+  }
+
+  if(k==="t30|t87"){
+    if(selectedFault==="stuckOpen")return Infinity;
+    if(selectedFault==="highContactResistance")return 3.5;
+    if(selectedFault==="stuckClosed")return 0.2;
+    if(contactsClosed())return 0.2;
+    return Infinity;
+  }
+
+  if(k==="chassis|t85"){
+    if(selectedFault==="no85Earth")return Infinity;
+    return 0.2;
+  }
+
+  if(k==="lampPlus|t87")return 0.2;
+
+  if(k==="batteryPlus|t30"){
+    if(selectedFault==="no30")return Infinity;
+    return 0.2;
+  }
+
+  return 0.2;
+}
+
+function loadShouldBeOn(){
+
+  if(selectedFault==="failedLoad")return false;
+
+  return pointVoltage("lampPlus")>10;
+}
+
+function updateVisuals(){
+
+  var energised=coilCanEnergise();
+
+  magneticField.setAttribute("opacity",energised?"1":"0");
+
+  if(energised || selectedFault==="stuckClosed"){
+    armature.style.transform="rotate(12deg)";
+  }else{
+    armature.style.transform="rotate(0deg)";
+  }
+
+  var loadOn=loadShouldBeOn();
+
+  if(loadOn){
+    lampOuter.setAttribute("opacity",".95");
+    lampOuter.setAttribute("fill","#fef3c7");
+    lampOuter.setAttribute("stroke","#facc15");
+    lampInner.setAttribute("fill","#fff7c2");
+    lampInner.setAttribute("stroke","#f59e0b");
+    lampFilament.setAttribute("stroke","#f59e0b");
+  }else{
+    lampOuter.setAttribute("opacity",".06");
+    lampOuter.setAttribute("fill","#374151");
+    lampOuter.setAttribute("stroke","#64748b");
+    lampInner.setAttribute("fill","#1f2937");
+    lampInner.setAttribute("stroke","#64748b");
+    lampFilament.setAttribute("stroke","#4b5563");
+  }
+
+  energiseBtn.textContent=relayCommanded?"⏹ De-energise Relay":"⚡ Energise Relay";
+
+  if(relayCommanded){
+
+    if(energised){
+      statusBox.className="status good";
+      statusBox.innerHTML="<b>Relay coil energised.</b><br>The magnetic field is attracting the armature. Check whether 30 and 87 are electrically connected and whether the load operates.";
+    }else{
+      statusBox.className="status bad";
+      statusBox.innerHTML="<b>Relay commanded ON, but the coil cannot energise correctly.</b><br>Use the meter to check terminal 86 supply, terminal 85 earth and coil continuity.";
+    }
+
+  }else{
+
+    statusBox.className="status";
+    statusBox.innerHTML="<b>Relay not commanded.</b><br>In a normal relay, terminals 30 and 87 should be open when the coil is not energised.";
+
+  }
+
+  if(selectedFault==="stuckClosed" && !relayCommanded){
+    statusBox.className="status warn";
+    statusBox.innerHTML="<b>Notice:</b> The load remains powered even though the relay is not commanded. Use the evidence to determine why.";
+  }
+
+}
+
+function updateMode(){
+
+  if(meterMode.value==="voltage"){
+    screenMode.textContent="DC VOLTAGE";
+    meterUnit.textContent="V";
+  }
+  else if(meterMode.value==="resistance"){
+    screenMode.textContent="RESISTANCE";
+    meterUnit.textContent="Ω";
+  }
+  else{
+    screenMode.textContent="CONTINUITY";
+    meterUnit.textContent="";
+  }
+
+}
+
+function updateMeter(){
+
+  updateMode();
+
+  if(!redProbe || !blackProbe){
+    meterReading.textContent=(meterMode.value==="continuity")?"----":"0.00";
+    return;
+  }
+
+  if(meterMode.value==="voltage"){
+
+    var val=pointVoltage(redProbe)-pointVoltage(blackProbe);
+
+    meterReading.textContent=val.toFixed(2);
+    meterUnit.textContent="V";
+
+  }else{
+
+    var r=resistanceBetween(redProbe,blackProbe);
+
+    if(meterMode.value==="resistance"){
+      meterReading.textContent=(r===Infinity)?"OL":r.toFixed(2);
+      meterUnit.textContent="Ω";
+    }else{
+      meterReading.textContent=(r!==Infinity && r<1)?"BEEP":"OPEN";
+      meterUnit.textContent="";
+    }
+
+  }
+
+}
+
+function refreshPoints(){
+
+  document.querySelectorAll(".test-point").forEach(function(el){
+    el.classList.remove("red-selected","black-selected");
+  });
+
+  if(redProbe){
+    var r=document.querySelector('[data-point="'+redProbe+'"]');
+    if(r)r.classList.add("red-selected");
+  }
+
+  if(blackProbe){
+    var b=document.querySelector('[data-point="'+blackProbe+'"]');
+    if(b)b.classList.add("black-selected");
+  }
+
+}
+
+document.querySelectorAll(".test-point").forEach(function(point){
+
+  point.addEventListener("click",function(e){
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    var id=this.dataset.point;
+
+    if(selectingRed){
+      redProbe=id;
+      blackProbe=null;
+      selectingRed=false;
+    }else{
+      blackProbe=id;
+      selectingRed=true;
+    }
+
+    redLocation.textContent=redProbe?pointNames[redProbe]:"Not connected";
+    blackLocation.textContent=blackProbe?pointNames[blackProbe]:"Not connected";
+
+    refreshPoints();
+    updateMeter();
+
+  });
+
+});
+
+energiseBtn.onclick=function(){
+
+  relayCommanded=!relayCommanded;
+
+  updateVisuals();
+  updateMeter();
+
+};
+
+meterMode.addEventListener("change",function(){
+
+  if(
+    meterMode.value==="resistance" ||
+    meterMode.value==="continuity"
+  ){
+    alert(
+      "This is just a simulation. Remember to disconnect components before resistance / continuity tests."
+    );
+  }
+
+  updateMeter();
+
+});
+
+function resetTest(){
+
+  relayCommanded=false;
+  redProbe=null;
+  blackProbe=null;
+  selectingRed=true;
+
+  redLocation.textContent="Not connected";
+  blackLocation.textContent="Not connected";
+
+  diagnosisSelect.value="";
+  resultBox.classList.remove("show");
+
+  refreshPoints();
+  updateVisuals();
+  updateMeter();
+
+}
+
+faultSelect.onchange=function(){
+
+  selectedFault=this.value;
+  resetTest();
+
+};
+
+document.getElementById("resetBtn").onclick=resetTest;
+
+document.getElementById("hiddenBtn").onclick=function(){
+
+  var faults=[
+    "openCoil",
+    "shortCoil",
+    "no30",
+    "no86",
+    "no85Earth",
+    "highContactResistance",
+    "stuckOpen",
+    "stuckClosed",
+    "failedLoad"
+  ];
+
+  selectedFault=faults[Math.floor(Math.random()*faults.length)];
+
+  faultSelect.value="good";
+
+  resetTest();
+
+  statusBox.className="status warn";
+  statusBox.innerHTML="<b>Hidden fault challenge active.</b><br>Energise the relay, inspect its behaviour and use the meter to determine the fault.";
+
+};
+
+function faultName(f){
+
+  return {
+    good:"Relay circuit operating correctly",
+    openCoil:"Open relay coil",
+    shortCoil:"Shorted relay coil",
+    no30:"No supply at terminal 30",
+    no86:"No supply at terminal 86",
+    no85Earth:"Missing earth at terminal 85",
+    highContactResistance:"High resistance contacts 30–87",
+    stuckOpen:"Relay contacts stuck open",
+    stuckClosed:"Relay contacts stuck closed",
+    failedLoad:"Failed load / lamp"
+  }[f];
+
+}
+
+function explanation(f){
+
+  return {
+
+    good:
+      "With the relay commanded ON, terminal 86 receives supply, terminal 85 has a satisfactory earth and the coil energises. The armature closes the normally open contact between terminals 30 and 87, supplying the load.",
+
+    openCoil:
+      "The control supply and earth may both be present, but the relay coil is open circuit. The coil cannot produce a magnetic field and the armature does not move.",
+
+    shortCoil:
+      "The relay coil has abnormally low resistance. In a real circuit this can cause excessive current and may blow a fuse or damage the control circuit.",
+
+    no30:
+      "The relay may click normally because the coil circuit is healthy, but terminal 30 has no load supply. Therefore terminal 87 cannot supply the lamp.",
+
+    no86:
+      "Terminal 86 has no control-side supply, so current cannot flow through the relay coil and the magnetic field cannot be produced.",
+
+    no85Earth:
+      "The coil supply is present at terminal 86 but terminal 85 does not have a satisfactory earth path, preventing coil current.",
+
+    highContactResistance:
+      "The relay energises and the contacts close, but excessive resistance between terminals 30 and 87 causes a significant voltage drop and reduces voltage available to the load.",
+
+    stuckOpen:
+      "The coil can energise, but the mechanical/electrical contacts remain open. Terminal 87 therefore does not receive the terminal 30 supply.",
+
+    stuckClosed:
+      "The contacts remain connected even when the coil is de-energised. The load can therefore stay powered when it should be switched off.",
+
+    failedLoad:
+      "The relay operates correctly and terminal 87 supplies the load, but the lamp/load itself is open or failed."
+
+  }[f];
+
+}
+
+document.getElementById("submitBtn").onclick=function(){
+
+  var choice=diagnosisSelect.value;
+
+  resultBox.classList.add("show");
+
+  if(!choice){
+    resultBox.innerHTML="<b>Select a diagnosis first.</b>";
+    return;
+  }
+
+  if(choice===selectedFault){
+
+    resultBox.innerHTML=
+      "✅ <b>Correct diagnosis.</b><br>"+
+      explanation(selectedFault);
+
+  }else{
+
+    resultBox.innerHTML=
+      "❌ <b>That is not the most likely fault.</b><br><br>"+
+      "The simulated fault was <b>"+
+      faultName(selectedFault)+
+      "</b>.<br>"+
+      explanation(selectedFault);
+
+  }
+
+};
+
+resetTest();
+
+})();
+</script>
+
+<!--
+============================================================
+END OF RRAINBOW AUTOMOTIVE RELAY OPERATION DIAGNOSTIC SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+RRainbow Learning Hub.
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of this software
+or its educational content is prohibited except where
+permitted by law.
+
+============================================================
+-->
+
+</body>
+</html>
