@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - AUTOMOTIVE SENSOR WAVEFORM SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This resource contains original software, graphics,
+written educational content and interactive learning
+resource design.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of protected
+content is prohibited except where permitted by law or
+expressly authorised by the rights holder.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Automotive Sensor Waveform Simulator</title>
+<style>
+:root{
+  --bg:#eef2f6;--panel:#fff;--ink:#17212b;--muted:#667085;
+  --sig:#00d4ff;--ref:#ffd54f;--aux:#ff4fa3;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#101820;color:#fff;padding:15px 18px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;color:#c9d3dc;font-size:13px}
+.wrap{max-width:1450px;margin:auto;padding:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1.45fr) 320px;gap:14px}
+.card{background:#fff;border:1px solid #d7dee5;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.scope-card,.side{padding:14px}
+.scope-box{background:#061018;border-radius:10px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+label{display:block;font-weight:700;font-size:13px;margin:12px 0 5px}
+select,input[type=range],button{width:100%}
+select,button{padding:10px;border-radius:8px;font-size:15px}
+select{border:1px solid #bbc6d0;background:#fff}
+button{border:0;font-weight:700;cursor:pointer;touch-action:manipulation}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.blue{background:#1565c0;color:#fff}.green{background:#2e7d32;color:#fff}.grey{background:#dfe5ea}.red{background:#d32f2f;color:#fff}
+.status,.result,.note{margin-top:10px;padding:11px;border:1px solid #d7dee5;border-radius:8px;background:#f7f9fb;white-space:pre-line;font-size:13px;line-height:1.45}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.metric{border:1px solid #d7dee5;border-radius:8px;padding:10px}
+.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:18px}
+.info-wrap{position:relative}
+.info-btn{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;padding:0;background:#1565c0;color:#fff;font-family:Georgia,serif;font-size:21px;z-index:20}
+.info-popup{position:absolute;top:54px;right:12px;width:min(430px,calc(100% - 24px));background:#fff;border:2px solid #1565c0;border-radius:10px;padding:14px;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none;font-size:13px;line-height:1.5}
+.info-popup.show{display:block}.info-popup h4{margin:0 0 7px;color:#1565c0}.good{color:#2e7d32;font-weight:bold}.bad{color:#d32f2f;font-weight:bold}
+.sensor-visual{margin-top:14px;background:#f7f9fb;border:1px solid #d7dee5;border-radius:10px;padding:12px}
+.sensor-stage{position:relative;height:180px;background:linear-gradient(#dbe5ec,#b9c4cd);border-radius:8px;overflow:hidden}
+.sensor-body{position:absolute;left:12%;top:42px;width:150px;height:85px;background:#3a434b;border-radius:14px;border:5px solid #20262b;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:bold}
+.target-wheel{position:absolute;right:14%;top:20px;width:140px;height:140px;border-radius:50%;border:14px dashed #535d65;animation:spin 2s linear infinite}
+.target-dot{position:absolute;right:calc(14% + 58px);top:78px;width:24px;height:24px;border-radius:50%;background:#ff5252}
+.airflow{position:absolute;right:10%;top:72px;width:180px;height:30px;border-radius:15px;background:repeating-linear-gradient(90deg,#8bc8ff 0 12px,#d9f1ff 12px 24px);animation:flow 1s linear infinite}
+.throttle{position:absolute;right:18%;top:43px;width:120px;height:95px;border:10px solid #606970;border-radius:50%;background:#dfe5e8}
+.throttle:after{content:"";position:absolute;left:52px;top:0;width:10px;height:75px;background:#444;transform:rotate(35deg);transform-origin:center}
+.o2pipe{position:absolute;right:10%;top:72px;width:210px;height:60px;border-radius:30px;background:#555}
+.o2sensor{position:absolute;right:34%;top:35px;width:42px;height:80px;background:#aeb7bd;border-radius:10px;border:5px solid #666}
+.abswheel{position:absolute;right:12%;top:15px;width:150px;height:150px;border-radius:50%;background:#262b2f;border:14px solid #444;box-shadow:inset 0 0 0 14px #888}
+.abswheel:after{content:"";position:absolute;inset:25px;border-radius:50%;border:10px dashed #bbb}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes flow{to{background-position:48px 0}}
+.rpm-line{
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+
+/* COPYRIGHT FOOTER */
+
+.copyright-footer{
+  max-width:1450px;
+  margin:10px auto 20px;
+  padding:18px 16px;
+  border-top:1px solid #d7dee5;
+  text-align:center;
+}
+
+.copyright-main{
+  color:#17212b;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.copyright-sub{
+  margin-top:5px;
+  color:#667085;
+  font-size:12px;
+  font-weight:600;
+}
+
+
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .side{order:-1}
+}
+
+@media(max-width:620px){
+  .metrics{grid-template-columns:1fr}
+  .btnrow{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Automotive Sensor Waveform Diagnostic Simulator</h1>
+<p>Animated oscilloscope patterns, selectable faults, and interactive diagnostic explanations.</p>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+<div class="card scope-card info-wrap">
+<button class="info-btn" id="infoBtn" aria-label="Explain waveform">i</button>
+<div class="info-popup" id="infoPopup">
+<h4 id="infoTitle">Waveform meaning</h4>
+<div id="infoVerdict" class="good">NORMAL WAVEFORM</div>
+<div id="infoText"></div>
+</div>
+
+<h3 style="margin-top:0">Live Oscilloscope</h3>
+<div class="scope-box">
+<svg viewBox="0 0 1100 470" xmlns="http://www.w3.org/2000/svg">
+<rect width="1100" height="470" fill="#061018"/>
+<g stroke="#17313f" stroke-width="1">
+<path d="M0 78H1100 M0 156H1100 M0 234H1100 M0 312H1100 M0 390H1100"/>
+<path d="M55 0V470 M110 0V470 M165 0V470 M220 0V470 M275 0V470 M330 0V470 M385 0V470 M440 0V470 M495 0V470 M550 0V470 M605 0V470 M660 0V470 M715 0V470 M770 0V470 M825 0V470 M880 0V470 M935 0V470 M990 0V470 M1045 0V470"/>
+</g>
+<g fill="#8aa4b5" font-family="Arial" font-size="14">
+<text x="70" y="18" id="scopeTitle">SIGNAL VOLTAGE</text>
+<text id="channel2Label" x="760" y="18">REFERENCE</text>
+<text id="channel3Label" x="900" y="18">AUX / DIGITAL</text>
+</g>
+<g id="voltageScale" fill="#c5d7e2" font-family="Arial" font-size="12" text-anchor="end">
+<text id="scale0" x="48" y="34"></text>
+<text id="scale1" x="48" y="112"></text>
+<text id="scale2" x="48" y="190"></text>
+<text id="scale3" x="48" y="268"></text>
+<text id="scale4" x="48" y="346"></text>
+<text id="scale5" x="48" y="424"></text>
+</g>
+<line x1="53" y1="25" x2="53" y2="420" stroke="#8aa4b5" stroke-width="1.5"/>
+<defs><clipPath id="clip"><rect x="55" y="25" width="1010" height="395"/></clipPath></defs>
+<g clip-path="url(#clip)">
+<g id="traceGroup">
+<polyline id="sigA" fill="none" stroke="#00d4ff" stroke-width="4"/>
+<polyline id="refA" fill="none" stroke="#ffd54f" stroke-width="3"/>
+<polyline id="auxA" fill="none" stroke="#ff4fa3" stroke-width="3"/>
+<polyline id="sigB" fill="none" stroke="#00d4ff" stroke-width="4"/>
+<polyline id="refB" fill="none" stroke="#ffd54f" stroke-width="3"/>
+<polyline id="auxB" fill="none" stroke="#ff4fa3" stroke-width="3"/>
+</g>
+</g>
+</svg>
+</div>
+<div class="legend">
+<span><i class="dot" style="background:#00d4ff"></i>Main sensor signal</span>
+<span><i class="dot" style="background:#ffd54f"></i>Reference / supply</span>
+<span><i class="dot" style="background:#ff4fa3"></i>Auxiliary / digital comparison</span>
+</div>
+
+<div class="metrics">
+<div class="metric"><small>Sensor</small><strong id="sensorMetric">CKP</strong></div>
+<div class="metric"><small>Speed / load</small><strong id="speedMetric">850 rpm</strong></div>
+<div class="metric"><small>Diagnosis</small><strong id="diagMetric">Normal</strong></div>
+</div>
+
+<div class="sensor-visual">
+<h3 style="margin:0 0 8px">Sensor Animation</h3>
+<div class="sensor-stage" id="sensorStage">
+<div class="sensor-body" id="sensorBody">CRANK SENSOR</div>
+<div id="visualTarget"></div>
+</div>
+</div>
+
+<div id="result" class="result">Known-good crankshaft position waveform selected.</div>
+</div>
+
+<div class="card side">
+<h3>Sensor Selection</h3>
+<label for="sensor">Sensor</label>
+<select id="sensor">
+<option value="ckp">Crankshaft position sensor (inductive)</option>
+<option value="cmp">Camshaft position sensor (Hall)</option>
+<option value="maf">MAF sensor</option>
+<option value="map">MAP sensor</option>
+<option value="tps">Throttle position sensor</option>
+<option value="o2">Oxygen / lambda sensor</option>
+<option value="o2compare">O₂ Sensor 1 vs Sensor 2 / catalytic converter</option>
+<option value="temp">Engine coolant temperature sensor (ECT)</option>
+<option value="abs">ABS wheel speed sensor (inductive)</option>
+<option value="absHall">ABS wheel speed sensor (Hall effect / active)</option>
+</select>
+
+<label for="fault">Fault condition</label>
+<select id="fault">
+<option value="none">No fault / known good</option>
+<option value="open">Open circuit</option>
+<option value="shortGround">Short to ground</option>
+<option value="shortPositive">Short to positive / reference</option>
+<option value="highResistance">High resistance / poor connection</option>
+<option value="intermittent">Intermittent signal dropout</option>
+<option value="airGap">Excessive air gap / weak signal</option>
+<option value="mechanical">Mechanical target / reluctor fault</option>
+<option value="catInefficient">Catalyst inefficient / failed</option>
+<option value="catBlocked">Catalyst restricted / blocked</option>
+</select>
+
+<label for="speed">Engine speed / input</label>
+<input id="speed" type="range" min="500" max="4500" step="50" value="850">
+<div class="rpm-line"><span>Low</span><strong id="speedLabel">850</strong><span>High</span></div>
+
+<div class="btnrow">
+<button id="snapBtn" class="blue">Snap / Increase Input</button>
+<button id="pauseBtn" class="grey">Pause Scope</button>
+</div>
+<button id="resetBtn" class="green" style="margin-top:8px">Reset</button>
+
+<div id="status" class="status">Known-good sensor waveform.</div>
+
+<div class="note">
+<b>Teaching model:</b> The waveform is now mathematically tied to the voltage scale on the left. Hall/analogue 5 V sensors, including the new active Hall-effect ABS example, narrowband 0–1 V zirconia O₂ sensors, and bipolar inductive CKP/ABS signals use different scope ranges. Exact voltages and calibrations still vary by vehicle and manufacturer, so real measurements must be compared with manufacturer information or a known-good capture.
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var sensor="ckp",fault="none",speed=850,running=true,scroll=0,anim=0,snap=false,snapStart=0;
+
+var sigA=document.getElementById("sigA"),refA=document.getElementById("refA"),auxA=document.getElementById("auxA");
+var sigB=document.getElementById("sigB"),refB=document.getElementById("refB"),auxB=document.getElementById("auxB");
+var traceGroup=document.getElementById("traceGroup");
+var channel2Label=document.getElementById("channel2Label");
+var channel3Label=document.getElementById("channel3Label");
+var scopeTitle=document.getElementById("scopeTitle");
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function xFor(t){return 55+t*1000;}
+
+function liveSpeed(){
+ if(!snap)return speed;
+ var e=(performance.now()-snapStart)/1000;
+ if(e>2.2){snap=false;return speed;}
+ if(e<.65)return speed+(4200-speed)*(e/.65);
+ return 4200-(4200-speed)*((e-.65)/1.55);
+}
+
+/*
+  True voltage scaling.
+  Every trace is generated in volts first, then converted to a Y position.
+*/
+function scaleForSensor(){
+ if(sensor==="o2" || sensor==="o2compare") return {min:0,max:1,unit:"V"};
+ if(sensor==="ckp") return {min:-20,max:20,unit:"V"};
+ if(sensor==="abs") return {min:-10,max:10,unit:"V"};
+ return {min:0,max:5,unit:"V"};
+}
+
+function voltageToY(v){
+ var s=scaleForSensor();
+ var top=28,bottom=418;
+ var n=(v-s.min)/(s.max-s.min);
+ n=clamp(n,0,1);
+ return bottom-n*(bottom-top);
+}
+
+function updateVoltageScale(){
+ var s=scaleForSensor();
+ var labels=[
+  document.getElementById("scale0"),document.getElementById("scale1"),
+  document.getElementById("scale2"),document.getElementById("scale3"),
+  document.getElementById("scale4"),document.getElementById("scale5")
+ ];
+ for(var i=0;i<6;i++){
+   var v=s.max-(s.max-s.min)*(i/5);
+   var decimals=(s.max-s.min)<=1?1:((s.max-s.min)<=5?1:0);
+   labels[i].textContent=v.toFixed(decimals)+" V";
+ }
+}
+
+/*
+ Representative operating voltages:
+ - Hall CMP: ~0 to 5 V digital.
+ - TPS: ~0.5 to 4.5 V.
+ - MAP petrol: ~1.5 V idle, ~4.5 V atmospheric/WOT, <0.5 V strong overrun.
+ - Analogue hot-wire MAF: generic ~1 V idle rising toward ~4.5 V with airflow.
+ - ECT NTC: high voltage cold, falling as temperature rises.
+ - Narrowband zirconia O2: ~0.1 to 0.9 V.
+ - Inductive CKP/ABS: AC voltage whose amplitude grows with speed.
+*/
+function baseVoltage(t){
+ var s=liveSpeed();
+ var speedFactor=s/850;
+
+ if(sensor==="ckp"){
+   var amp=clamp(2.8*speedFactor,1.0,15.0);
+   return {sig:Math.sin(t*Math.PI*2*18*speedFactor)*amp,ref:null,aux:null};
+ }
+
+ if(sensor==="cmp"){
+   var p=(t*speedFactor*3)%1;
+   return {sig:p<.35?4.8:.2,ref:5.0,aux:null};
+ }
+
+ if(sensor==="maf"){
+   var load=(Math.sin(t*Math.PI*2*.65)+1)/2;
+   var snapBoost=snap?clamp((liveSpeed()-850)/3350,0,1):0;
+   var volts=1.0 + load*1.5 + snapBoost*2.0;
+   return {sig:clamp(volts,.8,4.6),ref:5.0,aux:null};
+ }
+
+ if(sensor==="map"){
+   // generic naturally aspirated petrol MAP response
+   var revEffect=clamp((liveSpeed()-850)/3350,0,1);
+   var cycle=(Math.sin(t*Math.PI*2*.45)+1)/2;
+   var volts=1.5 + cycle*.45 + revEffect*2.45;
+   return {sig:clamp(volts,.4,4.5),ref:5.0,aux:null};
+ }
+
+ if(sensor==="tps"){
+   var throttle=(Math.sin(t*Math.PI*2*.30-Math.PI/2)+1)/2;
+   return {sig:.5+throttle*4.0,ref:5.0,aux:null};
+ }
+
+ if(sensor==="o2"){
+   var sw=Math.sin(t*Math.PI*2*1.0);
+   return {sig:.5+sw*.4,ref:null,aux:null}; // 0.1–0.9 V
+ }
+
+ if(sensor==="o2compare"){
+   var front=.5+Math.sin(t*Math.PI*2*1.0)*.4; // 0.1–0.9 V
+   var rear=.65+Math.sin(t*Math.PI*2*.18+.8)*.07; // damped post-cat activity
+   return {sig:front,ref:null,aux:rear};
+ }
+
+ if(sensor==="temp"){
+   var warm=(Math.sin(t*Math.PI*2*.12-Math.PI/2)+1)/2;
+   return {sig:4.2-warm*3.5,ref:5.0,aux:null}; // ~4.2 cold to ~0.7 warm
+ }
+
+ if(sensor==="abs"){
+   var amp2=clamp(.8*speedFactor,.3,6.5);
+   return {sig:Math.sin(t*Math.PI*2*12*speedFactor)*amp2,ref:null,aux:null};
+ }
+
+ if(sensor==="absHall"){
+   /*
+     Representative active Hall wheel-speed sensor:
+     5 V supply with a digital square-wave signal.
+     Frequency rises with wheel speed; voltage amplitude stays essentially constant.
+   */
+   var hallPhase=(t*12*speedFactor)%1;
+   return {sig:hallPhase<.5?4.8:.2,ref:5.0,aux:null};
+ }
+
+ return {sig:0,ref:null,aux:null};
+}
+
+function applyFault(v,t){
+ var sig=v.sig,ref=v.ref,aux=v.aux;
+
+ if(fault==="open"){
+   if(sensor==="o2"||sensor==="o2compare"){
+     sig=.45; // generic ECU bias/floating teaching value
+     if(sensor==="o2compare")aux=.45;
+   }else if(sensor==="ckp"||sensor==="abs"){
+     sig=0;
+   }else{
+     sig=5.0; // generic 5 V pull-up teaching model
+   }
+ }
+
+ if(fault==="shortGround"){
+   sig=0;
+   if(sensor==="o2compare")aux=0;
+ }
+
+ if(fault==="shortPositive"){
+   if(sensor==="o2"||sensor==="o2compare"){
+     sig=1.0;
+     if(sensor==="o2compare")aux=1.0;
+   }else if(sensor==="ckp"||sensor==="abs"){
+     sig=scaleForSensor().max;
+   }else{
+     sig=5.0;
+   }
+ }
+
+ if(fault==="highResistance"){
+   if(sensor==="ckp"||sensor==="abs"){
+     sig*=.45;
+   }else if(sensor==="o2"||sensor==="o2compare"){
+     sig=.45+(sig-.45)*.55;
+     if(sensor==="o2compare")aux=.45+(aux-.45)*.55;
+   }else{
+     sig=2.5+(sig-2.5)*.55;
+   }
+ }
+
+ if(fault==="intermittent"){
+   var block=Math.floor((t*12+anim*.02)%10);
+   if(block===4||block===5){
+     if(sensor==="ckp"||sensor==="abs")sig=0;
+     else if(sensor==="o2"||sensor==="o2compare")sig=.45;
+     else sig=5.0;
+   }
+ }
+
+ if(fault==="airGap"){
+   if(sensor==="ckp"||sensor==="abs"){
+     sig*=.25;
+   }else if(sensor==="absHall"){
+     var gapSector=((t*14+anim*.002)%1);
+     if(gapSector>.62&&gapSector<.78)sig=.2;
+   }else{
+     sig=2.5+(sig-2.5)*.7;
+   }
+ }
+
+ if(fault==="mechanical"){
+   if(sensor==="ckp"||sensor==="abs"){
+     var sector=((t*20)%1);
+     if(sector>.72&&sector<.82)sig=0;
+   }else if(sensor==="absHall"){
+     var hallSector=((t*18)%1);
+     if(hallSector>.70&&hallSector<.88)sig=.2;
+   }else if(sensor==="cmp"){
+     var shift=((t+.08)%1);
+     sig=shift<.35?4.8:.2;
+   }else{
+     sig += Math.sin(t*Math.PI*2*7)*.25;
+   }
+ }
+
+ if(sensor==="o2compare" && fault==="catInefficient"){
+   // downstream closely mimics upstream when oxygen-storage efficiency is poor
+   aux=.5+Math.sin(t*Math.PI*2*1.0+.12)*.32;
+ }
+
+ if(sensor==="o2compare" && fault==="catBlocked"){
+   // restriction cannot be proven by O2 alone; show sluggish downstream response
+   sig=.5+Math.sin(t*Math.PI*2*.75)*.32;
+   aux=.62+Math.sin(t*Math.PI*2*.12+.4)*.04;
+ }
+
+ if(sensor==="temp"){
+   if(fault==="open")sig=5.0;
+   if(fault==="shortGround")sig=0;
+   if(fault==="shortPositive")sig=5.0;
+   if(fault==="intermittent"){
+     var jump=Math.floor((t*10+anim*.02)%8);
+     if(jump===3)sig=5.0;
+   }
+ }
+
+ return {sig:sig,ref:ref,aux:aux};
+}
+
+function build(){
+ var sa=[],ra=[],aa=[],sb=[],rb=[],ab=[];
+ var steps=600;
+
+ for(var i=0;i<=steps;i++){
+   var t=i/steps;
+   var x=xFor(t);
+   var volts=applyFault(baseVoltage(t),t);
+
+   var sigY=voltageToY(volts.sig);
+   sa.push(x+","+sigY);
+   sb.push((x+1000)+","+sigY);
+
+   if(volts.ref!==null){
+     var refY=voltageToY(volts.ref);
+     ra.push(x+","+refY);
+     rb.push((x+1000)+","+refY);
+   }
+
+   if(volts.aux!==null){
+     var auxY=voltageToY(volts.aux);
+     aa.push(x+","+auxY);
+     ab.push((x+1000)+","+auxY);
+   }
+ }
+
+ sigA.setAttribute("points",sa.join(" "));
+ sigB.setAttribute("points",sb.join(" "));
+ refA.setAttribute("points",ra.join(" "));
+ refB.setAttribute("points",rb.join(" "));
+ auxA.setAttribute("points",aa.join(" "));
+ auxB.setAttribute("points",ab.join(" "));
+
+ scroll+=1.5*(liveSpeed()/850);
+ if(scroll>=1000)scroll-=1000;
+ traceGroup.setAttribute("transform","translate("+(-scroll)+" 0)");
+
+ document.getElementById("speedMetric").textContent=Math.round(liveSpeed())+(sensor==="abs"?" rpm equiv":" rpm");
+ document.getElementById("speedLabel").textContent=Math.round(liveSpeed());
+ document.getElementById("sensorMetric").textContent=
+   sensor==="o2compare"?"O₂ S1/S2":
+   sensor==="absHall"?"ABS HALL":
+   sensor.toUpperCase();
+ document.getElementById("diagMetric").textContent=fault==="none"?"Normal":"Fault";
+
+ if(sensor==="o2compare"){
+   channel2Label.textContent="";
+   channel3Label.textContent="PINK = O₂ SENSOR 2";
+   scopeTitle.textContent="CYAN = O₂ SENSOR 1";
+ }else if(sensor==="ckp"||sensor==="abs"){
+   channel2Label.textContent="";
+   channel3Label.textContent="";
+   scopeTitle.textContent="INDUCTIVE AC SIGNAL";
+ }else if(sensor==="absHall"){
+   channel2Label.textContent="YELLOW = 5 V SUPPLY";
+   channel3Label.textContent="";
+   scopeTitle.textContent="CYAN = HALL ABS DIGITAL SIGNAL";
+ }else{
+   channel2Label.textContent="YELLOW = 5 V REFERENCE";
+   channel3Label.textContent="";
+   scopeTitle.textContent="CYAN = SENSOR SIGNAL";
+ }
+
+ updateVoltageScale();
+}
+
+function visual(){
+ var stage=document.getElementById("visualTarget");
+ var body=document.getElementById("sensorBody");
+ stage.className="";stage.innerHTML="";
+ stage.removeAttribute("style");
+
+ if(sensor==="ckp"){body.textContent="CRANK SENSOR";stage.className="target-wheel";}
+ if(sensor==="cmp"){body.textContent="CAM SENSOR";stage.className="target-wheel";}
+ if(sensor==="maf"){body.textContent="MAF SENSOR";stage.className="airflow";}
+ if(sensor==="map"){body.textContent="MAP SENSOR";stage.className="airflow";}
+ if(sensor==="tps"){body.textContent="TPS SENSOR";stage.className="throttle";}
+ if(sensor==="o2"){
+   body.textContent="OXYGEN SENSOR";stage.className="o2pipe";
+   var o=document.createElement("div");o.className="o2sensor";stage.appendChild(o);
+ }
+ if(sensor==="o2compare"){
+   body.textContent="O₂ SENSOR 1";stage.className="o2pipe";
+   var o1=document.createElement("div");o1.className="o2sensor";o1.style.right="52%";stage.appendChild(o1);
+   var o2=document.createElement("div");o2.className="o2sensor";o2.style.right="18%";stage.appendChild(o2);
+ }
+ if(sensor==="temp"){
+   body.textContent="ECT SENSOR";
+   stage.style.position="absolute";stage.style.right="14%";stage.style.top="45px";
+   stage.style.width="120px";stage.style.height="80px";stage.style.borderRadius="40px";
+   stage.style.background="linear-gradient(90deg,#4fa3ff,#ff6b4f)";
+ }
+ if(sensor==="abs"){body.textContent="ABS INDUCTIVE";stage.className="abswheel";}
+ if(sensor==="absHall"){body.textContent="ABS HALL ACTIVE";stage.className="abswheel";}
+}
+
+function explain(){
+ var title="",text="",bad=fault!=="none";
+ var names={
+  ckp:"Crankshaft position sensor (inductive)",
+  cmp:"Camshaft position sensor (Hall)",
+  maf:"Analogue hot-wire MAF sensor",
+  map:"Analogue gasoline MAP sensor",
+  tps:"Throttle position sensor",
+  o2:"Narrowband zirconia oxygen sensor",
+  o2compare:"Narrowband O₂ Sensor 1 vs Sensor 2 catalyst comparison",
+  temp:"Engine coolant temperature sensor",
+  abs:"ABS wheel speed sensor (inductive)",
+  absHall:"ABS wheel speed sensor (Hall effect / active)"
+ };
+ title=names[sensor];
+
+ if(sensor==="o2compare"){
+   if(fault==="none"){
+     bad=false;
+     text="Healthy catalyst teaching model: upstream Sensor 1 switches approximately 0.1–0.9 V. Downstream Sensor 2 is much less active because a functioning catalyst damps the oxygen changes.";
+   }else if(fault==="catInefficient"){
+     bad=true;
+     text="Catalyst efficiency fault: downstream Sensor 2 now mirrors much more of the upstream 0.1–0.9 V switching pattern, indicating poor oxygen-storage damping.";
+   }else if(fault==="catBlocked"){
+     bad=true;
+     text="Restricted catalyst teaching model: downstream response is shown as sluggish. O₂ voltage alone cannot prove a blocked catalyst; back-pressure, vacuum, temperature or airflow testing is required.";
+   }else{
+     bad=true;
+     text="The selected electrical fault is affecting the O₂ signal. The scope scale is 0–1.0 V for this narrowband zirconia teaching model.";
+   }
+ }else if(sensor==="temp"){
+   if(fault==="none"){
+     bad=false;
+     text="Normal NTC ECT behaviour: voltage is high when cold and falls as coolant warms. This teaching trace runs from about 4.2 V cold toward about 0.7 V warm on a 5 V referenced circuit.";
+   }else{
+     bad=true;
+     text="The ECT waveform is outside its expected smooth 0–5 V referenced behaviour. An open circuit is represented near 5 V and a short to ground near 0 V.";
+   }
+ }else if(fault==="none"){
+   if(sensor==="cmp") text="Known-good Hall CMP waveform switches approximately 0–5 V.";
+   else if(sensor==="tps") text="Known-good TPS output moves smoothly from about 0.5 V closed to about 4.5 V wide open.";
+   else if(sensor==="map") text="Generic naturally aspirated gasoline MAP: about 1.5 V at idle, rising toward about 4.5 V near atmospheric pressure/WOT and potentially below 0.5 V on strong overrun.";
+   else if(sensor==="maf") text="Generic analogue hot-wire MAF: around 1 V at low airflow/idle and rising smoothly toward roughly 4–4.5 V as airflow increases. Exact calibration is engine specific.";
+   else if(sensor==="o2") text="Known-good narrowband zirconia O₂ switches roughly 0.1–0.9 V in closed loop, typically around once per second at steady conditions.";
+   else if(sensor==="ckp") text="Inductive CKP produces bipolar AC voltage. Amplitude increases with engine speed, so this simulator uses a ±20 V scope range rather than pretending it is a fixed 5 V sensor.";
+   else if(sensor==="abs") text="Inductive ABS sensor produces bipolar AC voltage whose amplitude and frequency increase with wheel speed. This simulator uses a ±10 V teaching range.";
+   else if(sensor==="absHall") text="Active Hall ABS sensor teaching model: the sensor is supplied with approximately 5 V and produces a digital square-wave output switching close to 0 V and 5 V. As wheel speed increases, the frequency increases while the signal amplitude remains essentially constant.";
+ }else if(fault==="open"){
+   text="Open-circuit teaching fault. The displayed level depends on circuit type: inductive sensors fall to zero output, 5 V referenced sensors are shown pulled high, and narrowband O₂ is shown at a generic ECU bias/floating level.";
+ }else if(fault==="shortGround"){
+   text="Signal is clamped to approximately 0 V.";
+ }else if(fault==="shortPositive"){
+   text="Signal is clamped to the upper circuit voltage/reference in this teaching model.";
+ }else if(fault==="highResistance"){
+   text="The signal range/amplitude is reduced or biased, representing voltage loss caused by unwanted circuit resistance.";
+ }else if(fault==="intermittent"){
+   text="The signal periodically drops out or moves to its bias/pull-up level, representing an intermittent wiring or connector fault.";
+ }else if(fault==="airGap"){
+   if(sensor==="absHall"){
+     text="For the active Hall ABS teaching model, excessive air gap is represented by intermittent or missing digital pulses rather than a simple reduction in square-wave amplitude.";
+   }else{
+     text="For inductive CKP/ABS sensors, excessive air gap causes a significant reduction in AC amplitude.";
+   }
+ }else if(fault==="mechanical"){
+   text="Mechanical target/reluctor damage disrupts the repeating waveform pattern even though the electrical circuit may still be intact.";
+ }else{
+   text="Catalyst-specific faults are intended for the O₂ Sensor 1 vs Sensor 2 comparison mode.";
+ }
+
+ document.getElementById("infoTitle").textContent=title;
+ var v=document.getElementById("infoVerdict");
+ v.textContent=bad?"ABNORMAL WAVEFORM":"NORMAL WAVEFORM";
+ v.className=bad?"bad":"good";
+ document.getElementById("infoText").textContent=text;
+ document.getElementById("status").textContent=text;
+ document.getElementById("result").textContent=title+": "+text;
+}
+
+function tick(){
+ if(running){anim++;build();}
+ requestAnimationFrame(tick);
+}
+
+document.getElementById("sensor").onchange=function(){
+ sensor=this.value;
+ scroll=0;
+ visual();explain();build();
+};
+document.getElementById("fault").onchange=function(){fault=this.value;explain();build();};
+document.getElementById("speed").oninput=function(){speed=parseInt(this.value,10);};
+document.getElementById("snapBtn").onclick=function(){snap=true;snapStart=performance.now();};
+document.getElementById("pauseBtn").onclick=function(){
+ running=!running;this.textContent=running?"Pause Scope":"Resume Scope";
+};
+document.getElementById("resetBtn").onclick=function(){
+ sensor="ckp";fault="none";speed=850;running=true;snap=false;scroll=0;
+ document.getElementById("sensor").value="ckp";
+ document.getElementById("fault").value="none";
+ document.getElementById("speed").value="850";
+ document.getElementById("pauseBtn").textContent="Pause Scope";
+ visual();explain();build();
+};
+
+var infoBtn=document.getElementById("infoBtn"),popup=document.getElementById("infoPopup");
+infoBtn.onclick=function(e){e.stopPropagation();popup.classList.toggle("show");};
+popup.onclick=function(e){e.stopPropagation();};
+document.addEventListener("click",function(){popup.classList.remove("show");});
+
+visual();explain();build();tick();
+})();
+</script>
+
+
+<!-- COPYRIGHT FOOTER -->
+
+<footer class="copyright-footer">
+
+  <div class="copyright-main">
+    © 2026 RRainbow. All Rights Reserved.
+  </div>
+
+  <div class="copyright-sub">
+    Automotive Sensor Waveform Simulator · RRainbow Learning Hub
+  </div>
+
+</footer>
+
+
+</body>
+</html>
