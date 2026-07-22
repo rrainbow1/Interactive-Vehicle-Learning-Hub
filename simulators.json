@@ -1,0 +1,170 @@
+[
+  {
+    "title": "Automotive Oscilloscope Practice Trainer",
+    "category": "Oscilloscope",
+    "icon": "📈",
+    "description": "Practise automotive waveform setup, triggering and component waveform interpretation.",
+    "folder": "oscilloscope",
+    "difficulty": "Intermediate",
+    "duration": "20–30 mins",
+    "level": "Level 2–3",
+    "featured": true
+  },
+  {
+    "title": "Diagnostic Challenge Simulator",
+    "category": "Diagnostics",
+    "icon": "🔍",
+    "description": "Choose tests, reveal evidence and identify the most likely vehicle fault.",
+    "folder": "diagnostic-challenge",
+    "difficulty": "Intermediate",
+    "duration": "20 mins",
+    "level": "Level 2–3",
+    "featured": true
+  },
+  {
+    "title": "Test — Don't Guess",
+    "category": "Diagnostics",
+    "icon": "🧪",
+    "description": "Develop structured diagnostic decision-making by selecting the best next test.",
+    "folder": "test-dont-guess",
+    "difficulty": "Intermediate",
+    "duration": "15–20 mins",
+    "level": "Level 2–3"
+  },
+  {
+    "title": "Wiring Diagram Diagnostic Trainer",
+    "category": "Diagnostics",
+    "icon": "🗺️",
+    "description": "Read automotive wiring diagrams, follow current paths and locate circuit faults.",
+    "folder": "wiring-diagram",
+    "difficulty": "Advanced",
+    "duration": "25–35 mins",
+    "level": "Level 3"
+  },
+  {
+    "title": "Electrical Circuit Simulator",
+    "category": "Electrical",
+    "icon": "💡",
+    "description": "Use a virtual multimeter to test automotive circuits and faults.",
+    "folder": "electrical-circuit",
+    "difficulty": "Beginner",
+    "duration": "20 mins",
+    "level": "Level 1–3",
+    "featured": true
+  },
+  {
+    "title": "Relay Operation Simulator",
+    "category": "Electrical",
+    "icon": "🔌",
+    "description": "Explore relay terminals, coil operation, contacts and circuit faults.",
+    "folder": "relay-operation",
+    "difficulty": "Beginner",
+    "duration": "10–15 mins",
+    "level": "Level 1–2"
+  },
+  {
+    "title": "Voltage Drop Simulator",
+    "category": "Electrical",
+    "icon": "⚡",
+    "description": "Learn correct voltage-drop testing across cables, connections and earth paths.",
+    "folder": "voltage-drop",
+    "difficulty": "Intermediate",
+    "duration": "15–20 mins",
+    "level": "Level 2–3"
+  },
+  {
+    "title": "CAN Bus Fault Simulator",
+    "category": "Electrical",
+    "icon": "🚌",
+    "description": "Investigate CAN High, CAN Low, termination resistance and network faults.",
+    "folder": "can-bus",
+    "difficulty": "Advanced",
+    "duration": "25 mins",
+    "level": "Level 3"
+  },
+  {
+    "title": "Automotive Alternator Simulator",
+    "category": "Electrical",
+    "icon": "⚙️",
+    "description": "Remove the casing and explore the rotor, stator, rectifier and regulator.",
+    "folder": "alternator",
+    "difficulty": "Intermediate",
+    "duration": "20 mins",
+    "level": "Level 2–3",
+    "featured": true,
+    "new": true
+  },
+  {
+    "title": "Camshaft & Crankshaft Correlation Trainer",
+    "category": "Oscilloscope",
+    "icon": "〽️",
+    "description": "Compare camshaft and crankshaft waveforms and identify timing faults.",
+    "folder": "cam-crank-correlation",
+    "difficulty": "Advanced",
+    "duration": "20–30 mins",
+    "level": "Level 3"
+  },
+  {
+    "title": "In-Cylinder Compression Simulator",
+    "category": "Engine",
+    "icon": "🔥",
+    "description": "Interpret in-cylinder pressure behaviour and engine mechanical condition.",
+    "folder": "in-cylinder-compression",
+    "difficulty": "Advanced",
+    "duration": "25 mins",
+    "level": "Level 3"
+  },
+  {
+    "title": "Low-Pressure Fuel Pump Simulator",
+    "category": "Engine",
+    "icon": "⛽",
+    "description": "Explore fuel-pump current, pressure behaviour and common faults.",
+    "folder": "fuel-pump",
+    "difficulty": "Intermediate",
+    "duration": "20 mins",
+    "level": "Level 2–3"
+  },
+  {
+    "title": "Brake Hydraulic Simulator",
+    "category": "Chassis",
+    "icon": "🛑",
+    "description": "Follow hydraulic pressure through a braking system and investigate faults.",
+    "folder": "brake-hydraulics",
+    "difficulty": "Intermediate",
+    "duration": "20 mins",
+    "level": "Level 2–3"
+  },
+  {
+    "title": "Wheel Alignment Simulator",
+    "category": "Chassis",
+    "icon": "🛞",
+    "description": "Explore toe, camber and caster and complete alignment challenges.",
+    "folder": "wheel-alignment",
+    "difficulty": "Intermediate",
+    "duration": "25–35 mins",
+    "level": "Level 2–3",
+    "featured": true
+  },
+  {
+    "title": "Manual Gearbox Power Flow Simulator",
+    "category": "Transmission",
+    "icon": "⚙️",
+    "description": "Observe power flow, synchroniser movement and different gearbox designs.",
+    "folder": "manual-gearbox",
+    "difficulty": "Intermediate",
+    "duration": "25 mins",
+    "level": "Level 2–3",
+    "featured": true
+  },
+  {
+    "title": "Differential & Final Drive Simulator",
+    "category": "Transmission",
+    "icon": "🔩",
+    "description": "Explore final-drive reduction, differential action and drivetrain faults.",
+    "folder": "differential",
+    "difficulty": "Advanced",
+    "duration": "25 mins",
+    "level": "Level 3",
+    "new": true
+  }
+]
