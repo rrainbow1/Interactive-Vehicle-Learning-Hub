@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - AUTOMOTIVE VOLTAGE DROP TEST SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This resource contains original software, graphics,
+written educational content and interactive learning
+resource design.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of protected
+content is prohibited except where permitted by law or
+expressly authorised by the rights holder.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Clear Automotive Voltage Drop Simulator</title>
+<style>
+:root{
+  --bg:#eef2f6; --panel:#fff; --ink:#17212b; --muted:#65717d;
+  --red:#d62828; --black:#202428; --yellow:#f2c94c; --blue:#1565c0;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#111820;color:#fff;padding:15px 18px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;color:#c9d3dc;font-size:13px}
+.wrap{max-width:1400px;margin:auto;padding:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:14px}
+.card{background:#fff;border:1px solid #d7dee5;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.scene-card{padding:14px}
+.side{padding:14px}
+h3{margin:0 0 10px}
+label{display:block;font-weight:700;font-size:13px;margin:12px 0 5px}
+select,button{width:100%;padding:10px;border-radius:8px;font-size:15px}
+select{border:1px solid #bbc6d0;background:#fff}
+button{border:0;font-weight:700;cursor:pointer;touch-action:manipulation}
+.test-buttons{display:grid;gap:8px}
+.test-btn{background:#e8eef5;color:#17212b;text-align:left}
+.test-btn.active{background:#1565c0;color:#fff}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.add{background:#d32f2f;color:#fff}.fix{background:#2e7d32;color:#fff}.reset{background:#dfe5ea;color:#17212b;margin-top:8px}
+.status,.result,.note{margin-top:10px;padding:11px;border:1px solid #d7dee5;border-radius:8px;background:#f7f9fb;white-space:pre-line;font-size:13px;line-height:1.45}
+.scene{position:relative;width:100%;aspect-ratio:16/9;min-height:520px;border-radius:12px;overflow:hidden;background:linear-gradient(#dce6ed 0 67%,#8b6b4f 67% 100%)}
+.wall-line{position:absolute;left:0;right:0;top:67%;height:14px;background:#684e38}
+.battery{position:absolute;left:7%;top:39%;width:190px;height:135px;background:#2c3338;border:4px solid #181c1f;border-radius:10px;z-index:3}
+.battery:before{content:"12 V BATTERY";position:absolute;left:0;right:0;top:48px;text-align:center;color:#fff;font-size:20px;font-weight:700}
+.battery-top{position:absolute;left:12px;right:12px;top:8px;height:28px;border-radius:5px;background:#485159}
+.terminal{position:absolute;width:28px;height:28px;border-radius:50%;top:-20px;border:4px solid #fff;box-shadow:0 0 0 3px #333;z-index:8}
+#batPos{left:28px;background:var(--red)}
+#batNeg{right:28px;background:var(--black)}
+.sign{position:absolute;top:-57px;font-weight:bold;font-size:22px}
+.sign.pos{left:35px;color:var(--red)} .sign.neg{right:36px;color:var(--black)}
+.consumer{position:absolute;right:8%;top:35%;width:180px;text-align:center;z-index:3}
+.lamp{position:relative;margin:auto;width:126px;height:126px;border-radius:50%;background:#c6ced4;border:8px solid #555}
+.glow{position:absolute;inset:18px;border-radius:50%;background:#fff3a0;box-shadow:0 0 34px 14px rgba(255,228,78,.92);transition:.3s}
+.glow.dim{background:#d2c27f;box-shadow:0 0 12px 3px rgba(255,215,75,.3)}
+.glow.off{background:#aeb8c0;box-shadow:none}
+.consumer-name{font-weight:700;margin-top:9px}
+#conPos,#conNeg{top:49px;width:24px;height:24px}
+#conPos{left:-28px;background:var(--red)}
+#conNeg{right:-28px;background:var(--black)}
+.wire{position:absolute;height:10px;border-radius:5px;z-index:1}
+.power-wire{left:calc(7% + 52px);right:calc(8% + 152px);top:40%;background:var(--red)}
+.ground-wire{left:calc(7% + 152px);right:calc(8% + 40px);top:61%;background:var(--black)}
+.battery-bridge{position:absolute;left:calc(7% + 147px);top:40%;width:10px;height:21%;background:var(--black);z-index:1}
+.consumer-bridge{position:absolute;right:calc(8% + 61px);top:40%;width:10px;height:21%;background:var(--black);z-index:1}
+.fault{position:absolute;width:32px;height:32px;border-radius:50%;background:#ff9800;border:4px solid #fff;box-shadow:0 0 0 3px #ff9800;display:none;z-index:9}
+#powerFault{left:48%;top:calc(40% - 11px)}
+#groundFault{left:58%;top:calc(61% - 11px)}
+.multimeter{position:absolute;left:40%;bottom:5%;width:220px;height:250px;background:var(--yellow);border:7px solid #252525;border-radius:18px;box-shadow:0 12px 25px rgba(0,0,0,.3);z-index:10}
+.display{position:absolute;left:25px;right:25px;top:25px;height:62px;background:#b8d8b8;border:5px solid #333;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:34px;font-weight:700}
+.meter-title{position:absolute;left:0;right:0;top:94px;text-align:center;font-size:12px;font-weight:700}
+.dial{position:absolute;left:70px;top:112px;width:72px;height:72px;border-radius:50%;background:#333;border:8px solid #ddd}
+.dial:after{content:"";position:absolute;left:31px;top:5px;width:6px;height:27px;background:#fff;border-radius:3px}
+.jack{position:absolute;bottom:18px;width:23px;height:23px;border-radius:50%;border:4px solid #222}
+.blackjack{left:56px;background:#111}.redjack{right:56px;background:#d32f2f}
+.lead{position:absolute;inset:0;z-index:6;pointer-events:none}
+.lead svg{width:100%;height:100%;overflow:visible}
+.lead path{fill:none;stroke-width:7;stroke-linecap:round;transition:d .55s ease}
+.red-lead path{stroke:#e53935}.black-lead path{stroke:#111}
+.probe-tip{position:absolute;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #333;z-index:12;transition:left .55s ease,top .55s ease}
+.red-tip{background:#e53935}.black-tip{background:#111}
+.info-btn{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;padding:0;background:#1565c0;color:#fff;font-family:Georgia,serif;font-size:21px;font-weight:bold;z-index:16;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.info-popup{position:absolute;top:54px;right:12px;width:min(390px,calc(100% - 24px));background:#fff;border:2px solid #1565c0;border-radius:10px;padding:14px;z-index:16;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none;font-size:13px;line-height:1.5}
+.info-popup.show{display:block}
+.info-popup h4{margin:0 0 7px;color:#1565c0;font-size:16px}
+.info-popup .verdict{font-weight:bold;margin-bottom:6px}
+.info-popup .normal{color:#2e7d32}.info-popup .abnormal{color:#d32f2f}
+.callout{position:absolute;top:4%;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.96);padding:9px 13px;border-radius:9px;border:1px solid #cad3dc;font-weight:700;text-align:center;max-width:78%;z-index:14}
+.node-label{position:absolute;font-size:12px;font-weight:700;background:rgba(255,255,255,.9);padding:4px 6px;border-radius:5px;z-index:5}
+.n1{left:11%;top:29%}.n2{right:16%;top:28%}.n3{right:16%;top:62%}.n4{left:12%;top:63%}
+.legend{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-top:8px;
+  font-size:12px;
+  color:#59636e;
+}
+
+.dot{
+  display:inline-block;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  margin-right:4px;
+}
+
+
+/* COPYRIGHT FOOTER */
+
+.copyright-footer{
+  max-width:1400px;
+  margin:10px auto 20px;
+  padding:18px 16px;
+  border-top:1px solid #d7dee5;
+  text-align:center;
+}
+
+.copyright-main{
+  color:#101820;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.copyright-sub{
+  margin-top:5px;
+  color:#65717d;
+  font-size:12px;
+  font-weight:600;
+}
+
+
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .side{order:-1}
+  .scene{min-height:440px}
+}
+
+@media(max-width:650px){
+  .scene{min-height:390px}
+  .battery{transform:scale(.78);transform-origin:left center}
+  .consumer{transform:scale(.78);transform-origin:right center}
+  .multimeter{transform:scale(.72);transform-origin:center bottom;left:34%}
+  .callout{font-size:12px;max-width:90%}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Clear Automotive Voltage Drop Test Simulator</h1>
+<p>Closed battery–lamp circuit with animated multimeter probe positions.</p>
+</header>
+
+<div class="wrap">
+<div class="layout">
+<div class="card scene-card">
+<div class="scene" id="scene">
+<div class="callout" id="callout">V1 — Red to battery positive, black to battery negative.</div>
+<button class="info-btn" id="infoBtn" aria-label="Explain this measurement" title="Explain this measurement">i</button>
+<div class="info-popup" id="infoPopup">
+<h4 id="infoTitle">Measurement explanation</h4>
+<div class="verdict normal" id="infoVerdict">NORMAL</div>
+<div id="infoText"></div>
+</div>
+<div class="wall-line"></div>
+
+<div class="battery" id="battery">
+<div class="battery-top"></div>
+<div class="terminal" id="batPos"></div>
+<div class="terminal" id="batNeg"></div>
+<div class="sign pos">+</div><div class="sign neg">−</div>
+</div>
+
+<div class="consumer">
+<div class="lamp">
+<div class="glow" id="bulbGlow"></div>
+<div class="terminal" id="conPos"></div>
+<div class="terminal" id="conNeg"></div>
+</div>
+<div class="consumer-name">Headlamp / Consumer</div>
+</div>
+
+<div class="wire power-wire"></div>
+<div class="wire ground-wire"></div>
+<div class="battery-bridge"></div>
+<div class="consumer-bridge"></div>
+
+<div class="node-label n1">Battery +</div>
+<div class="node-label n2">Consumer +</div>
+<div class="node-label n3">Consumer −</div>
+<div class="node-label n4">Battery −</div>
+
+<div class="fault" id="powerFault"></div>
+<div class="fault" id="groundFault"></div>
+
+<div class="multimeter" id="meter">
+<div class="display" id="meterDisplay">12.60</div>
+<div class="meter-title">DIGITAL MULTIMETER — DC VOLTS</div>
+<div class="dial"></div>
+<div class="jack blackjack"></div>
+<div class="jack redjack"></div>
+</div>
+
+<div class="lead red-lead"><svg preserveAspectRatio="none"><path id="redPath"/></svg></div>
+<div class="lead black-lead"><svg preserveAspectRatio="none"><path id="blackPath"/></svg></div>
+<div class="probe-tip red-tip" id="redTip"></div>
+<div class="probe-tip black-tip" id="blackTip"></div>
+</div>
+
+<div class="legend">
+<span><i class="dot" style="background:#d62828"></i>Battery positive → consumer positive</span>
+<span><i class="dot" style="background:#202428"></i>Consumer negative → battery negative</span>
+<span><i class="dot" style="background:#e53935"></i>Red meter probe</span>
+<span><i class="dot" style="background:#111"></i>Black meter probe</span>
+</div>
+
+<div class="note">
+Voltage-drop tests V3 and V4 are intended to be performed with the circuit switched on and current flowing. Open circuits are shown separately because an open stops load current, so their meter behaviour differs from a high-resistance fault under load.
+</div>
+</div>
+
+<div class="card side">
+<h3>Choose Test</h3>
+<div class="test-buttons">
+<button class="test-btn active" data-test="v1">V1 — Across battery</button>
+<button class="test-btn" data-test="v2">V2 — Across consumer</button>
+<button class="test-btn" data-test="v3">V3 — Battery + to consumer +</button>
+<button class="test-btn" data-test="v4">V4 — Consumer − to battery −</button>
+</div>
+
+<h3 style="margin-top:16px">Fault Setup</h3>
+<label>Fault type</label>
+<select id="faultType">
+<option value="none">No fault</option>
+<option value="resistance">High resistance</option>
+<option value="open">Open circuit</option>
+<option value="component">Component failure</option>
+</select>
+
+<label>Fault location</label>
+<select id="faultLocation">
+<option value="power">Power-side wire / connection</option>
+<option value="ground">Ground-side wire / connection</option>
+<option value="bulb">Bulb / consumer</option>
+</select>
+
+<label>Resistance severity</label>
+<select id="severity">
+<option value="low">Mild</option>
+<option value="medium" selected>Moderate</option>
+<option value="high">Severe</option>
+</select>
+
+<div class="actions">
+<button class="add" id="addFaultBtn">Add Fault</button>
+<button class="fix" id="fixFaultBtn">Fix Fault</button>
+</div>
+<button class="reset" id="resetBtn">Reset</button>
+
+<div id="status" class="status">Circuit healthy. Lamp operating normally.</div>
+<div id="result" class="result">V1 reading: 12.60 V
+This is the available battery voltage.</div>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var test="v1";
+var faultType="none";
+var faultLocation="power";
+var severity="medium";
+var battery=12.60;
+var values={v1:12.60,v2:12.35,v3:0.12,v4:0.13};
+
+var scene=document.getElementById("scene");
+var display=document.getElementById("meterDisplay");
+var callout=document.getElementById("callout");
+var result=document.getElementById("result");
+var status=document.getElementById("status");
+var bulbGlow=document.getElementById("bulbGlow");
+var powerFault=document.getElementById("powerFault");
+var groundFault=document.getElementById("groundFault");
+var infoBtn=document.getElementById("infoBtn");
+var infoPopup=document.getElementById("infoPopup");
+var infoTitle=document.getElementById("infoTitle");
+var infoVerdict=document.getElementById("infoVerdict");
+var infoText=document.getElementById("infoText");
+
+function severityDrop(){
+ if(severity==="low")return 0.45;
+ if(severity==="high")return 3.50;
+ return 1.80;
+}
+
+function calculate(){
+ values={v1:battery,v2:12.35,v3:0.12,v4:0.13};
+ bulbGlow.className="glow";
+ powerFault.style.display="none";
+ groundFault.style.display="none";
+ var text="Circuit healthy. Lamp operating normally.";
+
+ if(faultType==="resistance"){
+   var d=severityDrop();
+   if(faultLocation==="power"){
+     values.v3=d;
+     values.v4=0.12;
+     values.v2=Math.max(0,battery-values.v3-values.v4);
+     powerFault.style.display="block";
+     bulbGlow.className=d>=3?"glow off":"glow dim";
+     text="High resistance on the power side. Circuit remains loaded, so V3 shows the excessive drop.";
+   }else if(faultLocation==="ground"){
+     values.v3=0.10;
+     values.v4=d;
+     values.v2=Math.max(0,battery-values.v3-values.v4);
+     groundFault.style.display="block";
+     bulbGlow.className=d>=3?"glow off":"glow dim";
+     text="High resistance on the ground side. Circuit remains loaded, so V4 shows the excessive drop.";
+   }else{
+     values.v3=0.10;
+     values.v4=0.10;
+     values.v2=battery-values.v3-values.v4;
+     bulbGlow.className="glow dim";
+     text="Consumer performance fault. Supply and ground voltage drops remain low.";
+   }
+ }
+
+ if(faultType==="open"){
+   bulbGlow.className="glow off";
+   if(faultLocation==="power"){
+     values.v2=0.00;
+     values.v3=battery;
+     values.v4=0.00;
+     powerFault.style.display="block";
+     text="Open power circuit. No load current flows. V3 spans the open and reads approximately battery voltage.";
+   }else if(faultLocation==="ground"){
+     values.v2=0.00;
+     values.v3=0.00;
+     values.v4=battery;
+     groundFault.style.display="block";
+     text="Open ground circuit. No load current flows. V4 spans the open and reads approximately battery voltage.";
+   }else{
+     values.v2=battery;
+     values.v3=0.00;
+     values.v4=0.00;
+     text="Consumer failed open circuit. Battery voltage is available across the consumer terminals, but no current flows.";
+   }
+ }
+
+ if(faultType==="component"){
+   bulbGlow.className="glow off";
+   values.v2=12.40;
+   values.v3=0.10;
+   values.v4=0.10;
+   text="Component failure. Battery supply and both circuit paths test good, but the consumer does not operate.";
+ }
+
+ status.textContent=text;
+ updateTest();
+}
+
+function pointFor(id){
+ var e=document.getElementById(id), sr=scene.getBoundingClientRect(), r=e.getBoundingClientRect();
+ return {x:r.left-sr.left+r.width/2,y:r.top-sr.top+r.height/2};
+}
+
+function jackPoint(red){
+ var e=document.getElementById("meter"), sr=scene.getBoundingClientRect(), r=e.getBoundingClientRect();
+ return {x:r.left-sr.left+r.width*(red?.70:.30),y:r.top-sr.top+r.height*.91};
+}
+
+function moveProbes(redTarget,blackTarget){
+ var rp=pointFor(redTarget),bp=pointFor(blackTarget),rj=jackPoint(true),bj=jackPoint(false);
+ var rt=document.getElementById("redTip"),bt=document.getElementById("blackTip");
+ rt.style.left=(rp.x-7)+"px";rt.style.top=(rp.y-7)+"px";
+ bt.style.left=(bp.x-7)+"px";bt.style.top=(bp.y-7)+"px";
+ document.getElementById("redPath").setAttribute("d","M "+rj.x+" "+rj.y+" C "+(rj.x+40)+" "+(rj.y-90)+" "+(rp.x-40)+" "+(rp.y+50)+" "+rp.x+" "+rp.y);
+ document.getElementById("blackPath").setAttribute("d","M "+bj.x+" "+bj.y+" C "+(bj.x-40)+" "+(bj.y-70)+" "+(bp.x+40)+" "+(bp.y+55)+" "+bp.x+" "+bp.y);
+}
+
+
+function updateInfo(){
+ var v=values[test];
+ var normal=true;
+ var title="";
+ var explanation="";
+
+ if(test==="v1"){
+   title="V1 — Battery voltage";
+   normal=(v>=12.4&&v<=12.8);
+   explanation=normal
+     ?"The battery reading is normal for this simulation. It confirms that about 12.6 V is available to the circuit. This test does not locate a wiring fault by itself; it gives you the reference voltage to compare with V2, V3 and V4."
+     :"The available battery voltage is outside the expected range. Check battery state of charge and condition before diagnosing voltage drop elsewhere.";
+ }
+
+ if(test==="v2"){
+   title="V2 — Voltage across the consumer";
+   if(faultType==="component" || (faultType==="open"&&faultLocation==="bulb")){
+     normal=false;
+     explanation="Battery voltage is present across the consumer but the lamp is not operating. Because V3 and V4 show little voltage loss, the supply and ground paths are good. This points to a failed/open consumer.";
+   }else if(v>11.5){
+     normal=true;
+     explanation="The consumer is receiving close to battery voltage. This is normal when the lamp is operating correctly. If the lamp still does not work with this voltage available, suspect the component itself.";
+   }else if(v<0.5){
+     normal=false;
+     explanation="This is not normal for an operating lamp. Almost no voltage is available across the consumer. Use V3 and V4 to identify whether the loss/open circuit is on the power side or ground side.";
+   }else{
+     normal=false;
+     explanation="The consumer voltage is lower than the battery voltage. Voltage is being lost in the circuit. Compare V3 and V4: the side with the excessive voltage drop identifies the high-resistance side.";
+   }
+ }
+
+ if(test==="v3"){
+   title="V3 — Power-side voltage drop";
+   if(v<0.3){
+     normal=true;
+     explanation="The power-side voltage drop is low, so there is very little unwanted resistance between battery positive and consumer positive. The power feed is considered healthy in this simulation.";
+   }else if(v>10){
+     normal=false;
+     explanation="This is not a normal loaded voltage-drop reading. The meter is seeing nearly the full battery voltage across the power-side fault. In this simulation that indicates an open power circuit between battery positive and the consumer.";
+   }else{
+     normal=false;
+     explanation="The power-side voltage drop is excessive. This means voltage is being lost before it reaches the consumer, indicating unwanted resistance in the positive-side wiring, terminals, connectors or connections.";
+   }
+ }
+
+ if(test==="v4"){
+   title="V4 — Ground-side voltage drop";
+   if(v<0.3){
+     normal=true;
+     explanation="The ground-side voltage drop is low, so there is very little unwanted resistance between the consumer ground and battery negative. The ground path is considered healthy in this simulation.";
+   }else if(v>10){
+     normal=false;
+     explanation="This is not a normal loaded voltage-drop reading. The meter is seeing nearly the full battery voltage across the ground-side fault. In this simulation that indicates an open ground circuit between the consumer and battery negative.";
+   }else{
+     normal=false;
+     explanation="The ground-side voltage drop is excessive. This indicates unwanted resistance in the ground wiring, terminals, connectors or earth connection.";
+   }
+ }
+
+ infoTitle.textContent=title+" — "+v.toFixed(2)+" V";
+ infoVerdict.textContent=normal?"NORMAL READING":"ABNORMAL READING";
+ infoVerdict.className="verdict "+(normal?"normal":"abnormal");
+ infoText.textContent=explanation;
+}
+
+function updateTest(){
+ var redTarget,blackTarget,title,desc;
+ if(test==="v1"){
+   redTarget="batPos";blackTarget="batNeg";
+   title="V1 — Across battery";
+   desc="Red probe on battery positive. Black probe on battery negative.";
+ }
+ if(test==="v2"){
+   redTarget="conPos";blackTarget="conNeg";
+   title="V2 — Across consumer";
+   desc="Red probe on consumer positive. Black probe on consumer negative.";
+ }
+ if(test==="v3"){
+   redTarget="batPos";blackTarget="conPos";
+   title="V3 — Power-side voltage drop";
+   desc="Red probe on battery positive. Black probe on consumer positive.";
+ }
+ if(test==="v4"){
+   redTarget="conNeg";blackTarget="batNeg";
+   title="V4 — Ground-side voltage drop";
+   desc="Red probe on consumer negative. Black probe on battery negative.";
+ }
+ moveProbes(redTarget,blackTarget);
+ display.textContent=values[test].toFixed(2);
+ callout.textContent=title+" — "+desc;
+
+ var t=title+"\nReading: "+values[test].toFixed(2)+" V\n";
+ if(test==="v1") t+="This is the available battery voltage.";
+ if(test==="v2"){
+   if(faultType==="component"&&values.v2>11.5)t+="Full supply is available across the failed consumer, pointing toward component failure.";
+   else if(values.v2>11.5)t+="The consumer is receiving close to full battery voltage.";
+   else if(values.v2<0.5)t+="There is almost no voltage across the consumer.";
+   else t+="The consumer is receiving reduced voltage because voltage is being lost elsewhere in the circuit.";
+ }
+ if(test==="v3"){
+   if(values.v3<0.3)t+="Power-side drop is low.";
+   else if(values.v3>10)t+="This reading spans an open power-side circuit and is approximately battery voltage.";
+   else t+="Excessive voltage drop exists on the power side while the circuit is under load.";
+ }
+ if(test==="v4"){
+   if(values.v4<0.3)t+="Ground-side drop is low.";
+   else if(values.v4>10)t+="This reading spans an open ground-side circuit and is approximately battery voltage.";
+   else t+="Excessive voltage drop exists on the ground side while the circuit is under load.";
+ }
+ result.textContent=t;
+ updateInfo();
+}
+
+document.querySelectorAll(".test-btn").forEach(function(btn){
+ btn.onclick=function(){
+   test=this.dataset.test;
+   document.querySelectorAll(".test-btn").forEach(function(b){b.classList.remove("active");});
+   this.classList.add("active");
+   updateTest();
+ };
+});
+
+document.getElementById("addFaultBtn").onclick=function(){
+ faultType=document.getElementById("faultType").value;
+ faultLocation=document.getElementById("faultLocation").value;
+ severity=document.getElementById("severity").value;
+ calculate();
+};
+document.getElementById("fixFaultBtn").onclick=function(){
+ faultType="none";
+ document.getElementById("faultType").value="none";
+ calculate();
+ result.textContent+="\nFault repaired. Retest the circuit.";
+};
+document.getElementById("resetBtn").onclick=function(){
+ test="v1";faultType="none";faultLocation="power";severity="medium";
+ document.getElementById("faultType").value="none";
+ document.getElementById("faultLocation").value="power";
+ document.getElementById("severity").value="medium";
+ document.querySelectorAll(".test-btn").forEach(function(b){b.classList.remove("active");});
+ document.querySelector('[data-test="v1"]').classList.add("active");
+ calculate();
+};
+infoBtn.onclick=function(e){
+ e.stopPropagation();
+ infoPopup.classList.toggle("show");
+};
+infoPopup.onclick=function(e){e.stopPropagation();};
+document.addEventListener("click",function(){infoPopup.classList.remove("show");});
+window.addEventListener("resize",function(){setTimeout(updateTest,80);});
+calculate();
+setTimeout(updateTest,120);
+})();
+</script>
+
+
+<!-- COPYRIGHT FOOTER -->
+
+<footer class="copyright-footer">
+
+  <div class="copyright-main">
+    © 2026 RRainbow. All Rights Reserved.
+  </div>
+
+  <div class="copyright-sub">
+    Automotive Voltage Drop Test Simulator · RRainbow Learning Hub
+  </div>
+
+</footer>
+
+
+</body>
+</html>
