@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - CAN BUS DIAGNOSTIC SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This resource contains original software, graphics,
+written educational content and interactive learning
+resource design.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of protected
+content is prohibited except where permitted by law or
+expressly authorised by the rights holder.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Advanced CAN Bus Diagnostic Simulator</title>
+<style>
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f6;color:#17212b}
+header{background:#101820;color:#fff;padding:16px}
+.wrap{max-width:1280px;margin:auto;padding:14px}
+.grid{display:grid;grid-template-columns:370px 1fr;gap:14px}
+.card{background:#fff;border:1px solid #d6dde5;border-radius:12px;padding:15px;box-shadow:0 2px 9px rgba(0,0,0,.06)}
+label{display:block;font-weight:bold;margin-top:11px;margin-bottom:5px}
+select,button{width:100%;box-sizing:border-box;padding:11px;font-size:16px;border-radius:8px}
+select{border:1px solid #b9c5d0;background:#fff}
+button{border:0;font-weight:bold;cursor:pointer;margin-top:8px;touch-action:manipulation}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.red{background:#d32f2f;color:#fff}.green{background:#2e7d32;color:#fff}.blue{background:#1565c0;color:#fff}.grey{background:#dfe5ea}
+.status,.result,.note{padding:11px;border:1px solid #d7dee5;border-radius:8px;margin-top:12px;background:#f7f9fb;white-space:pre-line}
+.readings{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.r{border:1px solid #d6dde5;border-radius:8px;padding:9px}
+.r small{display:block;color:#667085}.r strong{font-size:19px}
+.scope{background:#061018;border-radius:10px;overflow:hidden}
+svg{width:100%;height:auto;display:block;min-height:320px}
+.legend{font-size:13px;margin-top:8px;display:flex;gap:16px;flex-wrap:wrap}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.h{background:#4fc3f7}.l{background:#ffd54f}
+.network{margin-top:14px}
+.bus{height:8px;background:#263238;margin:48px 18px 18px;position:relative;border-radius:4px}
+.bus:before,.bus:after{position:absolute;top:-38px;background:#fff3cd;border:1px solid #e7cf7a;padding:5px 8px;border-radius:6px;font-size:12px;font-weight:700}
+.bus:before{content:"120Ω";left:-3px}.bus:after{content:"120Ω";right:-3px}
+.marker{position:absolute;top:-11px;width:12px;height:30px;border-radius:4px;transform:translateX(-50%)}
+.break{background:#d32f2f}
+.probe{background:#1565c0}
+.nodes{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.node{padding:10px 4px;border:2px solid #92a5b7;border-radius:8px;background:#f8fafc;text-align:center;font-weight:700;font-size:12px}
+.small{
+  font-size:12px;
+  color:#667085;
+}
+
+
+/* COPYRIGHT FOOTER */
+
+.copyright-footer{
+  max-width:1280px;
+  margin:10px auto 20px;
+  padding:18px 16px;
+  border-top:1px solid #d6dde5;
+  text-align:center;
+}
+
+.copyright-main{
+  color:#17212b;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.copyright-sub{
+  margin-top:5px;
+  color:#667085;
+  font-size:12px;
+  font-weight:600;
+}
+
+
+@media(max-width:850px){
+  .grid{grid-template-columns:1fr}
+}
+
+@media(max-width:540px){
+  .row{grid-template-columns:1fr}
+  .nodes{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<header>
+<h2 style="margin:0">Advanced Vehicle CAN Bus Diagnostic Simulator</h2>
+<div style="font-size:13px;color:#cbd5df;margin-top:4px">Probe position + fault position + reflected waveform model</div>
+</header>
+
+<div class="wrap">
+<div class="grid">
+<div class="card">
+<h3 style="margin-top:0">Controls</h3>
+
+<label for="fault">Fault type</label>
+<select id="fault">
+<option value="none">No fault</option>
+<option value="openH">Open circuit - CAN-H</option>
+<option value="openL">Open circuit - CAN-L</option>
+<option value="shortHG">CAN-H short to ground</option>
+<option value="shortLG">CAN-L short to ground</option>
+<option value="shortHV">CAN-H short to positive</option>
+<option value="shortLV">CAN-L short to positive</option>
+<option value="shortHL">CAN-H short to CAN-L</option>
+<option value="term">One terminating resistor missing</option>
+</select>
+
+<label for="faultLoc">Fault location</label>
+<select id="faultLoc">
+<option value="15">Near ECU 1</option>
+<option value="32">Between ECU 1 and ECU 2</option>
+<option value="50">Between ECU 2 and ECU 3</option>
+<option value="68">Between ECU 3 and ECU 4</option>
+<option value="85">Near far termination</option>
+</select>
+
+<label for="probeLoc">Primary scope probe location</label>
+<select id="probeLoc">
+<option value="8">DLC / near start of bus</option>
+<option value="22">ECU 1</option>
+<option value="40">ECU 2</option>
+<option value="58">ECU 3</option>
+<option value="76">ECU 4</option>
+<option value="92">Far end of bus</option>
+</select>
+
+<label for="compareLoc">Comparison test location</label>
+<select id="compareLoc">
+<option value="8">DLC / near start of bus</option>
+<option value="22">ECU 1</option>
+<option value="40">ECU 2</option>
+<option value="58" selected>ECU 3</option>
+<option value="76">ECU 4</option>
+<option value="92">Far end of bus</option>
+</select>
+
+<label for="mode">Test equipment</label>
+<select id="mode">
+<option value="scope">Oscilloscope</option>
+<option value="voltage">Digital multimeter - Voltage</option>
+<option value="resistance">Digital multimeter - Resistance</option>
+</select>
+
+<div class="row">
+<button id="addBtn" class="red">Add Fault</button>
+<button id="fixBtn" class="green">Fix Fault</button>
+</div>
+<div class="row">
+<button id="testBtn" class="blue">Perform Test</button>
+<button id="pauseBtn" class="grey">Pause Scope</button>
+</div>
+<button id="resetBtn" class="grey">Reset Simulation</button>
+
+<div id="status" class="status">Network healthy. No fault present.</div>
+
+<div class="readings">
+<div class="r"><small>CAN-H typical</small><strong id="hRead">~2.5 V avg</strong></div>
+<div class="r"><small>CAN-L typical</small><strong id="lRead">~2.5 V avg</strong></div>
+<div class="r"><small>Bus resistance</small><strong id="rRead">~60 Ω</strong></div>
+<div class="r"><small>Communication</small><strong id="cRead">OK</strong></div>
+</div>
+
+<div class="note">
+<b>Model behaviour:</b> for an open circuit, the waveform can remain mostly normal when you probe on the intact side of the break, then show delayed ringing/reflection. If the probe is beyond the break, the affected line becomes much more severely degraded or absent.
+</div>
+</div>
+
+<div>
+<div class="card">
+<h3 style="margin-top:0">Animated Oscilloscope</h3>
+<div class="small" style="margin-bottom:8px">
+<strong style="color:#00bcd4">CAN-H</strong> and
+<strong style="color:#b08b00">CAN-L</strong> show the primary probe.
+<strong style="color:#e040fb">Comparison</strong> shows the most useful signal from the second test location. For an open circuit it follows the affected CAN conductor.
+</div>
+<div class="scope">
+<svg id="scope" viewBox="0 0 1000 380" xmlns="http://www.w3.org/2000/svg">
+<rect width="1000" height="380" fill="#061018"/>
+<g stroke="#17313f" stroke-width="1">
+<path d="M0 60H1000 M0 120H1000 M0 180H1000 M0 240H1000 M0 300H1000 M0 360H1000"/>
+<path d="M50 0V380 M100 0V380 M150 0V380 M200 0V380 M250 0V380 M300 0V380 M350 0V380 M400 0V380 M450 0V380 M500 0V380 M550 0V380 M600 0V380 M650 0V380 M700 0V380 M750 0V380 M800 0V380 M850 0V380 M900 0V380 M950 0V380"/>
+</g>
+<g fill="#8aa4b5" font-family="Arial" font-size="14">
+<text x="8" y="365">0V</text><text x="8" y="298">1V</text><text x="8" y="231">2V</text><text x="8" y="164">3V</text><text x="8" y="97">4V</text><text x="8" y="30">5V</text>
+</g>
+<polyline id="hTrace" fill="none" stroke="#00bcd4" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline id="lTrace" fill="none" stroke="#ffd54f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline id="compareTrace" fill="none" stroke="#e040fb" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="10 6"/>
+</svg>
+</div>
+<div class="legend">
+<span><i class="dot" style="background:#00bcd4"></i>CAN-H (primary probe)</span>
+<span><i class="dot" style="background:#ffd54f"></i>CAN-L (primary probe)</span>
+<span id="comparisonLegend"><i class="dot" style="background:#e040fb"></i>Comparison trace (selected comparison point)</span>
+<span>Blue marker = primary probe</span>
+<span>Purple marker = comparison probe</span>
+<span>Red marker = fault</span>
+</div>
+
+<div class="network">
+<div class="bus" id="bus">
+<div id="probeMarker" class="marker probe"></div>
+<div id="compareMarker" class="marker probe" style="background:#7b1fa2"></div>
+<div id="breakMarker" class="marker break" style="display:none"></div>
+</div>
+<div class="nodes">
+<div class="node">DLC</div>
+<div class="node">ECU 1</div>
+<div class="node">ECU 2</div>
+<div class="node">ECU 3/4</div>
+<div class="node">Far End</div>
+</div>
+</div>
+
+<div id="result" class="result">Healthy animated CAN waveform running.</div>
+<div id="compareSummary" class="result">Comparison point ready.</div>
+
+
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var currentFault="none";
+var running=true;
+var offset=0;
+
+var faultSel=document.getElementById("fault");
+var faultLocSel=document.getElementById("faultLoc");
+var probeLocSel=document.getElementById("probeLoc");
+var compareLocSel=document.getElementById("compareLoc");
+var modeSel=document.getElementById("mode");
+var result=document.getElementById("result");
+var hTrace=document.getElementById("hTrace");
+var lTrace=document.getElementById("lTrace");
+var compareTrace=document.getElementById("compareTrace");
+var probeMarker=document.getElementById("probeMarker");
+var compareMarker=document.getElementById("compareMarker");
+var breakMarker=document.getElementById("breakMarker");
+
+var bits=[1,1,0,1,0,0,1,0,1,1,1,0,1,0,0,1,1,0,1,0,1,1,0,0,1,0];
+
+function y(v){return 365-(v/5)*335;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function smoothstep(t){
+ if(t<=0)return 0;
+ if(t>=1)return 1;
+ return t*t*(3-2*t);
+}
+
+function dominantState(px){
+ var bitWidth=48;
+ var p=px+offset;
+ var idx=Math.floor(p/bitWidth);
+ var local=(p%bitWidth)/bitWidth;
+ var current=bits[idx%bits.length];
+ var prev=bits[(idx-1+bits.length)%bits.length];
+ var edge=0.12;
+ var blend=local<edge?smoothstep(local/edge):1;
+ var prevDom=prev===0?1:0;
+ var curDom=current===0?1:0;
+ return prevDom+(curDom-prevDom)*blend;
+}
+
+function reflectionShape(px,delay,strength){
+ var phase=(px+offset-delay)%48;
+ if(phase<0)phase+=48;
+
+ /*
+   Strong open-circuit reflection model:
+   - early section stays close to the original CAN level
+   - middle section rises sharply in a repeated saw-tooth pattern
+   - peak can approach the 5 V rail
+   - final section decays back toward the normal waveform
+ */
+ var p=phase/48;
+ var saw=(phase%7)/7;  // repeated saw teeth
+
+ if(p<0.18){
+   return 0;
+ }
+ if(p<0.62){
+   var rise=(p-0.18)/0.44;
+   return strength*(0.35+1.9*rise+0.65*saw);
+ }
+ if(p<0.82){
+   var hold=(p-0.62)/0.20;
+   return strength*(2.35-0.55*hold+0.55*saw);
+ }
+
+ var decay=(p-0.82)/0.18;
+ return strength*(1.8*(1-decay));
+}
+
+function valuesAtLocation(px,probe){
+ var dom=dominantState(px);
+ var h=2.5+1.0*dom;
+ var l=2.5-1.0*dom;
+
+ var faultLoc=parseFloat(faultLocSel.value);
+ var distance=Math.abs(probe-faultLoc);
+ var probeBefore=probe<faultLoc;
+
+ var commonRipple=Math.sin((px+offset)*0.05)*0.015;
+ h+=commonRipple;
+ l+=commonRipple;
+
+ if(currentFault==="openH" || currentFault==="openL"){
+   var affectedH=currentFault==="openH";
+   var affectedL=currentFault==="openL";
+
+   if(probeBefore){
+     var delay=5+distance*0.65;
+     var strength=clamp(0.78+(100-distance)*0.004,0.78,1.08);
+     var refl=reflectionShape(px,delay,strength);
+     if(affectedH){h+=refl;}
+     if(affectedL){l-=refl;}
+   }else{
+     var residual=0.025+Math.sin((px+offset)*0.08)*0.015;
+     if(affectedH) h=2.5+residual;
+     if(affectedL) l=2.5-residual;
+   }
+ }
+
+ if(currentFault==="shortHG"){h=0.08;l=2.5-0.15*dom;}
+ if(currentFault==="shortLG"){l=0.08;h=2.5+0.15*dom;}
+ if(currentFault==="shortHV"){h=5.0;l=2.5-0.12*dom;}
+ if(currentFault==="shortLV"){l=5.0;h=2.5+0.12*dom;}
+ if(currentFault==="shortHL"){h=2.5+Math.sin(px*0.03)*0.02;l=h;}
+ if(currentFault==="term"){
+   var delay2=12+distance*0.7;
+   var refl2=reflectionShape(px,delay2,0.38);
+   h+=refl2;
+   l-=refl2;
+ }
+ return [clamp(h,0,5),clamp(l,0,5)];
+}
+
+function draw(){
+ var hp=[],lp=[],cp=[];
+ var primaryProbe=parseFloat(probeLocSel.value);
+ var compareProbe=parseFloat(compareLocSel.value);
+
+ for(var x=42;x<=1000;x+=3){
+   var v=valuesAtLocation(x,primaryProbe);
+   hp.push(x+","+y(v[0]));
+   lp.push(x+","+y(v[1]));
+
+   var cv=valuesAtLocation(x,compareProbe);
+   var compareVoltage;
+
+   /*
+     Comparison trace logic:
+     - Open CAN-H: show CAN-H at the comparison location.
+     - Open CAN-L: show CAN-L at the comparison location.
+     - CAN-H electrical faults: show CAN-H.
+     - CAN-L electrical faults: show CAN-L.
+     - CAN-H to CAN-L / termination / healthy: show differential activity
+       centred around 2.5 V for easy visual comparison.
+   */
+   if(currentFault==="openH" || currentFault==="shortHG" || currentFault==="shortHV"){
+     compareVoltage=cv[0];
+   }else if(currentFault==="openL" || currentFault==="shortLG" || currentFault==="shortLV"){
+     compareVoltage=cv[1];
+   }else{
+     var differential=cv[0]-cv[1];
+     compareVoltage=2.5+(differential/2);
+   }
+
+   cp.push(x+","+y(compareVoltage));
+ }
+
+ hTrace.setAttribute("points",hp.join(" "));
+ lTrace.setAttribute("points",lp.join(" "));
+ compareTrace.setAttribute("points",cp.join(" "));
+
+ if(running){offset+=2.2;if(offset>1248)offset=0;}
+ requestAnimationFrame(draw);
+}
+
+function faultName(f){
+ var names={
+ none:"No fault",openH:"Open circuit - CAN-H",openL:"Open circuit - CAN-L",
+ shortHG:"CAN-H short to ground",shortLG:"CAN-L short to ground",
+ shortHV:"CAN-H short to positive",shortLV:"CAN-L short to positive",
+ shortHL:"CAN-H short to CAN-L",term:"One terminating resistor missing"
+ };
+ return names[f];
+}
+
+function updateMarkers(){
+ var probe=parseFloat(probeLocSel.value);
+ var compareProbe=parseFloat(compareLocSel.value);
+ var faultLoc=parseFloat(faultLocSel.value);
+ probeMarker.style.left=probe+"%";
+ compareMarker.style.left=compareProbe+"%";
+ if(currentFault==="none"){
+   breakMarker.style.display="none";
+ }else{
+   breakMarker.style.display="block";
+   breakMarker.style.left=faultLoc+"%";
+ }
+}
+
+function updateReadings(){
+ var h="~2.5 V avg",l="~2.5 V avg",r="~60 Ω",c="OK";
+ var probe=parseFloat(probeLocSel.value);
+ var faultLoc=parseFloat(faultLocSel.value);
+ var beyond=probe>=faultLoc;
+
+ if(currentFault==="openH"){
+   h=beyond?"Severely degraded":"Normal + reflections";
+   c=beyond?"LOCAL LOSS":"DEGRADED";
+ }
+ if(currentFault==="openL"){
+   l=beyond?"Severely degraded":"Normal + reflections";
+   c=beyond?"LOCAL LOSS":"DEGRADED";
+ }
+ if(currentFault==="shortHG"){h="~0 V";c="NO COMMS";}
+ if(currentFault==="shortLG"){l="~0 V";c="NO COMMS";}
+ if(currentFault==="shortHV"){h="~5 V";c="NO COMMS";}
+ if(currentFault==="shortLV"){l="~5 V";c="NO COMMS";}
+ if(currentFault==="shortHL"){h="≈ CAN-L";l="≈ CAN-H";r="Very low";c="NO COMMS";}
+ if(currentFault==="term"){r="~120 Ω";c="UNSTABLE";}
+
+ document.getElementById("hRead").textContent=h;
+ document.getElementById("lRead").textContent=l;
+ document.getElementById("rRead").textContent=r;
+ document.getElementById("cRead").textContent=c;
+
+ var s=currentFault==="none"?
+ "Network healthy. No fault present.":
+ "Fault active: "+faultName(currentFault)+" | Probe "+probe+"% | Fault "+faultLoc+"%";
+ document.getElementById("status").textContent=s;
+
+ var legend=document.getElementById("comparisonLegend");
+ if(currentFault==="openH" || currentFault==="shortHG" || currentFault==="shortHV"){
+   legend.innerHTML='<i class="dot" style="background:#e040fb"></i>Comparison CAN-H at second test point';
+ }else if(currentFault==="openL" || currentFault==="shortLG" || currentFault==="shortLV"){
+   legend.innerHTML='<i class="dot" style="background:#e040fb"></i>Comparison CAN-L at second test point';
+ }else{
+   legend.innerHTML='<i class="dot" style="background:#e040fb"></i>Comparison differential signal';
+ }
+
+ updateMarkers();
+
+ var compare=parseFloat(compareLocSel.value);
+ var summary="";
+ if(currentFault==="none"){
+   summary="Both test points show a healthy CAN waveform.";
+ }else if(currentFault==="openH"||currentFault==="openL"){
+   var primaryBefore=probe<faultLoc;
+   var compareBefore=compare<faultLoc;
+
+   if(primaryBefore&&compareBefore){
+     summary="Both probes are on the intact side of the open. Both waveforms remain recognisable, but the point nearer the break can show stronger overshoot and saw-tooth reflection.";
+   }else if(!primaryBefore&&!compareBefore){
+     summary="Both probes are beyond the open. The affected conductor is heavily degraded at both locations.";
+   }else{
+     summary="The probes are on opposite sides of the open. One test point shows reflected/overshooting CAN activity while the other shows the affected conductor heavily degraded. The open circuit is between these two test points.";
+   }
+ }else{
+   summary="Compare the two test points to decide whether the fault affects the whole network or only a section.";
+ }
+ document.getElementById("compareSummary").textContent=summary;
+}
+
+document.getElementById("addBtn").onclick=function(){
+ currentFault=faultSel.value;
+ updateReadings();
+ var probe=parseFloat(probeLocSel.value);
+ var faultLoc=parseFloat(faultLocSel.value);
+
+ if(currentFault==="openH"||currentFault==="openL"){
+   if(probe<faultLoc){
+     result.textContent="Open circuit added.\nYou are probing on the intact side of the break, so the waveform remains recognisable at first, then develops a strong delayed saw-tooth/overshoot section that can approach the 5 V rail before settling.";
+   }else{
+     result.textContent="Open circuit added.\nYou are probing beyond the break, so the affected conductor is severely degraded and the normal switching waveform is largely lost.";
+   }
+ }else{
+   result.textContent=currentFault==="none"?"No fault selected.":"Fault added: "+faultName(currentFault);
+ }
+};
+
+document.getElementById("fixBtn").onclick=function(){
+ if(currentFault==="none"){result.textContent="No active fault to repair.";return;}
+ var old=faultName(currentFault);
+ currentFault="none";
+ faultSel.value="none";
+ updateReadings();
+ result.textContent="Repair completed: "+old+"\nHealthy CAN waveform restored.";
+};
+
+document.getElementById("pauseBtn").onclick=function(){
+ running=!running;
+ this.textContent=running?"Pause Scope":"Resume Scope";
+};
+
+document.getElementById("resetBtn").onclick=function(){
+ currentFault="none";
+ faultSel.value="none";
+ faultLocSel.value="50";
+ probeLocSel.value="8";
+ compareLocSel.value="58";
+ modeSel.value="scope";
+ running=true;
+ document.getElementById("pauseBtn").textContent="Pause Scope";
+ updateReadings();
+ result.textContent="Simulation reset. Healthy animated CAN waveform running.";
+};
+
+probeLocSel.onchange=updateReadings;
+compareLocSel.onchange=updateReadings;
+faultLocSel.onchange=updateReadings;
+
+document.getElementById("testBtn").onclick=function(){
+ var mode=modeSel.value;
+ var probe=parseFloat(probeLocSel.value);
+ var faultLoc=parseFloat(faultLocSel.value);
+ var side=probe<faultLoc?"intact side of the break":"far side of the break";
+ var t="";
+
+ if(mode==="scope"){
+   if(currentFault==="none"){
+     t="Oscilloscope diagnosis:\nHealthy nominal CAN waveform. CAN-H rises and CAN-L falls during dominant bits.";
+   }else if(currentFault==="openH"||currentFault==="openL"){
+     if(probe<faultLoc){
+       t="Oscilloscope diagnosis:\nProbe is on the "+side+".\nThe waveform is initially recognisable, then a delayed reflected section can rise sharply in a saw-tooth pattern toward the supply rail before settling back toward the normal CAN level.\nThis is consistent with a transmission-line discontinuity/open circuit further down the bus.";
+     }else{
+       t="Oscilloscope diagnosis:\nProbe is on the "+side+".\nThe affected conductor no longer carries the normal CAN switching signal reliably.\nThis is consistent with an open conductor between the source and the probe point.";
+     }
+   }else if(currentFault==="term"){
+     t="Oscilloscope diagnosis:\nPoor termination creates repeated reflections/ringing on both differential lines.\nConfirm with an ignition-off resistance test.";
+   }else{
+     t="Oscilloscope diagnosis:\nThe waveform reflects the selected short-circuit fault.";
+   }
+ }
+
+ if(mode==="voltage"){
+   t="DMM voltage diagnosis:\nA DMM averages the signal. Probe position can change what you see with an open circuit, but a scope is the better tool for observing reflections and delayed distortion.";
+ }
+
+ if(mode==="resistance"){
+   if(currentFault==="none")t="Ignition-off resistance:\nApproximately 60 Ω expected with two 120 Ω terminating resistors in parallel.";
+   else if(currentFault==="term")t="Ignition-off resistance:\nApproximately 120 Ω suggests one terminating resistor or its connection is missing/open.";
+   else if(currentFault==="shortHL")t="Ignition-off resistance:\nVery low resistance suggests CAN-H and CAN-L are shorted together.";
+   else if(currentFault==="openH"||currentFault==="openL")t="Resistance diagnosis:\nDepending on where the open is and which conductor is broken, a simple CAN-H to CAN-L resistance reading may not fully localise the fault. Compare measurements at multiple access points.";
+   else t="Resistance test is not definitive for this selected fault.";
+ }
+
+ result.textContent=t;
+};
+
+updateReadings();
+draw();
+})();
+</script>
+
+
+<!-- COPYRIGHT FOOTER -->
+
+<footer class="copyright-footer">
+
+  <div class="copyright-main">
+    © 2026 RRainbow. All Rights Reserved.
+  </div>
+
+  <div class="copyright-sub">
+    CAN Bus Diagnostic Simulator · RRainbow Learning Hub
+  </div>
+
+</footer>
+
+
+</body>
+</html>
