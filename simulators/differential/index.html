@@ -441,7 +441,7 @@ footer{
             </g>
 
             <text x="560" y="605" text-anchor="middle" fill="#cbd5e1" font-size="15" font-weight="800">
-              Carrier speed = average of left and right wheel speeds.
+              Yellow markers show rotation; carrier speed = average of left and right wheel speeds.
             </text>
           </svg>
 
@@ -754,9 +754,21 @@ function calculate(){
   }
 
   if(differentialType==="lsd" && mode!=="ice"){
-    bias=1.5;
-    if(mode==="left"){leftTorque=42;rightTorque=58}
-    if(mode==="right"){leftTorque=58;rightTorque=42}
+    if(mode==="straight"){
+      bias=1.0;
+      leftTorque=50;
+      rightTorque=50;
+    }
+    if(mode==="left"){
+      bias=1.5;
+      leftTorque=42;
+      rightTorque=58;
+    }
+    if(mode==="right"){
+      bias=1.5;
+      leftTorque=58;
+      rightTorque=42;
+    }
   }
 
   if(differentialType==="locked"){
@@ -840,7 +852,11 @@ function updateSystem(){
   const status=document.getElementById("status");
   status.className="status";
 
-  if(mode==="straight"){
+  if(differentialType==="locked" && mode!=="straight"){
+    status.classList.add("warn");
+    status.innerHTML=
+      "<b>Locked differential while cornering:</b> both wheels are forced to the same speed. The inside tyre must scrub or the driveline will wind up because normal differentiation is prevented.";
+  }else if(mode==="straight"){
     status.classList.add("good");
     status.innerHTML="<b>Straight ahead:</b> the carrier, side gears and wheels rotate together. Spider gears orbit with the carrier but do not spin on their own shafts.";
   }else if(mode==="left"){
@@ -936,8 +952,14 @@ function animate(now){
     // Pinion and crown wheel are meshed, so the visible directions oppose.
     crownMarker.setAttribute("transform",`rotate(${-carrierAngle} 560 330)`);
 
-    leftSideMarker.setAttribute("transform",`rotate(${leftAngle} 500 330)`);
-    rightSideMarker.setAttribute("transform",`rotate(${rightAngle} 620 330)`);
+    /*
+      The side gears are carried by the rotating differential case.
+      In this front-facing teaching view they rotate in the same visible
+      direction as the crown wheel/carrier, with their individual speeds
+      increasing or decreasing during differentiation.
+    */
+    leftSideMarker.setAttribute("transform",`rotate(${-leftAngle} 500 330)`);
+    rightSideMarker.setAttribute("transform",`rotate(${-rightAngle} 620 330)`);
 
     // Spider gears orbit with the carrier, then counter-rotate on their own axes.
     spiderMarker.setAttribute("transform",`rotate(${-carrierAngle} 560 330)`);
@@ -950,9 +972,10 @@ function animate(now){
       `rotate(${-carrierAngle} 560 330) rotate(${-spiderSpin} 560 385)`
     );
 
-    // Front-facing road wheels rotate naturally around their hubs.
-    leftWheelMarker.setAttribute("transform",`rotate(${leftAngle} 130 330)`);
-    rightWheelMarker.setAttribute("transform",`rotate(${rightAngle} 990 330)`);
+    // Reverse the visible wheel rotation so both road wheels roll
+    // forwards in the direction represented by the simulator.
+    leftWheelMarker.setAttribute("transform",`rotate(${-leftAngle} 130 330)`);
+    rightWheelMarker.setAttribute("transform",`rotate(${-rightAngle} 990 330)`);
   }
 
   requestAnimationFrame(animate);
