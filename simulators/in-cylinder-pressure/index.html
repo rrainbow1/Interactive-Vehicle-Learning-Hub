@@ -1,0 +1,634 @@
+<!doctype html>
+
+<!--
+============================================================
+RRainbow - ANIMATED IN-CYLINDER PRESSURE SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This resource contains original software, graphics,
+written educational content and interactive learning
+resource design.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of protected
+content is prohibited except where permitted by law or
+expressly authorised by the rights holder.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Animated In-Cylinder Pressure Simulator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f6;color:#17212b;font-family:Arial,Helvetica,sans-serif}
+header{background:#101820;color:#fff;padding:14px 18px}
+header h1{margin:0;font-size:22px} header p{margin:4px 0 0;color:#cbd5df;font-size:13px}
+.wrap{max-width:1550px;margin:auto;padding:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 315px;gap:14px}
+.card{background:#fff;border:1px solid #d7dfe6;border-radius:12px;padding:14px;box-shadow:0 2px 10px #00000010}
+.scopeEngine{display:grid;grid-template-columns:minmax(0,2.25fr) 285px;gap:14px;align-items:start}
+.scope{border:1px solid #dce4ea;border-radius:10px;overflow:hidden;background:white}.scope svg{width:100%;min-height:410px}
+svg{display:block;width:100%;height:auto}
+.buttons{display:grid;gap:7px}
+.fault{padding:11px;border:0;border-radius:8px;background:#e7edf4;font-weight:bold;text-align:left;cursor:pointer}
+.fault.active{background:#1565c0;color:#fff}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.control{border:0;border-radius:8px;padding:11px;font-weight:bold;cursor:pointer}
+.play{background:#1565c0;color:white}.pause{background:#dfe5ea}.reset{background:#2e7d32;color:#fff;grid-column:1/-1}
+.info{margin-top:10px;padding:11px;border:1px solid #d7dfe6;border-radius:8px;background:#f7f9fb;line-height:1.45;font-size:13px}
+.readouts{display:grid;grid-template-columns:repeat(5,minmax(95px,1fr));gap:8px;margin-top:10px}
+.readout{padding:9px;border:1px solid #d7dfe6;border-radius:8px;min-width:0}.readout small{display:block;color:#667085}.readout b{font-size:16px;overflow-wrap:anywhere}
+.engine{background:#182127;border-radius:10px;padding:8px;max-width:285px;margin:0 auto}.engine svg{max-height:470px;width:100%;object-fit:contain}
+.speed{width:100%}
+.phase{font-weight:bold;font-size:16px;text-align:center;margin-top:6px}
+.iBtn{float:right;border:0;width:34px;height:34px;border-radius:50%;background:#1565c0;color:#fff;font:bold 20px Georgia;cursor:pointer}
+.popup{
+  display:none;
+  margin-top:10px;
+  border:2px solid #1565c0;
+  border-radius:8px;
+  padding:11px;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.popup.show{
+  display:block;
+}
+
+
+/* COPYRIGHT FOOTER */
+
+.copyright-footer{
+  max-width:1550px;
+  margin:10px auto 20px;
+  padding:18px 16px;
+  border-top:1px solid #d7dfe6;
+  text-align:center;
+}
+
+.copyright-main{
+  color:#17212b;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.copyright-sub{
+  margin-top:5px;
+  color:#65717d;
+  font-size:12px;
+  font-weight:600;
+}
+
+
+@media(max-width:1050px){
+  .layout{grid-template-columns:1fr}
+  .scopeEngine{grid-template-columns:minmax(0,1fr) 250px}
+}
+
+@media(max-width:780px){
+  .scopeEngine{grid-template-columns:1fr}
+  .engine{max-width:300px}
+  .scope svg{min-height:auto}
+}
+
+@media(max-width:650px){
+  .readouts{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Animated In-Cylinder Pressure Waveform Simulator</h1>
+<p>Animated 720° pressure trace with four-stroke piston and valve operation.</p>
+</header>
+
+<div class="wrap"><div class="layout">
+
+<div class="card">
+<button class="iBtn" id="infoBtn">i</button>
+<div class="scopeEngine">
+
+<div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+<h3 style="margin:0">In-Cylinder Pressure — 720° Cranking Cycle</h3>
+<select id="pressureUnit" style="width:auto;padding:7px;border-radius:7px;border:1px solid #bbc6d0">
+<option value="bar">bar(g)</option>
+<option value="psi">psi</option>
+</select>
+</div>
+<div class="scope">
+<svg id="scopeSvg" viewBox="0 0 1250 650">
+<rect width="1250" height="650" fill="white"/>
+<g stroke="#e1e7ec">
+<path d="M70 70H1190 M70 140H1190 M70 210H1190 M70 280H1190 M70 350H1190 M70 420H1190 M70 490H1190 M70 560H1190"/>
+<path d="M70 30V580 M210 30V580 M350 30V580 M490 30V580 M630 30V580 M770 30V580 M910 30V580 M1050 30V580 M1190 30V580"/>
+</g>
+<!-- Pressure scale: representative generic petrol cranking range -->
+<g id="pressureScale" font-family="Arial" font-size="13" fill="#4d5963">
+  <text id="scale14" x="8" y="74">14 bar</text>
+  <text id="scale12" x="8" y="121">12 bar</text>
+  <text id="scale10" x="8" y="169">10 bar</text>
+  <text id="scale8" x="8" y="216">8 bar</text>
+  <text id="scale6" x="8" y="264">6 bar</text>
+  <text id="scale4" x="8" y="311">4 bar</text>
+  <text id="scale2" x="8" y="359">2 bar</text>
+  <text id="scale0" x="8" y="409">0 bar</text>
+  <text id="scaleNeg1" x="8" y="457">-1 bar</text>
+</g>
+<line x1="70" y1="405" x2="1190" y2="405" stroke="#555" stroke-width="2"/>
+<g stroke="#13a04b" stroke-width="2">
+<path d="M70 30V580 M350 30V580 M630 30V580 M910 30V580 M1190 30V580"/>
+</g>
+<path id="wave" fill="none" stroke="#0a8fd8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<line id="cursor" x1="70" y1="30" x2="70" y2="580" stroke="#d32f2f" stroke-width="3"/>
+<circle id="dot" cx="70" cy="95" r="7" fill="#d32f2f"/>
+<g fill="#13a04b" font-size="17" font-weight="bold" text-anchor="middle">
+<text x="70" y="615">0° TDC</text><text x="350" y="615">180° BDC</text><text x="630" y="615">360° TDC</text><text x="910" y="615">540° BDC</text><text x="1190" y="615">720° TDC</text>
+</g>
+<g fill="#65717b" font-size="14" text-anchor="middle">
+<text x="210" y="52">EXPANSION</text><text x="490" y="52">EXHAUST</text><text x="770" y="52">INTAKE</text><text x="1050" y="52">COMPRESSION</text>
+</g>
+
+<!-- Valve overlap marker band and pins: generic teaching example 340°–380° -->
+<g id="overlapMarkers">
+  <rect x="598.9" y="30" width="62.2" height="550" fill="#8e44ad" opacity="0.08"/>
+  <line x1="598.9" y1="30" x2="598.9" y2="580" stroke="#8e44ad" stroke-width="2" stroke-dasharray="7 5"/>
+  <line x1="661.1" y1="30" x2="661.1" y2="580" stroke="#8e44ad" stroke-width="2" stroke-dasharray="7 5"/>
+
+  <!-- pin 1 -->
+  <path d="M598.9 82 L587 62 A14 14 0 1 1 610.8 62 Z" fill="#8e44ad"/>
+  <circle cx="598.9" cy="59" r="5" fill="white"/>
+  <text x="584" y="105" fill="#8e44ad" font-size="12" font-weight="bold" text-anchor="end">OVERLAP START</text>
+  <text x="584" y="120" fill="#8e44ad" font-size="11" text-anchor="end">≈340°</text>
+
+  <!-- pin 2 -->
+  <path d="M661.1 82 L649.2 62 A14 14 0 1 1 673 62 Z" fill="#8e44ad"/>
+  <circle cx="661.1" cy="59" r="5" fill="white"/>
+  <text x="676" y="105" fill="#8e44ad" font-size="12" font-weight="bold">OVERLAP END</text>
+  <text x="676" y="120" fill="#8e44ad" font-size="11">≈380°</text>
+
+  <text x="630" y="145" fill="#8e44ad" font-size="13" font-weight="bold" text-anchor="middle">BOTH VALVES OPEN</text>
+</g>
+</svg>
+</div>
+
+<div class="readouts">
+<div class="readout"><small>Crank angle</small><b id="angle">0°</b></div>
+<div class="readout"><small>Piston</small><b id="position">TDC</b></div>
+<div class="readout"><small>Inlet valve</small><b id="inletState">Closed</b></div>
+<div class="readout"><small>Exhaust valve</small><b id="exhaustState">Closed</b></div>
+<div class="readout"><small>Valve overlap</small><b id="overlapState">No</b></div>
+
+</div>
+<div id="desc" class="info"></div>
+<div id="popup" class="popup"></div>
+</div>
+
+<div>
+<h3 style="margin-top:0">Animated Engine</h3>
+<div class="engine">
+<svg id="engineSvg" viewBox="0 0 430 590">
+<rect width="430" height="590" rx="18" fill="#151b20"/>
+<text x="215" y="28" fill="white" text-anchor="middle" font-size="17" font-weight="bold">CYLINDER OPERATION</text>
+
+<!-- ports -->
+<path d="M20 118H130" stroke="#4caf50" stroke-width="28" stroke-linecap="round"/>
+<path d="M300 118H410" stroke="#ff7043" stroke-width="28" stroke-linecap="round"/>
+<text x="25" y="85" fill="#4caf50" font-size="14">INLET</text>
+<text x="340" y="85" fill="#ff7043" font-size="14">EXHAUST</text>
+
+<!-- cylinder -->
+<rect x="95" y="100" width="240" height="340" rx="15" fill="#3d474e" stroke="#89949c" stroke-width="8"/>
+<rect x="112" y="130" width="206" height="275" fill="#20282d"/>
+
+<!-- valves -->
+<g id="inValve">
+<line id="inValveStem" x1="160" y1="52" x2="160" y2="130" stroke="#dbe1e5" stroke-width="10"/>
+<ellipse id="inValveHead" cx="160" cy="136" rx="28" ry="8" fill="#dbe1e5"/>
+</g>
+<g id="exValve">
+<line id="exValveStem" x1="270" y1="52" x2="270" y2="130" stroke="#dbe1e5" stroke-width="10"/>
+<ellipse id="exValveHead" cx="270" cy="136" rx="28" ry="8" fill="#dbe1e5"/>
+</g>
+<g id="brokenInletFragment" style="display:none">
+  <path d="M145 142 L175 147 L168 160 L143 154 Z" fill="#ff5252" stroke="#fff" stroke-width="2"/>
+</g>
+<g id="brokenExhaustFragment" style="display:none">
+  <path d="M255 142 L285 147 L278 160 L253 154 Z" fill="#ff5252" stroke="#fff" stroke-width="2"/>
+</g>
+<text id="valveFaultText" x="215" y="185" fill="#ff5252" font-size="14" font-weight="bold" text-anchor="middle"></text>
+
+<!-- gas -->
+<rect id="gas" x="116" y="145" width="198" height="150" fill="#4fc3f7" opacity=".18"/>
+
+<!-- piston -->
+<g id="piston">
+<rect x="130" y="275" width="170" height="72" rx="8" fill="#c6cdd2" stroke="#737e85" stroke-width="6"/>
+<line x1="215" y1="347" x2="215" y2="445" stroke="#aab2b8" stroke-width="15"/>
+</g>
+
+<!-- crank -->
+<circle cx="215" cy="495" r="52" fill="#404a50" stroke="#8d989f" stroke-width="8"/>
+<line id="crank" x1="215" y1="495" x2="215" y2="445" stroke="#f0b429" stroke-width="12" stroke-linecap="round"/>
+<circle cx="215" cy="495" r="10" fill="#f0b429"/>
+
+<text id="phaseText" x="215" y="565" fill="#fff" text-anchor="middle" font-size="21" font-weight="bold">EXPANSION</text>
+</svg>
+</div>
+<div class="phase" id="phaseOutside">EXPANSION</div>
+<label style="font-size:13px"><b>Animation speed</b></label>
+<input class="speed" id="speed" type="range" min="0.3" max="2.5" value="1" step="0.1">
+<div class="controls">
+<button class="control play" id="play">▶ Play</button>
+<button class="control pause" id="pause">Pause</button>
+<button class="control reset" id="reset">Reset to 0° TDC</button>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="card">
+<h3 style="margin-top:0">Fault Selection</h3>
+<div class="buttons">
+<button class="fault active" data-m="normal">Known good</button>
+<button class="fault" data-m="blocked">Blocked / restricted exhaust</button>
+<button class="fault" data-m="inletLeak">Leaking inlet valve</button>
+<button class="fault" data-m="exhaustLeak">Leaking exhaust valve</button>
+<button class="fault" data-m="inletOpen">Inlet valve stuck open</button>
+<button class="fault" data-m="exhaustOpen">Exhaust valve stuck open</button>
+</div>
+<div class="info"><b>Animation:</b> the red cursor moves across the pressure waveform while the piston, crankshaft and valves move through the corresponding 720° four-stroke cycle.</div>
+<div class="info"><b>Pressure scale:</b> the known-good waveform is scaled to a representative petrol cranking peak of about <b>12 bar(g) / 174 psi</b>. Negative values represent pressure below atmospheric. Actual healthy compression varies by engine, cranking speed, temperature, altitude and test setup; manufacturer or known-good data must be used for real diagnosis.</div>
+<div class="info"><b>Note:</b> this is a teaching simulation. Actual pressure values and valve opening/closing points vary by engine.</div><div class="info" id="overlapInfo">
+<b>Valve overlap</b><br>
+Valve overlap occurs around the TDC transition between the exhaust and intake strokes, when the exhaust valve has not fully closed and the inlet valve has already started to open. This helps scavenging and cylinder filling on many engines.<br><br>
+<b>Purple pins on the scope:</b> the two pins show the start and end of the overlap window. The shaded area between them represents the period when both valves are open. This simulator uses approximately <b>340°–380°</b> as a clear teaching example around 360° TDC; actual valve opening, closing and overlap angles must be taken from the engine manufacturer's data.
+</div>
+</div>
+
+</div></div>
+
+<script>
+(function(){
+"use strict";
+
+let mode="normal";
+let deg=0;
+let running=true;
+let last=performance.now();
+
+const waveEl=document.getElementById("wave");
+const descEl=document.getElementById("desc");
+const popupEl=document.getElementById("popup");
+const infoBtn=document.getElementById("infoBtn");
+const unitEl=document.getElementById("pressureUnit");
+
+const cursorEl=document.getElementById("cursor");
+const dotEl=document.getElementById("dot");
+
+const pistonEl=document.getElementById("piston");
+const crankArmEl=document.getElementById("crank");
+const inletValveEl=document.getElementById("inValve");
+const exhaustValveEl=document.getElementById("exValve");
+const inStem=document.getElementById("inValveStem");
+const exStem=document.getElementById("exValveStem");
+const inHead=document.getElementById("inValveHead");
+const exHead=document.getElementById("exValveHead");
+const brokenInlet=document.getElementById("brokenInletFragment");
+const brokenExhaust=document.getElementById("brokenExhaustFragment");
+const valveFaultText=document.getElementById("valveFaultText");
+const gasEl=document.getElementById("gas");
+
+const phaseTextEl=document.getElementById("phaseText");
+const phaseOutsideEl=document.getElementById("phaseOutside");
+const angleEl=document.getElementById("angle");
+const positionEl=document.getElementById("position");
+const inletStateEl=document.getElementById("inletState");
+const exhaustStateEl=document.getElementById("exhaustState");
+const overlapStateEl=document.getElementById("overlapState");
+const pressureReadout=null;
+
+const speedEl=document.getElementById("speed");
+const playBtn=document.getElementById("play");
+const pauseBtn=document.getElementById("pause");
+const resetBtn=document.getElementById("reset");
+
+const base=[
+[0,1],[5,.96],[10,.78],[18,.46],[28,.20],[42,.07],[58,.01],[78,-.04],
+[105,-.10],[135,-.16],[160,-.18],[180,-.14],[195,-.07],[210,-.015],
+[225,.015],[240,.005],[255,.022],[270,.004],[285,.018],[300,.003],
+[315,.016],[330,.002],[345,.012],[360,-.01],[372,-.08],[390,-.14],
+[415,-.17],[445,-.16],[475,-.17],[505,-.16],[535,-.18],[555,-.17],
+[580,-.16],[605,-.14],[625,-.11],[645,-.07],[660,-.02],[675,.02],
+[688,.08],[698,.18],[706,.36],[712,.62],[716,.86],[720,1]
+];
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function smooth01(t){t=clamp(t,0,1);return t*t*(3-2*t);}
+
+/*
+  Generic valve timing used only for animation:
+  Exhaust begins opening late expansion (~145°), closes after 360° (~380°).
+  Inlet begins opening before 360° (~340°), closes after BDC (~575°).
+  Lift is gradual so valves do not "jump" into the piston.
+*/
+function valveLift(d,type){
+  let lift=0;
+
+  if(type==="exhaust"){
+    if(d>=145 && d<220) lift=smooth01((d-145)/75);
+    else if(d>=220 && d<=335) lift=1;
+    else if(d>335 && d<=380) lift=1-smooth01((d-335)/45);
+  }else{
+    if(d>=340 && d<390) lift=smooth01((d-340)/50);
+    else if(d>=390 && d<=520) lift=1;
+    else if(d>520 && d<=575) lift=1-smooth01((d-520)/55);
+  }
+
+  if(mode==="inletOpen" && type==="inlet") lift=Math.max(lift,.60);
+  if(mode==="exhaustOpen" && type==="exhaust") lift=Math.max(lift,.60);
+
+  return clamp(lift,0,1);
+}
+
+function faultPoints(){
+  return base.map(function(pair){
+    const d=pair[0];
+    let n=pair[1];
+
+    if(mode==="blocked"){
+      if(d>=180&&d<=360)n+=.28*Math.sin(Math.PI*(d-180)/180);
+      if(d>360&&d<555)n+=.07;
+    }
+    if(mode==="inletLeak"){
+      if(d<60||d>660)n*=.55;
+      if(d>=360&&d<=555)n+=.065;
+    }
+    if(mode==="exhaustLeak"){
+      if(d<60||d>660)n*=.50;
+      if(d>=70&&d<=190)n+=.09;
+    }
+    if(mode==="inletOpen"){
+      n*=.16;
+      if(d>=360&&d<=555)n-=.055;
+    }
+    if(mode==="exhaustOpen"){
+      n*=.15;
+      if(d>=180&&d<=360)n+=.035;
+    }
+    return[d,n];
+  });
+}
+
+function buildPath(points){
+  const p=points.map(function(pair){
+    return {x:70+pair[0]/720*1120,y:405-pair[1]*310};
+  });
+  let s="M "+p[0].x+" "+p[0].y;
+  for(let j=0;j<p.length-1;j++){
+    const p0=p[j-1]||p[j],p1=p[j],p2=p[j+1],p3=p[j+2]||p2;
+    const a={x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6};
+    const b={x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};
+    s+=" C "+a.x+" "+a.y+", "+b.x+" "+b.y+", "+p2.x+" "+p2.y;
+  }
+  return s;
+}
+
+function relativePressure(d){
+  const p=faultPoints();
+  for(let i=0;i<p.length-1;i++){
+    if(d>=p[i][0]&&d<=p[i+1][0]){
+      const a=p[i],b=p[i+1],t=(d-a[0])/(b[0]-a[0]);
+      return a[1]+(b[1]-a[1])*t;
+    }
+  }
+  return p[p.length-1][1];
+}
+
+/* Map the relative teaching trace to a representative pressure scale:
+   peak 1.0 -> 12 bar(g); atmospheric 0 -> 0 bar(g);
+   trough -0.18 -> about -0.85 bar(g). */
+function pressureBar(d){
+  const r=relativePressure(d);
+  if(r>=0) return r*12.0;
+  return r*(0.85/0.18);
+}
+
+function updateScale(){
+  const psi=unitEl.value==="psi";
+  const labels=[
+    ["scale14",14],["scale12",12],["scale10",10],["scale8",8],
+    ["scale6",6],["scale4",4],["scale2",2],["scale0",0],["scaleNeg1",-1]
+  ];
+  labels.forEach(function(item){
+    const el=document.getElementById(item[0]);
+    if(psi){
+      el.textContent=Math.round(item[1]*14.5038)+" psi";
+    }else{
+      el.textContent=item[1]+" bar";
+    }
+  });
+  updateEngine();
+}
+
+const explanations={
+ normal:["Known good","The pressure waveform and valve motion are linked to the same 720° cycle. Valve lift is gradual around the opening and closing events, including overlap near 360° TDC."],
+ blocked:["Restricted exhaust","The exhaust section of the pressure trace rises because the cylinder cannot discharge freely. The valve motion remains mechanically normal because the restriction is downstream of the cylinder."],
+ inletLeak:["Bent / leaking inlet valve","The inlet valve still follows the cam timing but is drawn slightly bent and cannot seal fully. The compression peak is reduced and the intake-side pressure pattern changes."],
+ exhaustLeak:["Bent / leaking exhaust valve","The exhaust valve still follows the cam timing but is drawn slightly bent and cannot seal fully. Compression and expansion pressure are reduced."],
+ inletOpen:["Inlet valve stuck open","The inlet valve remains visibly open beyond its normal timing window. The cylinder cannot trap the charge, so compression is very low."],
+ exhaustOpen:["Exhaust valve stuck open","The exhaust valve remains visibly open beyond its normal timing window. The cylinder cannot seal, so compression is very low."]
+};
+
+function drawWave(){
+  waveEl.setAttribute("d",buildPath(faultPoints()));
+  const e=explanations[mode];
+  descEl.innerHTML="<b>"+e[0]+"</b><br>"+e[1];
+  popupEl.innerHTML="<b>"+e[0]+"</b><br>"+e[1];
+}
+
+function updateFaultVisuals(){
+  inStem.setAttribute("stroke","#dbe1e5");
+  exStem.setAttribute("stroke","#dbe1e5");
+  inHead.setAttribute("fill","#dbe1e5");
+  exHead.setAttribute("fill","#dbe1e5");
+  brokenInlet.style.display="none";
+  brokenExhaust.style.display="none";
+  valveFaultText.textContent="";
+
+  if(mode==="inletLeak"){
+    inletValveEl.setAttribute("transform","rotate(-10 160 100)");
+    inStem.setAttribute("stroke","#ff7777");
+    inHead.setAttribute("fill","#ff7777");
+    brokenInlet.style.display="block";
+    valveFaultText.textContent="BENT / LEAKING INLET VALVE";
+  }else{
+    inletValveEl.removeAttribute("data-fault-rotate");
+  }
+
+  if(mode==="exhaustLeak"){
+    exhaustValveEl.setAttribute("transform","rotate(10 270 100)");
+    exStem.setAttribute("stroke","#ff7777");
+    exHead.setAttribute("fill","#ff7777");
+    brokenExhaust.style.display="block";
+    valveFaultText.textContent="BENT / LEAKING EXHAUST VALVE";
+  }
+
+  if(mode==="inletOpen"){
+    inStem.setAttribute("stroke","#ff5252");
+    inHead.setAttribute("fill","#ff5252");
+    valveFaultText.textContent="INLET VALVE STUCK OPEN";
+  }
+  if(mode==="exhaustOpen"){
+    exStem.setAttribute("stroke","#ff5252");
+    exHead.setAttribute("fill","#ff5252");
+    valveFaultText.textContent="EXHAUST VALVE STUCK OPEN";
+  }
+}
+
+function updateEngine(){
+  const crankAngle=deg%360;
+  const rad=crankAngle*Math.PI/180;
+  const travel=(1-Math.cos(rad))/2;
+
+  /*
+    Keep a clear visual safety gap between piston crown and valve heads.
+    Piston top ranges roughly 155–320 in this stylised animation.
+  */
+  const pistonY=180+travel*145;
+  pistonEl.setAttribute("transform","translate(0 "+(pistonY-275)+")");
+  crankArmEl.setAttribute("transform","rotate("+crankAngle+" 215 495)");
+
+  const inLift=valveLift(deg,"inlet");
+  const exLift=valveLift(deg,"exhaust");
+
+  // maximum displayed lift 24 px keeps the valves visibly clear of the piston at TDC
+  let inTransform="translate(0 "+(inLift*24)+")";
+  let exTransform="translate(0 "+(exLift*24)+")";
+
+  if(mode==="inletLeak"){
+    inTransform+=" rotate(-10 160 100)";
+  }
+  if(mode==="exhaustLeak"){
+    exTransform+=" rotate(10 270 100)";
+  }
+
+  inletValveEl.setAttribute("transform",inTransform);
+  exhaustValveEl.setAttribute("transform",exTransform);
+
+  const overlap=inLift>.05 && exLift>.05;
+
+  let phase;
+  if(overlap && deg>=330 && deg<=390) phase="VALVE OVERLAP";
+  else if(deg<180) phase="EXPANSION";
+  else if(deg<360) phase="EXHAUST";
+  else if(deg<540) phase="INTAKE";
+  else phase="COMPRESSION";
+
+  phaseTextEl.textContent=phase;
+  phaseOutsideEl.textContent=phase;
+
+  const gasTop=145;
+  const gasBottom=pistonY+5;
+  gasEl.setAttribute("y",gasTop);
+  gasEl.setAttribute("height",Math.max(8,gasBottom-gasTop));
+
+  if(phase==="VALVE OVERLAP") gasEl.setAttribute("fill","#a855f7");
+  else if(phase==="EXHAUST") gasEl.setAttribute("fill","#ff7043");
+  else if(phase==="INTAKE") gasEl.setAttribute("fill","#4caf50");
+  else gasEl.setAttribute("fill","#4fc3f7");
+
+  angleEl.textContent=Math.round(deg)+"°";
+
+  let pistonPosition;
+  if(crankAngle<4||crankAngle>356)pistonPosition="TDC";
+  else if(Math.abs(crankAngle-180)<4)pistonPosition="BDC";
+  else if(crankAngle<180)pistonPosition="Moving down";
+  else pistonPosition="Moving up";
+
+  positionEl.textContent=pistonPosition;
+  inletStateEl.textContent=inLift>.05?"OPEN":"Closed";
+  exhaustStateEl.textContent=exLift>.05?"OPEN":"Closed";
+  overlapStateEl.textContent=overlap?"YES":"No";
+
+  const bar=pressureBar(deg);
+  // Pressure is read directly from the scope scale; separate pressure card removed.
+  if(pressureReadout){
+    if(unitEl.value==="psi"){
+      pressureReadout.textContent=(bar*14.5038).toFixed(0)+" psi";
+    }else{
+      pressureReadout.textContent=bar.toFixed(1)+" bar";
+    }
+  }
+
+  const scopeX=70+deg/720*1120;
+  const scopeY=405-relativePressure(deg)*310;
+  cursorEl.setAttribute("x1",scopeX);
+  cursorEl.setAttribute("x2",scopeX);
+  dotEl.setAttribute("cx",scopeX);
+  dotEl.setAttribute("cy",scopeY);
+
+  updateFaultVisuals();
+}
+
+function loop(now){
+  const dt=Math.min((now-last)/1000,.05);
+  last=now;
+  if(running){
+    deg+=dt*70*parseFloat(speedEl.value);
+    if(deg>720)deg-=720;
+    updateEngine();
+  }
+  requestAnimationFrame(loop);
+}
+
+document.querySelectorAll(".fault").forEach(function(btn){
+  btn.addEventListener("click",function(){
+    mode=btn.dataset.m;
+    document.querySelectorAll(".fault").forEach(function(b){b.classList.remove("active");});
+    btn.classList.add("active");
+    drawWave();
+    updateEngine();
+  });
+});
+
+playBtn.addEventListener("click",function(){running=true;last=performance.now();});
+pauseBtn.addEventListener("click",function(){running=false;});
+resetBtn.addEventListener("click",function(){running=false;deg=0;updateEngine();});
+infoBtn.addEventListener("click",function(){popupEl.classList.toggle("show");});
+unitEl.addEventListener("change",updateScale);
+
+drawWave();
+updateScale();
+updateEngine();
+requestAnimationFrame(loop);
+
+})();
+</script>
+
+
+<!-- COPYRIGHT FOOTER -->
+
+<footer class="copyright-footer">
+
+  <div class="copyright-main">
+    © 2026 RRainbow. All Rights Reserved.
+  </div>
+
+  <div class="copyright-sub">
+    Animated In-Cylinder Pressure Simulator · RRainbow Learning Hub
+  </div>
+
+</footer>
+
+
+</body>
+</html>
