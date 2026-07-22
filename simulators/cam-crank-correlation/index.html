@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - CAM CRANK CORRELATION SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This resource contains original software, graphics,
+written educational content and interactive learning
+resource design.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of protected
+content is prohibited except where permitted by law or
+expressly authorised by the rights holder.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cam Crank Correlation & Injector Sync Simulator</title>
+<style>
+:root{
+  --bg:#eef2f6;--panel:#fff;--ink:#17212b;--muted:#667085;
+  --crank:#00d4ff;--cam:#ffd54f;--inj:#ff4fa3;--good:#2e7d32;--bad:#d32f2f;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#101820;color:#fff;padding:15px 18px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;color:#c9d3dc;font-size:13px}
+.wrap{max-width:1500px;margin:auto;padding:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(340px,.8fr);gap:14px}
+.card{background:#fff;border:1px solid #d7dee5;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.scope-card,.timing-card,.controls{padding:14px}
+.top-grid{display:grid;grid-template-columns:1.65fr .65fr;gap:14px}
+.scope-box{background:#061018;border-radius:10px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+label{display:block;font-weight:700;font-size:13px;margin:12px 0 5px}
+select,input[type=range],button{width:100%}
+select,button{padding:10px;border-radius:8px;font-size:15px}
+select{border:1px solid #bbc6d0;background:#fff}
+button{border:0;font-weight:700;cursor:pointer;touch-action:manipulation}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.blue{background:#1565c0;color:#fff}.green{background:#2e7d32;color:#fff}.grey{background:#dfe5ea}.red{background:#d32f2f;color:#fff}
+.status,.result,.note{margin-top:10px;padding:11px;border:1px solid #d7dee5;border-radius:8px;background:#f7f9fb;white-space:pre-line;font-size:13px;line-height:1.45}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.metric{border:1px solid #d7dee5;border-radius:8px;padding:10px}
+.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:18px}
+.info-wrap{position:relative}
+.info-btn{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;padding:0;background:#1565c0;color:#fff;font-family:Georgia,serif;font-size:21px;z-index:20}
+.info-popup{position:absolute;top:54px;right:12px;width:min(420px,calc(100% - 24px));background:#fff;border:2px solid #1565c0;border-radius:10px;padding:14px;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none;font-size:13px;line-height:1.5}
+.info-popup.show{display:block}.info-popup h4{margin:0 0 7px;color:#1565c0}.good{color:#2e7d32;font-weight:bold}.bad{color:#d32f2f;font-weight:bold}
+.timing-stage{background:#20272d;border-radius:10px;padding:8px}
+.rpm-line{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+.small{font-size:12px;color:var(--muted);line-height:1.4}
+.mode-buttons{
+  display:grid;
+  gap:7px;
+  margin-top:8px;
+}
+
+.mode-btn{
+  background:#e8eef5;
+  text-align:left;
+  color:#17212b;
+}
+
+.mode-btn.active{
+  background:#1565c0;
+  color:#fff;
+}
+
+
+/* COPYRIGHT FOOTER */
+
+.copyright-footer{
+  max-width:1500px;
+  margin:10px auto 20px;
+  padding:18px 16px;
+  border-top:1px solid #d7dee5;
+  text-align:center;
+}
+
+.copyright-main{
+  color:#17212b;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.copyright-sub{
+  margin-top:5px;
+  color:#667085;
+  font-size:12px;
+  font-weight:600;
+}
+
+
+@media(max-width:1050px){
+  .layout{grid-template-columns:1fr}
+  .top-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:620px){
+  .metrics{grid-template-columns:1fr}
+  .btnrow{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Cam & Crank Correlation with Injector Sync</h1>
+<p>Animated educational simulator for known-good timing, one-tooth errors and dynamic belt/chain slack.</p>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+<div>
+<div class="top-grid">
+
+<div class="card scope-card info-wrap">
+<button class="info-btn" id="infoBtn" aria-label="Explain waveform">i</button>
+<div class="info-popup" id="infoPopup">
+<h4 id="infoTitle">Waveform meaning</h4>
+<div id="infoVerdict" class="good">CORRELATION NORMAL</div>
+<div id="infoText"></div>
+</div>
+
+<h3 style="margin-top:0">Oscilloscope — 720° Crank Rotation</h3>
+<div class="scope-box">
+<svg id="scope" viewBox="0 0 1100 520" xmlns="http://www.w3.org/2000/svg">
+<rect width="1100" height="520" fill="#061018"/>
+<g stroke="#17313f" stroke-width="1">
+<path d="M0 85H1100 M0 170H1100 M0 255H1100 M0 340H1100 M0 425H1100"/>
+<path d="M55 0V430 M110 0V430 M165 0V430 M220 0V430 M275 0V430 M330 0V430 M385 0V430 M440 0V430 M495 0V430 M550 0V430 M605 0V430 M660 0V430 M715 0V430 M770 0V430 M825 0V430 M880 0V430 M935 0V430 M990 0V430 M1045 0V430"/>
+</g>
+<g fill="#8aa4b5" font-family="Arial" font-size="14">
+<text x="68" y="70">CRANK</text><text x="68" y="225">CAM</text><text x="68" y="375">INJECTOR</text>
+<text x="45" y="505">0°</text><text x="535" y="505">360°</text><text x="1035" y="505">720°</text>
+</g>
+
+<!-- Channel voltage scales -->
+<g font-family="Arial" font-size="11" text-anchor="end">
+  <!-- Crank 0–5 V -->
+  <text x="56" y="100" fill="#00d4ff">5 V</text>
+  <text x="56" y="125" fill="#00d4ff">2.5 V</text>
+  <text x="56" y="158" fill="#00d4ff">0 V</text>
+  <line x1="60" y1="100" x2="60" y2="158" stroke="#00d4ff" stroke-width="1.5"/>
+
+  <!-- Cam 0–5 V -->
+  <text x="56" y="255" fill="#ffd54f">5 V</text>
+  <text x="56" y="286" fill="#ffd54f">2.5 V</text>
+  <text x="56" y="323" fill="#ffd54f">0 V</text>
+  <line x1="60" y1="255" x2="60" y2="323" stroke="#ffd54f" stroke-width="1.5"/>
+
+  <!-- Injector 0–12 V -->
+  <text x="56" y="400" fill="#ff4fa3">12 V</text>
+  <text x="56" y="430" fill="#ff4fa3">6 V</text>
+  <text x="56" y="458" fill="#ff4fa3">0 V</text>
+  <line x1="60" y1="400" x2="60" y2="458" stroke="#ff4fa3" stroke-width="1.5"/>
+</g>
+<defs>
+<clipPath id="scopeClip"><rect x="65" y="20" width="1000" height="450"/></clipPath>
+</defs>
+<g clip-path="url(#scopeClip)">
+  <g id="traceGroup">
+    <polyline id="crankTraceA" fill="none" stroke="#00d4ff" stroke-width="3" stroke-linejoin="round"/>
+    <polyline id="camTraceA" fill="none" stroke="#ffd54f" stroke-width="4" stroke-linejoin="round"/>
+    <polyline id="injTraceA" fill="none" stroke="#ff4fa3" stroke-width="4" stroke-linejoin="round"/>
+    <polyline id="crankTraceB" fill="none" stroke="#00d4ff" stroke-width="3" stroke-linejoin="round"/>
+    <polyline id="camTraceB" fill="none" stroke="#ffd54f" stroke-width="4" stroke-linejoin="round"/>
+    <polyline id="injTraceB" fill="none" stroke="#ff4fa3" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+</g>
+<line id="refLine" x1="50" y1="0" x2="50" y2="470" stroke="#fff" stroke-width="2" stroke-dasharray="7 7" opacity=".5"/>
+
+<!-- Mechanical TDC alignment reference: crank TDC and cam TDC are shown on the same vertical line -->
+<line id="tdcLine" x1="550" y1="20" x2="550" y2="470" stroke="#7cff6b" stroke-width="3" stroke-dasharray="8 6" opacity=".95"/>
+<text id="tdcText" x="558" y="38" fill="#7cff6b" font-family="Arial" font-size="15" font-weight="bold">CYLINDER 1 CRANK TDC — 360°</text>
+<circle cx="550" cy="130" r="7" fill="#7cff6b"/>
+<circle cx="550" cy="290" r="7" fill="#7cff6b"/>
+<text x="558" y="300" fill="#7cff6b" font-family="Arial" font-size="12">mechanical cam timing datum</text>
+
+<!-- Separate correlation-edge references -->
+<line id="expectedCamLine" x1="678" y1="230" x2="678" y2="340" stroke="#ffffff" stroke-width="2" stroke-dasharray="5 5" opacity=".8"/>
+<line id="actualCamLine" x1="678" y1="230" x2="678" y2="340" stroke="#ff5252" stroke-width="3"/>
+<line id="measureLine" x1="678" y1="240" x2="678" y2="240" stroke="#ff5252" stroke-width="3"/>
+<line id="measureTickA" x1="678" y1="231" x2="678" y2="249" stroke="#ff5252" stroke-width="3"/>
+<line id="measureTickB" x1="678" y1="231" x2="678" y2="249" stroke="#ff5252" stroke-width="3"/>
+<rect id="degreeBox" x="690" y="185" width="205" height="36" rx="7" fill="#101820" stroke="#ff5252" stroke-width="2"/>
+<text id="degreeText" x="792" y="209" fill="#ffffff" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle">CAM ERROR: 0.0° CA</text>
+</svg>
+</div>
+<div class="legend">
+<span><i class="dot" style="background:#00d4ff"></i>Crankshaft position</span>
+<span><i class="dot" style="background:#ffd54f"></i>Camshaft position</span>
+<span><i class="dot" style="background:#ff4fa3"></i>Injector sync/reference</span>
+</div>
+
+<div class="metrics">
+<div class="metric"><small>Cam timing error</small><strong id="phaseMetric">0° CA</strong></div>
+<div class="metric"><small>Engine speed</small><strong id="rpmMetric">850 rpm</strong></div>
+<div class="metric"><small>Correlation</small><strong id="corrMetric">Stable</strong></div>
+</div>
+<div class="note" style="margin-top:8px">
+<b>Degree reference:</b> The green dashed line is the <b>Cylinder 1 crankshaft TDC datum at 360°</b> in this 720° cycle. The green point on the cam channel is the corresponding mechanical cam timing datum, not a cam-sensor switching edge. The <b>white dashed line</b> is the expected known-good cam sensor edge at 405° CA (45° after the TDC datum in this generic teaching model). The <b>red line</b> is the actual cam edge. The red bracket measures the difference between expected and actual cam position in <b>crankshaft degrees (°CA)</b>. Divide °CA by 2 for equivalent physical camshaft rotation.
+</div>
+<div id="scopeResult" class="result">Known-good live correlation. The traces scroll continuously like a running oscilloscope while the cam reference remains repeatable relative to the crank missing-tooth reference and injector sync.</div>
+</div>
+
+<div class="card timing-card">
+<h3 style="margin-top:0">Inside Timing Cover</h3>
+<div class="timing-stage">
+<svg id="timingSvg" viewBox="0 0 520 500" xmlns="http://www.w3.org/2000/svg">
+<rect width="520" height="500" rx="18" fill="#151b20"/>
+<path d="M80 40 Q260 0 440 40 Q500 150 475 430 Q260 490 45 430 Q20 150 80 40Z" fill="#2d363d" stroke="#5f6b73" stroke-width="8"/>
+<circle cx="260" cy="145" r="82" fill="#414c54" stroke="#a9b2b8" stroke-width="8"/>
+<circle cx="260" cy="145" r="18" fill="#151b20"/>
+<circle cx="260" cy="370" r="56" fill="#414c54" stroke="#a9b2b8" stroke-width="8"/>
+<circle cx="260" cy="370" r="15" fill="#151b20"/>
+<g id="camTeeth"></g><g id="crankTeeth"></g>
+<path id="drivePath" d="" fill="none" stroke="#c8c8c8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="driveHighlight" d="" fill="none" stroke="#f0b429" stroke-width="4" stroke-dasharray="10 10"/>
+<line id="camMark" x1="260" y1="63" x2="260" y2="88" stroke="#ff5252" stroke-width="7"/>
+<line id="camCaseMark" x1="260" y1="45" x2="260" y2="61" stroke="#fff" stroke-width="5"/>
+<line id="crankMark" x1="260" y1="314" x2="260" y2="332" stroke="#ff5252" stroke-width="7"/>
+<line id="crankCaseMark" x1="260" y1="295" x2="260" y2="312" stroke="#fff" stroke-width="5"/>
+<text x="260" y="148" fill="#fff" font-size="18" text-anchor="middle">CAM</text>
+<text x="260" y="374" fill="#fff" font-size="16" text-anchor="middle">CRANK</text>
+<text id="driveLabel" x="260" y="470" fill="#fff" font-size="16" text-anchor="middle">TIMING CHAIN</text>
+<rect x="135" y="420" width="250" height="30" rx="7" fill="#101820" opacity=".92"/>
+<text id="mechanicalError" x="260" y="441" fill="#fff" font-size="14" font-weight="bold" text-anchor="middle">MECHANICAL ERROR: 0.0° CAM</text>
+</svg>
+</div>
+<div class="small" style="margin-top:8px">Red marks = sprocket timing marks. White marks = casing/reference marks. In the loose-drive mode the belt/chain visibly whips as RPM changes.</div>
+</div>
+
+</div>
+</div>
+
+<div class="card controls">
+<h3>Simulation Controls</h3>
+
+<div class="mode-buttons">
+<button class="mode-btn active" data-mode="good">Known good timing</button>
+<button class="mode-btn" data-mode="advanced">Cam one tooth advanced</button>
+<button class="mode-btn" data-mode="retarded">Cam one tooth retarded</button>
+<button class="mode-btn" data-mode="loose">Loose belt / chain — dynamic correlation</button>
+</div>
+
+<label for="driveType">Drive type</label>
+<select id="driveType">
+<option value="chain">Timing chain</option>
+<option value="belt">Timing belt</option>
+</select>
+
+<label for="rpm">Engine speed / revving</label>
+<input id="rpm" type="range" min="700" max="4500" step="50" value="850">
+<div class="rpm-line"><span>Idle 700</span><strong id="rpmLabel">850 rpm</strong><span>4500 rpm</span></div>
+
+<div class="btnrow">
+<button id="revBtn" class="blue">Snap Throttle</button>
+<button id="pauseBtn" class="grey">Pause Animation</button>
+</div>
+<button id="resetBtn" class="green" style="margin-top:8px">Reset to Known Good</button>
+
+<div id="status" class="status">Known good: fixed, repeatable cam/crank relationship.</div>
+
+<div class="note">
+<b>Generic teaching model:</b> This uses a representative 60-2 digital crank pattern, a 0–5 V Hall-style cam signal and a 0–12 V injector command/reference pulse. The waveform positions are now mathematically tied to the voltage scales shown beside each channel. A real engine must always be compared with manufacturer data or a known-good waveform for that exact engine. In this model all displays use one shared crank-angle model. Cylinder 1 TDC is 360° CA; the generic known-good cam correlation edge is 405° CA. A one-tooth error on the representative 36-tooth cam sprocket is 10° physical cam rotation = 20° crank-angle correlation error. The scope phase, degree bracket and timing-cover sprocket displacement are mathematically linked.
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var mode="good";
+var driveType="chain";
+var rpm=850;
+var running=true;
+var anim=0;
+var snapActive=false;
+var snapStart=0;
+var scopeScroll=0;
+
+var crankTraceA=document.getElementById("crankTraceA");
+var camTraceA=document.getElementById("camTraceA");
+var injTraceA=document.getElementById("injTraceA");
+var crankTraceB=document.getElementById("crankTraceB");
+var camTraceB=document.getElementById("camTraceB");
+var injTraceB=document.getElementById("injTraceB");
+var traceGroup=document.getElementById("traceGroup");
+var refLine=document.getElementById("refLine");
+var expectedCamLine=document.getElementById("expectedCamLine");
+var actualCamLine=document.getElementById("actualCamLine");
+var measureLine=document.getElementById("measureLine");
+var measureTickA=document.getElementById("measureTickA");
+var measureTickB=document.getElementById("measureTickB");
+var degreeBox=document.getElementById("degreeBox");
+var degreeText=document.getElementById("degreeText");
+var drivePath=document.getElementById("drivePath");
+var driveHighlight=document.getElementById("driveHighlight");
+var camMark=document.getElementById("camMark");
+var crankMark=document.getElementById("crankMark");
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function currentRpm(){
+ if(!snapActive)return rpm;
+ var elapsed=(performance.now()-snapStart)/1000;
+ if(elapsed>2.7){snapActive=false;return rpm;}
+ if(elapsed<.75)return rpm+(4200-rpm)*(elapsed/.75);
+ if(elapsed<1.25)return 4200;
+ return 4200-(4200-rpm)*((elapsed-1.25)/1.45);
+}
+
+function phaseError(){
+ if(mode==="advanced")return -20;
+ if(mode==="retarded")return 20;
+ if(mode==="loose"){
+   var r=currentRpm();
+   var severity=clamp((r-700)/3800,0,1);
+   var whip=Math.sin(anim*.115)*6*severity;
+   var backlash=Math.sin(anim*.037+1.3)*2.5*severity;
+   return whip+backlash;
+ }
+ return 0;
+}
+
+function xForDeg(deg){return 70+(deg/720)*980;}
+
+function crankSignal(deg){
+ var toothAngle=6;
+ var revDeg=((deg%360)+360)%360;
+ var toothIndex=Math.floor(revDeg/toothAngle);
+ var local=(revDeg%toothAngle)/toothAngle;
+ var missing=(toothIndex===58||toothIndex===59);
+ if(missing)return 0;
+ return local<.5?1:0;
+}
+
+function camSignal(deg,phase){
+ var adjusted=((deg-phase)%720+720)%720;
+ if((adjusted>=92&&adjusted<165)||(adjusted>=405&&adjusted<455)||(adjusted>=545&&adjusted<635))return 1;
+ return 0;
+}
+
+function injectorSignal(deg){
+ var d=((deg%720)+720)%720;
+ return (d>=18&&d<48)?1:0;
+}
+
+function screenXForDeg(deg){
+ // The traces are two repeated 720° buffers translated by scopeScroll.
+ // Return the currently visible screen x-coordinate for a crank-angle event.
+ var base=xForDeg(deg)-scopeScroll;
+ while(base<70)base+=980;
+ while(base>1050)base-=980;
+ return base;
+}
+
+function updateDegreeMeasurement(pe){
+ // Unified crank-angle model:
+ // Cylinder 1 mechanical TDC datum = 360° CA.
+ // Generic known-good cam rising correlation edge = 405° CA = 45° ATDC.
+ // Actual cam edge = known-good edge + phase error.
+ // Negative phase error = advanced; positive = retarded.
+ var tdcDeg=360;
+ var expectedDeg=405;
+ var actualDeg=expectedDeg+pe;
+
+ var tdcX=screenXForDeg(tdcDeg);
+ var expectedX=screenXForDeg(expectedDeg);
+ var actualX=screenXForDeg(actualDeg);
+
+ // Move the TDC datum with the scrolling waveform so the marker remains attached
+ // to the actual crank-angle model rather than staying fixed on screen.
+ var tdcLine=document.getElementById("tdcLine");
+ tdcLine.setAttribute("x1",tdcX);tdcLine.setAttribute("x2",tdcX);
+
+ // Move TDC label and green datum dots as one linked group by updating coordinates.
+ var tdcText=document.getElementById("tdcText");
+ if(tdcText){tdcText.setAttribute("x",clamp(tdcX+8,55,790));}
+ var greenCircles=document.querySelectorAll('#scope circle[fill="#7cff6b"]');
+ if(greenCircles.length>=2){
+   greenCircles[0].setAttribute("cx",tdcX);
+   greenCircles[1].setAttribute("cx",tdcX);
+ }
+ var camDatumLabel=document.querySelector('#scope text[fill="#7cff6b"][font-size="12"]');
+ if(camDatumLabel)camDatumLabel.setAttribute("x",clamp(tdcX+8,55,820));
+
+ expectedCamLine.setAttribute("x1",expectedX);
+ expectedCamLine.setAttribute("x2",expectedX);
+ actualCamLine.setAttribute("x1",actualX);
+ actualCamLine.setAttribute("x2",actualX);
+
+ // If wrap occurs at the display edge, use angular separation to draw a readable
+ // local bracket rather than spanning the whole scope.
+ var pixelsPerDegree=980/720;
+ var bracketActual=expectedX+(pe*pixelsPerDegree);
+ var left=Math.min(expectedX,bracketActual);
+ var right=Math.max(expectedX,bracketActual);
+
+ measureLine.setAttribute("x1",left);
+ measureLine.setAttribute("x2",right);
+ measureTickA.setAttribute("x1",expectedX);
+ measureTickA.setAttribute("x2",expectedX);
+ measureTickB.setAttribute("x1",bracketActual);
+ measureTickB.setAttribute("x2",bracketActual);
+
+ var mid=(left+right)/2;
+ var boxX=clamp(mid-102,55,840);
+ degreeBox.setAttribute("x",boxX);
+ degreeText.setAttribute("x",boxX+102);
+
+ var direction="ON TIME";
+ if(pe<-.1)direction="ADVANCED";
+ if(pe>.1)direction="RETARDED";
+ degreeText.textContent="CAM ERROR: "+Math.abs(pe).toFixed(1)+"° CA "+direction;
+ document.getElementById("phaseMetric").textContent=(pe>=0?"+":"")+pe.toFixed(1)+"° CA";
+}
+function buildScope(){
+ var pe=phaseError();
+ var cpA=[],cmpA=[],ipA=[],cpB=[],cmpB=[],ipB=[];
+
+ for(var deg=0;deg<=720;deg+=1.5){
+   var x=xForDeg(deg);
+   var c=crankSignal(deg);
+   var m=camSignal(deg,pe);
+   var inj=injectorSignal(deg);
+
+   // Convert logical states to actual channel voltages.
+   // Generic digital teaching model:
+   // crank and cam switch 0–5 V; injector sync/reference switches 0–12 V.
+   var crankV=c?5.0:0.0;
+   var camV=m?5.0:0.0;
+   var injV=inj?12.0:0.0;
+
+   function crankY(v){ return 158-(v/5.0)*(158-100); }
+   function camY(v){ return 323-(v/5.0)*(323-255); }
+   function injY(v){ return 458-(v/12.0)*(458-400); }
+
+   cpA.push(x+","+crankY(crankV));
+   cmpA.push(x+","+camY(camV));
+   ipA.push(x+","+injY(injV));
+
+   var x2=x+980;
+   cpB.push(x2+","+crankY(crankV));
+   cmpB.push(x2+","+camY(camV));
+   ipB.push(x2+","+injY(injV));
+ }
+
+ crankTraceA.setAttribute("points",cpA.join(" "));
+ camTraceA.setAttribute("points",cmpA.join(" "));
+ injTraceA.setAttribute("points",ipA.join(" "));
+ crankTraceB.setAttribute("points",cpB.join(" "));
+ camTraceB.setAttribute("points",cmpB.join(" "));
+ injTraceB.setAttribute("points",ipB.join(" "));
+
+ var speedFactor=currentRpm()/850;
+ scopeScroll += 1.6*speedFactor;
+ if(scopeScroll>=980)scopeScroll-=980;
+ traceGroup.setAttribute("transform","translate("+(-scopeScroll)+" 0)");
+
+ // Keep the degree measurement readable as a fixed diagnostic overlay.
+ // It represents phase difference rather than following the scrolling pixels.
+ updateDegreeMeasurement(pe);
+ document.getElementById("rpmMetric").textContent=Math.round(currentRpm())+" rpm";
+ document.getElementById("rpmLabel").textContent=Math.round(currentRpm())+" rpm";
+
+ var corr="Stable";
+ if(mode==="advanced"||mode==="retarded")corr="Fixed offset";
+ if(mode==="loose")corr=Math.abs(pe)>4?"Moving / unstable":"Variable";
+ document.getElementById("corrMetric").textContent=corr;
+}
+function makeTeeth(groupId,cx,cy,r,count){
+ var g=document.getElementById(groupId);
+ if(g.childNodes.length)return;
+ for(var i=0;i<count;i++){
+   var a=(Math.PI*2*i/count)-Math.PI/2;
+   var x1=cx+Math.cos(a)*(r+7), y1=cy+Math.sin(a)*(r+7);
+   var x2=cx+Math.cos(a)*(r+15), y2=cy+Math.sin(a)*(r+15);
+   var line=document.createElementNS("http://www.w3.org/2000/svg","line");
+   line.setAttribute("x1",x1);line.setAttribute("y1",y1);line.setAttribute("x2",x2);line.setAttribute("y2",y2);
+   line.setAttribute("stroke","#aeb8bf");line.setAttribute("stroke-width","5");
+   g.appendChild(line);
+ }
+}
+makeTeeth("camTeeth",260,145,82,36);
+makeTeeth("crankTeeth",260,370,56,18);
+
+function rotateLine(line,cx,cy,angle){
+ line.setAttribute("transform","rotate("+angle+" "+cx+" "+cy+")");
+}
+
+function buildDrive(){
+ var pe=phaseError();
+ var r=currentRpm();
+ var severity=mode==="loose"?clamp((r-700)/3800,0,1):0;
+ var bounce=Math.sin(anim*.16)*15*severity;
+ var bounce2=Math.sin(anim*.23+1)*10*severity;
+
+ var leftX=190+bounce;
+ var rightX=330-bounce2;
+ var d="M 212 85 Q "+leftX+" 235 215 335 Q 260 425 305 335 Q "+rightX+" 235 308 85";
+ drivePath.setAttribute("d",d);
+ driveHighlight.setAttribute("d",d);
+
+ drivePath.setAttribute("stroke",driveType==="belt"?"#222":"#c8c8c8");
+ drivePath.setAttribute("stroke-width",driveType==="belt"?"20":"14");
+ driveHighlight.setAttribute("stroke",driveType==="belt"?"#6f6f6f":"#f0b429");
+ document.getElementById("driveLabel").textContent=driveType==="belt"?"TIMING BELT":"TIMING CHAIN";
+
+ // crank rotates twice the cam
+ var crankAngle=anim*(r/850)*2.2;
+ // pe is measured in crankshaft degrees. The camshaft turns at half crank speed,
+ // therefore the physical cam sprocket timing displacement is pe / 2.
+ var camMechanicalError=pe/2;
+ var camAngle=crankAngle/2 + camMechanicalError;
+ rotateLine(crankMark,260,370,crankAngle);
+ rotateLine(camMark,260,145,camAngle);
+ var mech=document.getElementById("mechanicalError");
+ var mechDirection=Math.abs(camMechanicalError)<.05?"ON TIME":(camMechanicalError<0?"ADV":"RET");
+ mech.textContent="MECHANICAL ERROR: "+Math.abs(camMechanicalError).toFixed(1)+"° CAM "+mechDirection;
+}
+
+function updateInfo(){
+ var pe=phaseError();
+ var title="",verdict="",text="",bad=false;
+
+ if(mode==="good"){
+   title="Known-good cam/crank/injector relationship";
+   verdict="CORRELATION NORMAL";
+   text="The crank missing-tooth reference repeats consistently, the cam edges occur at a repeatable position within the 720° cycle, and the injector sync event remains fixed to the crank reference. The degree overlay compares an expected known-good cam edge with the actual cam edge. A 0° CA error means the simulated cam timing matches the known-good correlation reference. The green TDC line is the Cylinder 1 crank-angle datum. The cam mechanical datum is referenced to that same 720° position, while the sensor switching edge is deliberately shown separately at its defined known-good correlation angle.";
+ }else if(mode==="advanced"){
+   title="Camshaft one tooth advanced";
+   verdict="CORRELATION ABNORMAL — FIXED ADVANCE";
+   bad=true;
+   text="The cam waveform has shifted earlier relative to the crank and injector reference by a fixed amount. In this representative model one cam sprocket tooth equals 10° of physical camshaft rotation, which appears as a 20° crank-angle (°CA) correlation error on the scope. The important diagnostic feature is that the error is repeatable and does not move with RPM.";
+ }else if(mode==="retarded"){
+   title="Camshaft one tooth retarded";
+   verdict="CORRELATION ABNORMAL — FIXED RETARD";
+   bad=true;
+   text="The cam waveform has shifted later relative to the crank and injector reference by a fixed amount. The repeated fixed offset suggests a mechanical timing installation error, jumped tooth, incorrectly indexed sprocket or similar static timing fault.";
+ }else{
+   title="Loose belt / chain dynamic correlation";
+   verdict="CORRELATION ABNORMAL — RPM DEPENDENT";
+   bad=true;
+   text="The cam phase is moving relative to the stable crank and injector references. At low speed the pattern may appear nearly correct, but during a snap throttle the simulated slack, whip and backlash make the cam signal advance and retard dynamically. This is the kind of behaviour that can point toward chain stretch, belt whip, weak tensioning, guide wear or gear backlash. The exact allowable movement is engine-specific and must be compared with known-good data.";
+ }
+
+ document.getElementById("infoTitle").textContent=title;
+ var v=document.getElementById("infoVerdict");
+ v.textContent=verdict;v.className=bad?"bad":"good";
+ document.getElementById("infoText").textContent=text;
+
+ var status="";
+ if(mode==="good")status="Known good: fixed, repeatable cam/crank relationship.";
+ if(mode==="advanced")status="Static timing fault: cam is one tooth advanced.";
+ if(mode==="retarded")status="Static timing fault: cam is one tooth retarded.";
+ if(mode==="loose")status="Dynamic fault: cam phase changes as RPM and drive whip change.";
+ document.getElementById("status").textContent=status;
+
+ document.getElementById("scopeResult").textContent=
+   mode==="good"?"Known-good live correlation. The traces scroll continuously like a running oscilloscope while the cam reference remains repeatable relative to the crank missing-tooth reference and injector sync.":
+   mode==="advanced"?"Cam signal is shifted earlier by a fixed one-tooth equivalent. Injector sync remains fixed to the crank reference for comparison.":
+   mode==="retarded"?"Cam signal is shifted later by a fixed one-tooth equivalent. Injector sync remains fixed to the crank reference for comparison.":
+   "Cam phase is varying dynamically. Increase RPM or use Snap Throttle to see correlation move while the belt/chain visibly whips inside the timing cover.";
+}
+
+function tick(){
+ if(running){
+   anim+=1;
+   buildScope();
+   buildDrive();
+ }
+ requestAnimationFrame(tick);
+}
+
+document.querySelectorAll(".mode-btn").forEach(function(btn){
+ btn.onclick=function(){
+   mode=this.dataset.mode;
+   document.querySelectorAll(".mode-btn").forEach(function(b){b.classList.remove("active");});
+   this.classList.add("active");
+   updateInfo();buildScope();buildDrive();
+ };
+});
+
+document.getElementById("driveType").onchange=function(){driveType=this.value;buildDrive();};
+document.getElementById("rpm").oninput=function(){rpm=parseInt(this.value,10);buildScope();buildDrive();};
+
+document.getElementById("revBtn").onclick=function(){
+ snapActive=true;snapStart=performance.now();
+};
+
+document.getElementById("pauseBtn").onclick=function(){
+ running=!running;
+ this.textContent=running?"Pause Animation":"Resume Animation";
+};
+
+document.getElementById("resetBtn").onclick=function(){
+ mode="good";driveType="chain";rpm=850;snapActive=false;running=true;
+ document.getElementById("driveType").value="chain";
+ document.getElementById("rpm").value="850";
+ document.querySelectorAll(".mode-btn").forEach(function(b){b.classList.remove("active");});
+ document.querySelector('[data-mode="good"]').classList.add("active");
+ document.getElementById("pauseBtn").textContent="Pause Animation";
+ updateInfo();buildScope();buildDrive();
+};
+
+var infoBtn=document.getElementById("infoBtn"),infoPopup=document.getElementById("infoPopup");
+infoBtn.onclick=function(e){e.stopPropagation();infoPopup.classList.toggle("show");};
+infoPopup.onclick=function(e){e.stopPropagation();};
+document.addEventListener("click",function(){infoPopup.classList.remove("show");});
+
+updateInfo();buildScope();buildDrive();tick();
+})();
+</script>
+
+
+<!-- COPYRIGHT FOOTER -->
+
+<footer class="copyright-footer">
+
+  <div class="copyright-main">
+    © 2026 RRainbow. All Rights Reserved.
+  </div>
+
+  <div class="copyright-sub">
+    Cam Crank Correlation Simulator · RRainbow Learning Hub
+  </div>
+
+</footer>
+
+
+</body>
+</html>
