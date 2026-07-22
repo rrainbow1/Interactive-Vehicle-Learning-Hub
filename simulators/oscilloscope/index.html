@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - AUTOMOTIVE OSCILLOSCOPE PRACTICE TRAINER
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This resource contains original software, graphics,
+written educational content and interactive learning
+resource design.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of protected
+content is prohibited except where permitted by law or
+expressly authorised by the rights holder.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Automotive Oscilloscope Practice Trainer</title>
+<style>
+:root{
+ --bg:#e9eef3;--ink:#18222d;--muted:#65717d;--scope:#07131d;--grid:#173447;
+ --cyan:#00d4ff;--yellow:#ffd54f;--red:#ef5350;--blue:#1769c2;--green:#2e7d32;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+header{background:#101820;color:#fff;padding:14px 18px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;color:#cbd5df;font-size:13px}
+.wrap{max-width:1550px;margin:auto;padding:12px}
+.card{background:#fff;border:1px solid #d5dde5;border-radius:12px;box-shadow:0 2px 9px #0000000f;overflow:hidden}
+
+/* TOP TOOLBAR */
+.toolbar{
+ display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+ padding:10px 12px;border-bottom:1px solid #dce3e9;background:#f7f9fb
+}
+.group{position:relative;display:flex;align-items:center;gap:6px}
+.toolbtn{
+ border:0;border-radius:7px;padding:9px 12px;font-weight:bold;cursor:pointer;
+ background:#e7edf3;color:#17212b
+}
+.toolbtn.primary{background:#1565c0;color:#fff}
+.toolbtn.run{background:#2e7d32;color:#fff}
+.toolbtn.stop{background:#d32f2f;color:#fff}
+.toolbtn.active{outline:3px solid #90caf9}
+.mini-info{
+ border:0;width:25px;height:25px;border-radius:50%;padding:0;background:#1565c0;
+ color:white;font:bold 15px Georgia;cursor:pointer
+}
+.dropdown{
+ display:none;position:absolute;top:43px;left:0;z-index:30;background:#fff;
+ border:1px solid #cdd6de;border-radius:9px;box-shadow:0 10px 28px #0002;
+ min-width:245px;padding:9px
+}
+.dropdown.show{display:block}
+.dropdown label{font-size:11px;font-weight:bold;color:#64748b;margin:7px 0 4px;display:block}
+.dropdown select,.dropdown input{width:100%}
+.dropdown select{
+ padding:8px;border:1px solid #b9c4cd;border-radius:7px;background:white
+}
+.dropdown-row{display:grid;grid-template-columns:1fr 54px;gap:6px;align-items:center}
+.valuepill{background:#e7edf3;border-radius:6px;padding:6px;text-align:center;font-weight:bold;font-size:12px}
+
+/* SCOPE */
+.scope-area{padding:12px}
+.scope-box{background:#07131d;border-radius:8px;overflow:hidden;border:1px solid #263d4e;touch-action:none}
+svg{width:100%;display:block;user-select:none;-webkit-user-select:none}
+.legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:7px;font-size:12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.feedback{margin-top:10px;padding:10px;border-radius:8px;background:#f5f7f9;border:1px solid #d8e0e6;font-size:13px;line-height:1.45}
+.feedback.good{border-color:#86d7a5;background:#ecfdf3}
+.feedback.warn{border-color:#f0c36d;background:#fff8e5}
+.statusbar{display:flex;gap:14px;flex-wrap:wrap;padding:9px 12px;background:#f4f7f9;border-top:1px solid #dbe2e8;font-size:12px;color:#475569}
+.statusbar b{color:#17212b}
+.trigger-state{font-weight:bold}
+.trigger-state.armed{color:#9a6700}
+.trigger-state.triggered{color:#0b6b3a}
+.trigger-state.stopped{color:#991b1b}
+
+/* HELP */
+.help-overlay{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
+.help-overlay.show{display:flex}
+.help-card{max-width:560px;background:white;border-radius:12px;padding:18px;box-shadow:0 12px 30px #0006}
+.help-card h3{margin:0 0 8px;color:#1565c0}
+.help-card p{line-height:1.55;font-size:14px}
+.help-card button{width:100%;padding:10px;border:0;border-radius:8px;background:#1565c0;color:#fff;font-weight:bold;cursor:pointer}
+
+
+
+/* WAVEFORM GUIDE */
+.wave-guide-btn{
+  border:0;
+  border-radius:7px;
+  padding:9px 12px;
+  font-weight:bold;
+  cursor:pointer;
+  background:#0f766e;
+  color:#fff;
+}
+
+.wave-guide-btn.active{
+  outline:3px solid #99f6e4;
+}
+
+.wave-guide{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  border-radius:9px;
+  background:#f0fdfa;
+  border:1px solid #99f6e4;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.wave-guide.show{
+  display:block;
+}
+
+.wave-guide h3{
+  margin:0 0 8px;
+  color:#115e59;
+  font-size:15px;
+}
+
+.guide-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(245px,1fr));
+  gap:8px;
+}
+
+.guide-item{
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+  background:#fff;
+  border:1px solid #ccfbf1;
+  border-radius:8px;
+  padding:9px;
+}
+
+.guide-num{
+  flex:0 0 auto;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0f766e;
+  color:#fff;
+  font-weight:bold;
+  font-size:12px;
+}
+
+.wave-marker circle{
+  fill:#0f766e;
+  stroke:#ffffff;
+  stroke-width:2.5;
+}
+
+.wave-marker text{
+  fill:#ffffff;
+  font-size:12px;
+  font-weight:bold;
+  text-anchor:middle;
+  dominant-baseline:middle;
+  pointer-events:none;
+}
+
+
+
+/* HOVER WAVEFORM TOOLTIPS */
+.wave-marker{
+  cursor:pointer;
+}
+
+.wave-marker circle{
+  transition:transform .12s ease, filter .12s ease;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+
+.wave-marker:hover circle{
+  transform:scale(1.12);
+  filter:drop-shadow(0 0 5px rgba(94,234,212,.9));
+}
+
+#waveHoverTip{
+  position:fixed;
+  z-index:99999;
+  display:none;
+  max-width:390px;
+  padding:11px 13px;
+  border-radius:9px;
+  background:#071923;
+  color:#eafaff;
+  border:1px solid #5eead4;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
+  font-size:13px;
+  line-height:1.45;
+  pointer-events:none;
+}
+
+#waveHoverTip strong{
+  color:#5eead4;
+}
+
+/* COPYRIGHT FOOTER */
+
+.copyright-footer{
+  max-width:1550px;
+  margin:10px auto 20px;
+  padding:18px 16px;
+  border-top:1px solid #d5dde5;
+  text-align:center;
+}
+
+.copyright-main{
+  color:#18222d;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.copyright-sub{
+  margin-top:5px;
+  color:#65717d;
+  font-size:12px;
+  font-weight:600;
+}
+
+
+@media(max-width:800px){
+ .toolbar{align-items:flex-start}
+ .dropdown{position:fixed;left:12px;right:12px;top:120px;min-width:0}
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>Automotive Oscilloscope Practice Trainer</h1>
+<p>Practise voltage range, timebase and triggering using automotive reference waveforms.</p>
+</header>
+
+<div class="wrap">
+<div class="card">
+
+<div class="toolbar">
+
+  <div class="group">
+    <button class="toolbtn run" id="runBtn">▶ Run</button>
+    <button class="toolbtn stop" id="stopBtn">■ Stop</button>
+    <button class="mini-info" data-help="runstop">i</button>
+  </div>
+
+  <div class="group">
+    <button class="toolbtn" id="waveBtn">Reference ▾</button>
+    <button class="mini-info" data-help="reference">i</button>
+    <div class="dropdown" id="waveDrop">
+      <label>Waveform example</label>
+      <select id="waveformSelect">
+        <option value="hallCam">Hall camshaft sensor 0–5 V</option>
+        <option value="tps">Throttle position sensor 0.5–4.5 V</option>
+        <option value="o2">Narrowband O₂ sensor 0.1–0.9 V</option>
+        <option value="ckp">Inductive crankshaft sensor ±10 V</option>
+        <option value="injector">Petrol MPI injector switched-earth voltage</option>
+        <option value="can">CAN High teaching waveform 2.5–3.5 V</option>
+        <option value="camCrank">Camshaft &amp; crankshaft correlation</option>
+      </select>
+      <label>Reference overlay</label>
+      <select id="refToggle">
+        <option value="on">Show reference</option>
+        <option value="off">Hide reference</option>
+      </select>
+
+      <div id="camFaultWrap" style="display:none">
+        <label>Cam / crank timing condition</label>
+        <select id="camFault">
+          <option value="good">Known good timing</option>
+          <option value="advanced">Cam one tooth advanced</option>
+          <option value="retarded">Cam one tooth retarded</option>
+          <option value="loose">Loose belt / chain — dynamic timing</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <button class="toolbtn" id="voltageBtn">Voltage ▾</button>
+    <button class="mini-info" data-help="voltage">i</button>
+    <div class="dropdown" id="voltageDrop">
+      <label>Input range</label>
+      <select id="voltageRange">
+        <option value="1">±1 V</option>
+        <option value="2">±2 V</option>
+        <option value="5" selected>±5 V</option>
+        <option value="10">±10 V</option>
+        <option value="20">±20 V</option>
+        <option value="50">±50 V</option>
+        <option value="100">±100 V</option>
+      </select>
+
+      <label>Vertical position</label>
+      <div class="dropdown-row">
+        <input id="verticalOffset" type="range" min="-5" max="5" step=".1" value="0">
+        <div class="valuepill" id="offsetValue">0.0 V</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <button class="toolbtn" id="timeBtn">Timebase ▾</button>
+    <button class="mini-info" data-help="timebase">i</button>
+    <div class="dropdown" id="timeDrop">
+      <label>Time / division</label>
+      <select id="timebase">
+        <option value="0.5">0.5 ms/div</option>
+        <option value="1">1 ms/div</option>
+        <option value="2">2 ms/div</option>
+        <option value="5" selected>5 ms/div</option>
+        <option value="10">10 ms/div</option>
+        <option value="20">20 ms/div</option>
+        <option value="50">50 ms/div</option>
+        <option value="100">100 ms/div</option>
+        <option value="200">200 ms/div</option>
+        <option value="500">500 ms/div</option>
+      </select>
+
+      <label>Signal speed / frequency</label>
+      <div class="dropdown-row">
+        <input id="signalSpeed" type="range" min=".25" max="4" step=".05" value="1">
+        <div class="valuepill" id="speedValue">1.00×</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <button class="toolbtn" id="triggerBtn">Trigger ▾</button>
+    <button class="mini-info" data-help="trigger">i</button>
+    <div class="dropdown" id="triggerDrop">
+      <label>Trigger mode</label>
+      <select id="triggerMode">
+        <option value="manual">Manual / free running</option>
+        <option value="rising">↗ Rising edge</option>
+        <option value="falling">↘ Falling edge</option>
+        <option value="repeat">Repeat / Auto</option>
+        <option value="single">Single capture</option>
+      </select>
+
+      <div style="margin-top:8px;padding:8px;border-radius:7px;background:#f3f6f8;font-size:12px;line-height:1.45">
+        <b>Trigger dot:</b> drag the red dot directly on the scope.<br>
+        Up/down sets trigger voltage.<br>
+        Left/right sets the trigger position in the capture.
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <button class="toolbtn primary" id="autoBtn">Auto Setup</button>
+    <button class="mini-info" data-help="auto">i</button>
+  </div>
+
+  <div class="group">
+    <button class="wave-guide-btn" id="waveGuideBtn">ⓘ Show Waveform Help</button>
+  </div>
+
+  <div class="group">
+    <button class="toolbtn" id="resetBtn">Reset</button>
+  </div>
+
+</div>
+
+<div class="scope-area">
+
+<div class="scope-box" id="scopeBox">
+<svg id="scope" viewBox="0 0 1200 650" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="650" fill="#07131d"/>
+
+<g stroke="#173447" stroke-width="1">
+<path d="M80 55H1140 M80 108H1140 M80 161H1140 M80 214H1140 M80 267H1140 M80 320H1140 M80 373H1140 M80 426H1140 M80 479H1140 M80 532H1140 M80 585H1140"/>
+<path d="M80 55V585 M186 55V585 M292 55V585 M398 55V585 M504 55V585 M610 55V585 M716 55V585 M822 55V585 M928 55V585 M1034 55V585 M1140 55V585"/>
+</g>
+
+<line x1="80" y1="320" x2="1140" y2="320" stroke="#315268" stroke-width="2"/>
+<line x1="610" y1="55" x2="610" y2="585" stroke="#315268" stroke-width="2"/>
+
+<g id="voltageScaleDrag" style="cursor:ns-resize">
+  <rect x="0" y="50" width="78" height="540" fill="transparent"/>
+  <g id="voltageLabels" fill="#b6c9d5" font-size="12" text-anchor="end"></g>
+  <circle id="scaleHandle" cx="34" cy="320" r="13" fill="#1565c0" opacity=".9"/>
+  <path d="M34 308 L28 316 H40 Z M34 332 L28 324 H40 Z" fill="white"/>
+</g>
+
+<!-- CAM/CRANK MODE: INDEPENDENT DRAGGABLE CHANNEL SCALES -->
+<g id="dualScaleGroup" style="display:none">
+  <g id="crankScaleDrag" style="cursor:ns-resize">
+    <rect x="0" y="55" width="78" height="530" fill="transparent"/>
+    <g id="crankScaleLabels" fill="#00d4ff" font-size="12" text-anchor="end"></g>
+    <circle id="crankScaleHandle" cx="34" cy="190" r="14" fill="#00d4ff"/>
+    <text x="34" y="194" text-anchor="middle" fill="#07131d" font-size="11" font-weight="bold">A</text>
+  </g>
+  <g id="camScaleDrag" style="cursor:ns-resize">
+    <rect x="42" y="55" width="36" height="530" fill="transparent"/>
+    <g id="camScaleLabels" fill="#ffd54f" font-size="12" text-anchor="end"></g>
+    <circle id="camScaleHandle" cx="58" cy="450" r="14" fill="#ffd54f"/>
+    <text x="58" y="454" text-anchor="middle" fill="#07131d" font-size="11" font-weight="bold">B</text>
+  </g>
+</g>
+<g id="timeLabels" fill="#b6c9d5" font-size="11" text-anchor="middle"></g>
+
+<defs><clipPath id="clip"><rect x="80" y="55" width="1060" height="530"/></clipPath></defs>
+
+<g clip-path="url(#clip)">
+ <polyline id="trace" fill="none" stroke="#00d4ff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+ <polyline id="trace2" fill="none" stroke="#ffd54f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+ <polyline id="referenceTrace" fill="none" stroke="#9ad8ff" stroke-width="3" opacity=".33" stroke-dasharray="8 5"/>
+ <polyline id="referenceTrace2" fill="none" stroke="#fff2a8" stroke-width="3" opacity=".33" stroke-dasharray="8 5"/>
+</g>
+
+<!-- SINGLE DRAGGABLE TRIGGER DOT -->
+<g id="triggerDragGroup" style="cursor:move">
+  <circle id="triggerOuter" cx="610" cy="320" r="18" fill="#07131d" stroke="#ef5350" stroke-width="4"/>
+  <circle id="triggerHandle" cx="610" cy="320" r="8" fill="#ef5350"/>
+  <line id="triggerCrossH" x1="585" y1="320" x2="635" y2="320" stroke="#ef5350" stroke-width="2" opacity=".7"/>
+  <line id="triggerCrossV" x1="610" y1="295" x2="610" y2="345" stroke="#ef5350" stroke-width="2" opacity=".7"/>
+  <text id="triggerHandleText" x="610" y="289" text-anchor="middle" fill="#ef5350" font-size="13" font-weight="bold">TRIGGER</text>
+</g>
+
+
+<!-- NUMBERED WAVEFORM GUIDE MARKERS -->
+<g id="waveGuideMarkers" style="display:none"></g>
+
+<text x="92" y="42" fill="#00d4ff" font-size="14" font-weight="bold" id="signalName">Hall Camshaft Sensor</text>
+<text x="850" y="42" fill="#ffd54f" font-size="12">DASHED = REFERENCE</text>
+<circle id="liveLed" cx="1120" cy="38" r="8" fill="#22c55e"/>
+<text id="liveLedText" x="1105" y="42" fill="#cbd5df" font-size="11" text-anchor="end">LIVE</text>
+</svg>
+</div>
+
+<div class="legend">
+<span><i class="dot" style="background:#00d4ff"></i>Channel A / live signal</span>
+<span id="camLegend" style="display:none"><i class="dot" style="background:#ffd54f"></i>Channel B / cam signal</span>
+<span><i class="dot" style="background:#9ad8ff"></i>Reference overlay</span>
+<span><i class="dot" style="background:#ef5350"></i>Single trigger — drag the red dot anywhere on the scope</span>
+<span><i class="dot" style="background:#1565c0"></i>Voltage scale — drag the blue handle up/down</span>
+</div>
+
+<div id="feedback" class="feedback warn">
+Adjust the voltage range, timebase and trigger. Drag the red trigger dot to set the trigger. Drag the blue voltage-scale handle on the left to move the whole channel/waveform up or down.
+</div>
+
+<div id="waveGuide" class="wave-guide" style="display:none!important">
+  <h3 id="waveGuideTitle">Waveform guide</h3>
+  <div id="waveGuideList" class="guide-list"></div>
+</div>
+
+</div>
+
+<div class="statusbar">
+<span>Waveform: <b id="statusWave">Hall Camshaft</b></span>
+<span>Range: <b id="statusRange">±5 V</b></span>
+<span>Timebase: <b id="statusTime">5 ms/div</b></span>
+<span>Capture: <b id="statusCapture">50 ms</b></span>
+<span>Trigger: <b id="statusTrigger">Off</b></span>
+<span class="trigger-state" id="triggerState">FREE RUNNING</span>
+</div>
+
+</div>
+</div>
+
+<div class="help-overlay" id="helpOverlay">
+<div class="help-card">
+<h3 id="helpTitle"></h3>
+<p id="helpText"></p>
+<button id="closeHelp">Close</button>
+</div>
+</div>
+
+<div id="waveHoverTip" role="tooltip"></div>
+
+<script>
+(function(){
+"use strict";
+
+var running=true;
+var phase=0;
+var frozenPhase=0;
+var triggerArmed=false;
+var singleCapture=false;
+var repeatLocked=false;
+var repeatAnchor=0;
+var repeatVisualJitter=0;
+var lastTime=performance.now();
+var draggingTrigger=false;
+var draggingScale=false;
+var scaleDragStartY=0;
+var scaleDragStartOffset=0;
+
+var crankOffset=2.4;
+var camOffset=-2.4;
+var draggingCrankScale=false;
+var draggingCamScale=false;
+var dualDragStartY=0;
+var dualDragStartOffset=0;
+var lastDisplayStart=0;
+var lastCamPhaseError=0;
+
+var trace=document.getElementById("trace");
+var trace2=document.getElementById("trace2");
+var referenceTrace=document.getElementById("referenceTrace");
+var referenceTrace2=document.getElementById("referenceTrace2");
+var camFault=document.getElementById("camFault");
+var camFaultWrap=document.getElementById("camFaultWrap");
+var camLegend=document.getElementById("camLegend");
+var triggerOuter=document.getElementById("triggerOuter");
+var triggerHandle=document.getElementById("triggerHandle");
+var triggerHandleText=document.getElementById("triggerHandleText");
+var triggerCrossH=document.getElementById("triggerCrossH");
+var triggerCrossV=document.getElementById("triggerCrossV");
+var triggerDragGroup=document.getElementById("triggerDragGroup");
+var voltageScaleDrag=document.getElementById("voltageScaleDrag");
+var scaleHandle=document.getElementById("scaleHandle");
+var dualScaleGroup=document.getElementById("dualScaleGroup");
+var crankScaleDrag=document.getElementById("crankScaleDrag");
+var camScaleDrag=document.getElementById("camScaleDrag");
+var crankScaleLabels=document.getElementById("crankScaleLabels");
+var camScaleLabels=document.getElementById("camScaleLabels");
+var crankScaleHandle=document.getElementById("crankScaleHandle");
+var camScaleHandle=document.getElementById("camScaleHandle");
+
+var waveformSelect=document.getElementById("waveformSelect");
+var voltageRange=document.getElementById("voltageRange");
+var verticalOffset=document.getElementById("verticalOffset");
+var timebase=document.getElementById("timebase");
+var signalSpeed=document.getElementById("signalSpeed");
+var triggerMode=document.getElementById("triggerMode");
+var triggerVoltage=2.5;
+var triggerX=610;
+var refToggle=document.getElementById("refToggle");
+var triggerState=document.getElementById("triggerState");
+var liveLed=document.getElementById("liveLed");
+var liveLedText=document.getElementById("liveLedText");
+var waveGuideBtn=document.getElementById("waveGuideBtn");
+var waveGuide=document.getElementById("waveGuide");
+var waveGuideTitle=document.getElementById("waveGuideTitle");
+var waveGuideList=document.getElementById("waveGuideList");
+var waveGuideMarkers=document.getElementById("waveGuideMarkers");
+var waveGuideOpen=false;
+var waveHoverTip=document.getElementById("waveHoverTip");
+if(!waveHoverTip){
+  waveHoverTip=document.createElement("div");
+  waveHoverTip.id="waveHoverTip";
+  waveHoverTip.setAttribute("role","tooltip");
+  document.body.appendChild(waveHoverTip);
+}
+
+var configs={
+ hallCam:{name:"Hall Camshaft Sensor",idealRange:5,idealTime:5,trigger:2.5,
+  signal:function(t){var p=((t*28)%1+1)%1;return p<.38?4.8:.2;}},
+ tps:{name:"Throttle Position Sensor",idealRange:5,idealTime:50,trigger:2.5,
+  signal:function(t){var p=((t*2)%1+1)%1;if(p<.35)return .5+(p/.35)*4;if(p<.65)return 4.5;return 4.5-((p-.65)/.35)*4;}},
+ o2:{name:"Narrowband O₂ Sensor",idealRange:1,idealTime:100,trigger:.45,
+  signal:function(t){return .5+.4*Math.sin(t*Math.PI*2*1.2);}},
+ ckp:{name:"Inductive Crankshaft Sensor",idealRange:10,idealTime:2,trigger:0,
+  signal:function(t){var a=Math.sin(t*Math.PI*2*120);var tooth=((t*60)%1+1)%1;return tooth>.86?0:a*7.5;}},
+ injector:{name:"Petrol MPI Injector Voltage",idealRange:100,idealTime:10,trigger:6,
+  signal:function(t){
+    /*
+      Conventional petrol MPI injector voltage measured at the
+      switched-earth terminal.
+
+      Teaching representation:
+      - Injector OFF: approximately charging-system voltage
+      - ECU switches injector ON: voltage falls close to 0 V
+      - Injector remains energised for the pulse width
+      - ECU switches injector OFF: collapsing magnetic field creates back EMF
+      - Back-EMF spike decays towards supply voltage
+      - A small pintle/valve-closing feature may appear in the decay
+    */
+
+    // One teaching event every 50 ms.
+    var p=((t*20)%1+1)%1;
+
+    // Injector OFF / supply voltage.
+    if(p<0.18){
+      return 13.8;
+    }
+
+    // Injector ON / switched earth close to ground.
+    if(p<0.27){
+      return 0.35;
+    }
+
+    // Rapid back-EMF rise at switch-off.
+    if(p<0.278){
+      var rise=(p-0.27)/0.008;
+      return 0.35 + rise*(62-0.35);
+    }
+
+    // Initial back-EMF decay.
+    if(p<0.305){
+      var d1=(p-0.278)/0.027;
+      return 62 - d1*31;
+    }
+
+    // Pintle / valve closing feature.
+    if(p<0.316){
+      var notch=(p-0.305)/0.011;
+      return 31 - 6*Math.sin(notch*Math.PI);
+    }
+
+    // Final decay back to supply voltage.
+    if(p<0.355){
+      var d2=(p-0.316)/0.039;
+      return 31 - d2*(31-13.8);
+    }
+
+    return 13.8;
+  }},
+ can:{name:"CAN High Teaching Waveform",idealRange:5,idealTime:1,trigger:3,
+  signal:function(t){var p=((t*500)%1+1)%1;return p<.5?3.5:2.5;}},
+ camCrank:{name:"Camshaft & Crankshaft Correlation",idealRange:5,idealTime:5,trigger:2.5,
+  signal:function(t){return 0;}}
+};
+
+
+/*
+  Numbered waveform guides.
+  These are teaching annotations for the generic reference examples in this trainer.
+  Always confirm exact voltages, timing and waveform shape against manufacturer data
+  for the vehicle being tested.
+*/
+var waveformGuides={
+  hallCam:{
+    title:"Hall camshaft sensor — waveform sections",
+    items:[
+      {n:1,freq:28,phase:.14,pref:.18,text:"High state — the conditioned Hall output is near 5 V while the relevant pulse-wheel sector is being detected."},
+      {n:2,freq:28,phase:.381,pref:.38,text:"Falling edge — as the reference feature passes, the digital Hall output switches from its high state to its low state."},
+      {n:3,freq:28,phase:.65,pref:.62,text:"Low state — the Hall sensor output remains close to 0 V while the conditioned output is in its low state."},
+      {n:4,freq:28,phase:.998,pref:.84,text:"Rising edge — at the next pulse-wheel transition the conditioned output switches from low back to high."}
+    ]
+  },
+
+  tps:{
+    title:"Throttle position sensor — waveform sections",
+    items:[
+      {n:1,freq:2,phase:.02,pref:.10,text:"Closed / idle throttle — a conventional potentiometer-type TPS has a low signal voltage, around 0.5 V in this teaching example."},
+      {n:2,freq:2,phase:.20,pref:.30,text:"Throttle opening — signal voltage rises smoothly as the throttle butterfly opens. The trace should not contain sudden drop-outs or spikes."},
+      {n:3,freq:2,phase:.50,pref:.53,text:"Wide-open throttle — the signal is near the upper end of its operating range, around 4.5 V in this example."},
+      {n:4,freq:2,phase:.82,pref:.78,text:"Throttle closing — the voltage should reduce smoothly and consistently as the throttle returns towards idle."}
+    ]
+  },
+
+  o2:{
+    title:"Narrowband zirconia oxygen sensor — waveform sections",
+    items:[
+      {n:1,freq:1.2,phase:.75,pref:.18,text:"Lean exhaust condition — a conventional zirconia narrowband sensor produces a low voltage, typically around 0.1–0.2 V."},
+      {n:2,freq:1.2,phase:.00,pref:.35,text:"Lean-to-rich switching point — the signal passes through its mid region as the mixture correction moves from lean towards rich."},
+      {n:3,freq:1.2,phase:.25,pref:.58,text:"Rich exhaust condition — the sensor produces a higher voltage, typically around 0.8–0.9 V."},
+      {n:4,freq:1.2,phase:.50,pref:.78,text:"Rich-to-lean switching point — in closed loop the ECM continually corrects fuelling, so the signal repeatedly moves between rich and lean."}
+    ]
+  },
+
+  ckp:{
+    title:"Inductive crankshaft position sensor — waveform sections",
+    items:[
+      {n:1,freq:120,phase:.25,pref:.16,text:"Positive induced half-cycle — movement of a reluctor tooth past the magnetic sensor changes magnetic flux and induces a positive voltage."},
+      {n:2,freq:120,phase:.75,pref:.34,text:"Negative induced half-cycle — as magnetic flux changes in the opposite direction, the induced voltage reverses polarity."},
+      {n:3,freq:60,phase:.93,pref:.55,text:"Reference / missing-tooth region — the interruption in the regular tooth pattern gives the ECM a crankshaft position reference."},
+      {n:4,freq:120,phase:.25,pref:.80,text:"Repeated tooth pattern — waveform frequency increases with engine speed; on a real inductive sensor the amplitude also normally rises with rotational speed."}
+    ]
+  },
+
+  injector:{
+    title:"Petrol MPI injector switched-earth voltage — waveform sections",
+    items:[
+      {n:1,freq:20,phase:.10,pref:.10,text:"Supply voltage / Injector OFF — the injector switched-earth terminal is approximately at battery/charging voltage while the ECU driver is switched off."},
+      {n:2,freq:20,phase:.182,pref:.24,text:"Injector switched ON — the ECU completes the earth path. Voltage falls close to 0 V and current begins flowing through the injector winding."},
+      {n:3,freq:20,phase:.235,pref:.38,text:"Injector energised / magnetic field established — current through the winding creates the magnetic field that operates the injector. The duration of this low-voltage section is the injector pulse width."},
+      {n:4,freq:20,phase:.277,pref:.50,text:"Injector switched OFF – Back EMF — the magnetic field collapses rapidly, inducing a high voltage in the winding and producing the back-EMF spike."},
+      {n:5,freq:20,phase:.294,pref:.61,text:"Back-EMF decay – magnetic field continues to collapse — stored magnetic energy is dissipated and the induced voltage falls rapidly towards supply voltage."},
+      {n:6,freq:20,phase:.311,pref:.70,text:"Injector pintle / valve closing feature — on some injector waveforms, a small change or interruption in the decay can be associated with the injector pintle mechanically closing."},
+      {n:7,freq:20,phase:.37,pref:.84,text:"Return to supply voltage — the magnetic field has dissipated and the switched-earth terminal returns to approximately battery/charging voltage until the next injection event."}
+    ]
+  },
+
+  can:{
+    title:"CAN High — teaching waveform sections",
+    items:[
+      {n:1,freq:500,phase:.75,pref:.15,text:"Recessive level — CAN High sits at approximately 2.5 V when the bus is recessive."},
+      {n:2,freq:500,phase:.25,pref:.35,text:"Dominant level — during a dominant bit, CAN High rises to approximately 3.5 V."},
+      {n:3,freq:500,phase:.75,pref:.58,text:"Return to recessive — CAN High falls back towards approximately 2.5 V when the dominant state ends."},
+      {n:4,freq:500,phase:.25,pref:.80,text:"Data transitions — the sequence of dominant and recessive states carries CAN data. Physical-layer diagnosis should compare CAN High with CAN Low."}
+    ]
+  },
+
+  camCrank:{
+    title:"Camshaft / crankshaft correlation — waveform sections",
+    dual:true,
+    items:[
+      {n:1,ch:"crank",freq:24,phase:.25,pref:.15,text:"Crankshaft tooth pattern — the CKP channel provides the ECM with its primary engine-speed and crank-position information."},
+      {n:2,ch:"crank",freq:24,phase:.975,pref:.36,text:"Crank reference / gap region — the deliberately altered or missing reference section identifies a known crankshaft position."},
+      {n:3,ch:"cam",freq:3,phase:.22,pref:.53,text:"Camshaft reference pulse — the CMP signal identifies camshaft position so the ECM can determine engine phase within the 720° four-stroke cycle."},
+      {n:4,ch:"cam",freq:3,phase:.36,pref:.68,text:"Cam edge / correlation point — diagnosis compares the position of a chosen cam edge with a known crank reference using manufacturer data or a known-good capture."},
+      {n:5,ch:"cam",freq:3,phase:.60,pref:.84,text:"Timing relationship — when cam timing is advanced, retarded or dynamically unstable, the cam trace moves relative to the crank reference."}
+    ]
+  }
+};
+
+function wrap01(v){
+  return ((v%1)+1)%1;
+}
+
+/*
+  Find the exact local capture time at which a requested waveform phase occurs.
+
+  This is the key fix:
+  the guide numbers are no longer placed at fixed x/y coordinates.
+  They are calculated from the SAME phase, trigger position, signal speed,
+  timebase and channel offsets that are currently drawing the live trace.
+*/
+function findGuideLocal(item){
+  var total=totalTime();
+  var speed=speedVal();
+  var preferred=(item.pref===undefined?.5:item.pref)*total;
+  var freq=item.freq;
+  var phase=item.phase;
+
+  if(!freq || freq<=0)return preferred;
+
+  var phaseShift=0;
+
+  // Cam waveform includes the live cam timing error in its phase calculation.
+  if(item.ch==="cam"){
+    phaseShift=lastCamPhaseError/720;
+  }
+
+  var base=(lastDisplayStart*speed*freq)+phaseShift;
+  var rate=speed*freq;
+
+  if(rate===0)return preferred;
+
+  // local = (k + requiredPhase - base) / rate
+  var kMin=Math.floor(base-phase)-4;
+  var kMax=Math.ceil(base+(total*rate)-phase)+4;
+  var best=null;
+  var bestDist=Infinity;
+
+  for(var k=kMin;k<=kMax;k++){
+    var local=(k+phase-base)/rate;
+    if(local<0 || local>total)continue;
+
+    var dist=Math.abs(local-preferred);
+    if(dist<bestDist){
+      bestDist=dist;
+      best=local;
+    }
+  }
+
+  // If a very short capture does not contain the requested phase,
+  // keep the number within the scope rather than placing it off-screen.
+  if(best===null){
+    best=Math.max(0,Math.min(total,preferred));
+  }
+
+  return best;
+}
+
+function guideVoltageAt(item,local){
+  var t=lastDisplayStart+local;
+
+  if(item.ch==="crank"){
+    return crankCorrelationVoltage(t*speedVal());
+  }
+
+  if(item.ch==="cam"){
+    return camCorrelationVoltage(t*speedVal(),lastCamPhaseError);
+  }
+
+  return sampleSignal(t,false);
+}
+
+function guideY(item,local){
+  var v=guideVoltageAt(item,local);
+
+  if(item.ch==="crank"){
+    return channelY(v,crankOffset);
+  }
+
+  if(item.ch==="cam"){
+    return channelY(v,camOffset);
+  }
+
+  return yForVoltage(v);
+}
+
+function updateWaveGuide(){
+  var guide=waveformGuides[waveformSelect.value];
+  if(!guide)return;
+
+  waveGuideTitle.textContent=guide.title;
+
+  // Explanations are now shown by hovering over the numbered markers.
+  // Keep the lower guide panel empty and hidden.
+  waveGuideList.innerHTML="";
+  waveGuide.classList.remove("show");
+
+  drawWaveGuideMarkers();
+}
+
+function drawWaveGuideMarkers(){
+  waveGuideMarkers.innerHTML="";
+
+  if(!waveGuideOpen){
+    waveGuideMarkers.style.display="none";
+    return;
+  }
+
+  var guide=waveformGuides[waveformSelect.value];
+  if(!guide)return;
+
+  waveGuideMarkers.style.display="block";
+  var ns="http://www.w3.org/2000/svg";
+
+  guide.items.forEach(function(item){
+    var local=findGuideLocal(item);
+    var x=xForTime(local);
+    var waveformY=guideY(item,local);
+
+    /*
+      Keep the marker attached to the correct waveform point.
+      A small vertical lift prevents the circle from hiding the trace,
+      but the marker remains directly above/below its actual waveform section.
+    */
+    var lift=(waveformY<105)?22:-22;
+    var y=Math.max(70,Math.min(570,waveformY+lift));
+
+    var g=document.createElementNS(ns,"g");
+    g.setAttribute("class","wave-marker");
+
+    // Small leader line from the marker to the exact waveform point.
+    var leader=document.createElementNS(ns,"line");
+    leader.setAttribute("x1",x);
+    leader.setAttribute("y1",y);
+    leader.setAttribute("x2",x);
+    leader.setAttribute("y2",Math.max(55,Math.min(585,waveformY)));
+    leader.setAttribute("stroke","#5eead4");
+    leader.setAttribute("stroke-width","2");
+    leader.setAttribute("opacity",".9");
+
+    var circle=document.createElementNS(ns,"circle");
+    circle.setAttribute("cx",x);
+    circle.setAttribute("cy",y);
+    circle.setAttribute("r","14");
+
+    var label=document.createElementNS(ns,"text");
+    label.setAttribute("x",x);
+    label.setAttribute("y",y+.5);
+    label.textContent=item.n;
+
+    g.appendChild(leader);
+    g.appendChild(circle);
+    g.appendChild(label);
+
+    // Hover over a numbered marker to see its explanation.
+    (function(markerItem,markerGroup){
+      function positionWaveTip(e){
+        var pad=16;
+        waveHoverTip.style.left=(e.clientX+pad)+"px";
+        waveHoverTip.style.top=(e.clientY+pad)+"px";
+
+        var r=waveHoverTip.getBoundingClientRect();
+        if(r.right>window.innerWidth-8){
+          waveHoverTip.style.left=Math.max(8,e.clientX-r.width-pad)+"px";
+        }
+        if(r.bottom>window.innerHeight-8){
+          waveHoverTip.style.top=Math.max(8,e.clientY-r.height-pad)+"px";
+        }
+      }
+
+      function showWaveTip(e){
+        waveHoverTip.innerHTML="<strong>"+markerItem.n+".</strong> "+markerItem.text;
+        waveHoverTip.style.display="block";
+        positionWaveTip(e);
+      }
+
+      markerGroup.addEventListener("mouseenter",showWaveTip);
+      markerGroup.addEventListener("mousemove",positionWaveTip);
+      markerGroup.addEventListener("mouseleave",function(){
+        waveHoverTip.style.display="none";
+      });
+
+      // Click/tap support as well as desktop hover.
+      markerGroup.addEventListener("click",function(e){
+        e.stopPropagation();
+        showWaveTip(e);
+      });
+    })(item,g);
+
+    waveGuideMarkers.appendChild(g);
+  });
+}
+
+
+waveGuideBtn.onclick=function(){
+  waveGuideOpen=!waveGuideOpen;
+  waveGuideBtn.classList.toggle("active",waveGuideOpen);
+  waveGuideBtn.textContent=waveGuideOpen?"ⓘ Hide Waveform Help":"ⓘ Show Waveform Help";
+  waveHoverTip.style.display="none";
+  updateWaveGuide();
+};
+
+
+function cfg(){return configs[waveformSelect.value];}
+function rangeVal(){return parseFloat(voltageRange.value);}
+function tbSeconds(){return parseFloat(timebase.value)/1000;}
+function totalTime(){return tbSeconds()*10;}
+function speedVal(){return parseFloat(signalSpeed.value);}
+function trigVal(){return triggerVoltage;}
+function offsetVal(){return parseFloat(verticalOffset.value);}
+
+function yForVoltage(v){
+ var r=rangeVal(),top=55,bottom=585,center=(top+bottom)/2,half=(bottom-top)/2;
+ return center-((v+offsetVal())/r)*half;
+}
+function voltageForY(y){
+ var r=rangeVal(),top=55,bottom=585,center=(top+bottom)/2,half=(bottom-top)/2;
+ return ((center-y)/half)*r-offsetVal();
+}
+function xForTime(t){return 80+(t/totalTime())*1060;}
+
+
+function channelY(v,offset){
+  var r=rangeVal();
+  var center=320;
+  var half=265;
+  return center-((v+offset)/r)*half;
+}
+
+function updateDualScales(){
+  var isDual=waveformSelect.value==="camCrank";
+
+  if(!dualScaleGroup || !voltageScaleDrag)return;
+
+  dualScaleGroup.style.display=isDual?"block":"none";
+  voltageScaleDrag.style.display=isDual?"none":"block";
+
+  if(!isDual){
+    var normalLabels=document.getElementById("voltageLabels");
+    if(normalLabels)normalLabels.style.display="";
+    return;
+  }
+
+  var normalLabels2=document.getElementById("voltageLabels");
+  if(normalLabels2)normalLabels2.style.display="none";
+
+  var ns="http://www.w3.org/2000/svg";
+  crankScaleLabels.innerHTML="";
+  camScaleLabels.innerHTML="";
+  var r=rangeVal();
+
+  for(var i=0;i<=10;i++){
+    var y=55+i*53;
+    var nominal=r-(2*r)*(i/10);
+
+    var crankV=nominal-crankOffset;
+    var camV=nominal-camOffset;
+
+    var a=document.createElementNS(ns,"text");
+    a.setAttribute("x","31");
+    a.setAttribute("y",String(y+4));
+    a.textContent=(Math.abs(crankV)<.01?"0":crankV.toFixed(r<=2?1:0))+" V";
+    crankScaleLabels.appendChild(a);
+
+    var b=document.createElementNS(ns,"text");
+    b.setAttribute("x","76");
+    b.setAttribute("y",String(y+4));
+    b.textContent=(Math.abs(camV)<.01?"0":camV.toFixed(r<=2?1:0))+" V";
+    camScaleLabels.appendChild(b);
+  }
+
+  var crankZeroY=channelY(0,crankOffset);
+  var camZeroY=channelY(0,camOffset);
+
+  crankScaleHandle.setAttribute("cy",Math.max(68,Math.min(572,crankZeroY)));
+  camScaleHandle.setAttribute("cy",Math.max(68,Math.min(572,camZeroY)));
+}
+
+function restoreSingleScale(){
+  if(waveformSelect.value!=="camCrank"){
+    var normalLabels=document.getElementById("voltageLabels");
+    if(normalLabels)normalLabels.style.display="";
+    if(dualScaleGroup)dualScaleGroup.style.display="none";
+    if(voltageScaleDrag)voltageScaleDrag.style.display="block";
+  }
+}
+
+function updateAxes(){
+ var ns="http://www.w3.org/2000/svg";
+ var vg=document.getElementById("voltageLabels");vg.innerHTML="";
+ var r=rangeVal();
+
+ for(var i=0;i<=10;i++){
+  /*
+    The displayed scale moves with the channel offset.
+    Screen voltage = nominal division voltage - vertical channel offset.
+  */
+  var nominal=r-(2*r)*(i/10);
+  var val=nominal-offsetVal();
+  var y=55+i*53;
+  var tx=document.createElementNS(ns,"text");
+  tx.setAttribute("x","72");tx.setAttribute("y",String(y+4));
+  tx.textContent=(Math.abs(val)<.001?"0":val.toFixed(r<=2?1:0))+" V";
+  vg.appendChild(tx);
+ }
+
+ // Blue scale handle tracks the 0 V position when it is on screen.
+ var zeroY=yForVoltage(0);
+ scaleHandle.setAttribute("cy",Math.max(68,Math.min(572,zeroY)));
+
+ var tg=document.getElementById("timeLabels");tg.innerHTML="";
+ var tb=parseFloat(timebase.value);
+ for(var j=0;j<=10;j++){
+  var x=80+j*106;
+  var tt=(j-5)*tb;
+  var tx2=document.createElementNS(ns,"text");
+  tx2.setAttribute("x",String(x));tx2.setAttribute("y","608");
+  tx2.textContent=(tt===0?"0":tt.toFixed(tb<1?1:0))+" ms";
+  tg.appendChild(tx2);
+ }
+
+ updateTriggerGraphic();
+ updateDualScales();
+ restoreSingleScale();
+
+ document.getElementById("offsetValue").textContent=offsetVal().toFixed(1)+" V";
+ document.getElementById("speedValue").textContent=speedVal().toFixed(2)+"×";
+ document.getElementById("statusRange").textContent="±"+rangeVal()+" V";
+ document.getElementById("statusTime").textContent=timebase.value+" ms/div";
+ document.getElementById("statusCapture").textContent=(parseFloat(timebase.value)*10)+" ms";
+ document.getElementById("statusWave").textContent=cfg().name;
+ document.getElementById("signalName").textContent=cfg().name;
+ document.getElementById("statusTrigger").textContent=triggerMode.value+" @ "+triggerVoltage.toFixed(1)+" V";
+}
+
+function updateTriggerGraphic(){
+ var ty=Math.max(55,Math.min(585,yForVoltage(triggerVoltage)));
+ triggerX=Math.max(80,Math.min(1140,triggerX));
+
+ triggerOuter.setAttribute("cx",triggerX);
+ triggerOuter.setAttribute("cy",ty);
+
+ triggerHandle.setAttribute("cx",triggerX);
+ triggerHandle.setAttribute("cy",ty);
+
+ triggerCrossH.setAttribute("x1",triggerX-25);
+ triggerCrossH.setAttribute("x2",triggerX+25);
+ triggerCrossH.setAttribute("y1",ty);
+ triggerCrossH.setAttribute("y2",ty);
+
+ triggerCrossV.setAttribute("x1",triggerX);
+ triggerCrossV.setAttribute("x2",triggerX);
+ triggerCrossV.setAttribute("y1",ty-25);
+ triggerCrossV.setAttribute("y2",ty+25);
+
+ triggerHandleText.setAttribute("x",triggerX);
+ triggerHandleText.setAttribute("y",Math.max(68,ty-28));
+}
+
+
+function camCrankPhaseError(){
+ if(camFault.value==="advanced")return -20;
+ if(camFault.value==="retarded")return 20;
+ if(camFault.value==="loose"){
+  /*
+    Dynamic cam movement is driven by live animation time, not by the
+    frozen/locked trigger capture position. This lets the crank remain
+    stationary while the cam edge visibly moves around it.
+  */
+  var severity=Math.min(1,Math.max(.18,(speedVal()-.25)/3.75));
+  return Math.sin(performance.now()/165)*8*severity
+       + Math.sin(performance.now()/430+1.2)*3*severity;
+ }
+ return 0;
+}
+
+function crankCorrelationVoltage(t){
+ /*
+   Generic digital 60-2 style teaching representation.
+   720° equivalent pattern repeated over time.
+ */
+ var p=((t*24)%1+1)%1;
+ var tooth=Math.floor(p*60);
+ if(tooth===58||tooth===59)return .2;
+ return ((p*60)%1)<.5?4.8:.2;
+}
+
+function camCorrelationVoltage(t,phaseErrorDeg){
+ /*
+   Generic Hall cam pulse pattern with timing offset expressed in crank degrees.
+   Convert degree error to fraction of 720° cycle.
+ */
+ var shift=phaseErrorDeg/720;
+ var p=(((t*3)+shift)%1+1)%1;
+ return (p>.18&&p<.36)||(p>.58&&p<.67)?4.8:.2;
+}
+
+function sampleSignal(localTime,reference){
+ var speed=reference?1:speedVal();
+ return cfg().signal(localTime*speed);
+}
+
+function triggerCrossing(startPhase){
+ var level=trigVal();
+ var mode=triggerMode.value;
+ var slope=(mode==="falling")?"falling":"rising";
+ var total=totalTime(),steps=3500;
+ var isCamCrank=waveformSelect.value==="camCrank";
+
+ function triggerSignal(t){
+   if(isCamCrank)return crankCorrelationVoltage(t*speedVal());
+   return sampleSignal(t,false);
+ }
+
+ var prev=triggerSignal(startPhase);
+
+ for(var i=1;i<steps;i++){
+  var t=startPhase+(i/steps)*total*3;
+  var cur=triggerSignal(t);
+  if(slope==="rising"&&prev<level&&cur>=level)return t;
+  if(slope==="falling"&&prev>level&&cur<=level)return t;
+  prev=cur;
+ }
+ return null;
+}
+
+function chooseDisplayPhase(){
+ var m=triggerMode.value;
+
+ if(!running)return frozenPhase;
+
+ if(m==="manual"){
+  repeatLocked=false;
+  triggerState.textContent="MANUAL / FREE RUNNING";
+  triggerState.className="trigger-state";
+  return phase;
+ }
+
+ /*
+   In Repeat mode the trigger position must remain fixed on the screen.
+   We therefore establish one crank-trigger anchor and then reuse that
+   same anchor while the cam phase is allowed to move dynamically.
+ */
+ if(m==="repeat"){
+   if(!repeatLocked){
+     var firstCross=triggerCrossing(phase);
+     if(firstCross===null){
+       triggerState.textContent="REPEAT — SEARCHING";
+       triggerState.className="trigger-state armed";
+       return phase;
+     }
+
+     var fraction=(triggerX-80)/1060;
+     repeatAnchor=firstCross-(totalTime()*fraction);
+     repeatLocked=true;
+   }
+
+   triggerState.textContent="REPEAT — CRANK LOCKED / LIVE";
+   triggerState.className="trigger-state triggered";
+
+   /*
+     Real scopes still look "alive" while triggered. Keep the trigger lock,
+     but add a very small display-only phase dither. This is intentionally
+     tiny so the waveform does not drift away from the trigger point.
+   */
+   repeatVisualJitter=Math.sin(performance.now()/240)*totalTime()*0.0025;
+   return repeatAnchor+repeatVisualJitter;
+ }
+
+ var crossing=triggerCrossing(phase);
+
+ if(crossing===null){
+   triggerState.textContent="WAITING FOR TRIGGER";
+   triggerState.className="trigger-state armed";
+   return frozenPhase;
+ }
+
+ var fraction2=(triggerX-80)/1060;
+ var captureStart=crossing-(totalTime()*fraction2);
+ frozenPhase=captureStart;
+
+ if(m==="single"){
+   running=false;
+   triggerState.textContent="SINGLE CAPTURE — FROZEN";
+   triggerState.className="trigger-state stopped";
+   return frozenPhase;
+ }
+
+ if(m==="rising"){
+   triggerState.textContent="RISING EDGE — TRIGGERED";
+   triggerState.className="trigger-state triggered";
+   return captureStart;
+ }
+
+ if(m==="falling"){
+   triggerState.textContent="FALLING EDGE — TRIGGERED";
+   triggerState.className="trigger-state triggered";
+   return captureStart;
+ }
+
+ return phase;
+}
+
+function buildTrace(){
+ var start=chooseDisplayPhase();
+ lastDisplayStart=start;
+ var points=[],points2=[],refpoints=[],refpoints2=[];
+ var steps=1200,total=totalTime();
+ var isCamCrank=waveformSelect.value==="camCrank";
+ var pe=camCrankPhaseError();
+ lastCamPhaseError=pe;
+
+ for(var i=0;i<=steps;i++){
+  var local=(i/steps)*total;
+  var x=xForTime(local);
+
+  if(isCamCrank){
+    var t=start+local;
+    var crankV=crankCorrelationVoltage(t*speedVal());
+    var camV=camCorrelationVoltage(t*speedVal(),pe);
+
+    var refCrank=crankCorrelationVoltage(local);
+    var refCam=camCorrelationVoltage(local,0);
+
+    points.push(x+","+channelY(crankV,crankOffset));
+    points2.push(x+","+channelY(camV,camOffset));
+
+    refpoints.push(x+","+channelY(refCrank,crankOffset));
+    refpoints2.push(x+","+channelY(refCam,camOffset));
+  }else{
+    var v=sampleSignal(start+local,false);
+    var rv=cfg().signal(local);
+    points.push(x+","+yForVoltage(v));
+    refpoints.push(x+","+yForVoltage(rv));
+  }
+ }
+
+ trace.setAttribute("points",points.join(" "));
+ trace2.setAttribute("points",isCamCrank?points2.join(" "):"");
+
+ if(refToggle.value==="on"){
+   referenceTrace.setAttribute("points",refpoints.join(" "));
+   referenceTrace2.setAttribute("points",isCamCrank?refpoints2.join(" "):"");
+ }else{
+   referenceTrace.setAttribute("points","");
+   referenceTrace2.setAttribute("points","");
+ }
+
+ camLegend.style.display=isCamCrank?"inline":"none";
+
+ drawWaveGuideMarkers();
+ updateFeedback();
+}
+
+function updateFeedback(){
+ var c=cfg(),r=rangeVal(),tb=parseFloat(timebase.value),msg=[],good=true;
+ var isCamCrank=waveformSelect.value==="camCrank";
+
+ if(r<c.idealRange*.75){msg.push("Voltage range is too small and may clip the signal.");good=false;}
+ else if(r>c.idealRange*4){msg.push("Voltage range is much larger than needed, so vertical detail is lost.");good=false;}
+
+ if(tb<c.idealTime*.25){msg.push("Timebase is very fast; you may only see part of the event.");good=false;}
+ else if(tb>c.idealTime*5){msg.push("Timebase is very slow; too many events are compressed together.");good=false;}
+
+ if(triggerMode.value==="manual"){
+  msg.push("Trigger is in manual/free-running mode, so the waveform is not locked to an edge.");
+  good=false;
+ }
+
+ if(isCamCrank){
+   var pe=camCrankPhaseError();
+   if(camFault.value==="good"){
+     msg.push("Cam/crank correlation is known-good. Trigger on the crank edge and compare the yellow cam edge with the dashed reference.");
+   }else if(camFault.value==="advanced"){
+     msg.push("Cam is one tooth advanced: the yellow cam edge is shifted earlier by 20° crank angle relative to the crank-triggered reference.");
+     good=false;
+   }else if(camFault.value==="retarded"){
+     msg.push("Cam is one tooth retarded: the yellow cam edge is shifted later by 20° crank angle relative to the crank-triggered reference.");
+     good=false;
+   }else{
+     msg.push("Loose belt/chain: use Repeat trigger on the crank. The cyan crank remains locked to the trigger position but has a tiny live display movement so the scope still looks active. The yellow cam trace moves relative to the crank as timing varies. Increase Signal Speed to make the timing movement more obvious.");
+     good=false;
+   }
+ }
+
+ var box=document.getElementById("feedback");
+ if(good){
+  box.className="feedback good";
+  box.innerHTML="<b>Good scope setup.</b> The waveform is using the display well and the trigger should give a stable capture.";
+ }else{
+  box.className="feedback warn";
+  box.innerHTML="<b>Scope practice:</b><br>"+msg.join("<br>");
+ }
+}
+
+function autoSetup(){
+ var c=cfg();
+ voltageRange.value=String(c.idealRange);
+ timebase.value=String(c.idealTime);
+ triggerVoltage=c.trigger;
+ triggerX=610;
+ triggerMode.value="repeat";
+ verticalOffset.value="0";
+ signalSpeed.value="1";
+ running=true;triggerArmed=false;singleCapture=false;repeatLocked=false;
+ updateAxes();buildTrace();
+}
+
+function resetForWaveform(){
+ var c=cfg();
+ voltageRange.value="5";
+ timebase.value="5";
+ triggerMode.value="manual";
+ triggerVoltage=c.trigger;
+ triggerX=610;
+ verticalOffset.value="0";
+ signalSpeed.value="1";
+ running=true;phase=0;frozenPhase=0;triggerArmed=false;singleCapture=false;repeatLocked=false;
+ updateAxes();buildTrace();
+}
+
+function animate(now){
+ var dt=Math.min((now-lastTime)/1000,.05);lastTime=now;
+
+ if(running){
+   phase+=dt;
+   var pulse=.55+.45*Math.sin(now/170);
+   liveLed.setAttribute("opacity",pulse.toFixed(2));
+   liveLed.setAttribute("fill","#22c55e");
+   liveLedText.textContent="LIVE";
+ }else{
+   liveLed.setAttribute("opacity","1");
+   liveLed.setAttribute("fill","#ef5350");
+   liveLedText.textContent="STOPPED";
+ }
+
+ buildTrace();
+ requestAnimationFrame(animate);
+}
+
+/* SINGLE TRIGGER DOT — DRAG BOTH AXES */
+function pointerToSvg(evt){
+ var svg=document.getElementById("scope");
+ var rect=svg.getBoundingClientRect();
+ return {
+  x:(evt.clientX-rect.left)*(1200/rect.width),
+  y:(evt.clientY-rect.top)*(650/rect.height)
+ };
+}
+
+function setTriggerFromPointer(evt){
+ var p=pointerToSvg(evt);
+
+ triggerX=Math.max(80,Math.min(1140,p.x));
+
+ var y=Math.max(55,Math.min(585,p.y));
+ triggerVoltage=voltageForY(y);
+ triggerVoltage=Math.max(-50,Math.min(50,triggerVoltage));
+ repeatLocked=false;
+
+ updateAxes();
+ buildTrace();
+}
+
+triggerDragGroup.addEventListener("pointerdown",function(e){
+ draggingTrigger=true;
+ triggerDragGroup.setPointerCapture(e.pointerId);
+ setTriggerFromPointer(e);
+});
+
+triggerDragGroup.addEventListener("pointermove",function(e){
+ if(draggingTrigger)setTriggerFromPointer(e);
+});
+
+triggerDragGroup.addEventListener("pointerup",function(e){
+ draggingTrigger=false;
+ try{triggerDragGroup.releasePointerCapture(e.pointerId);}catch(err){}
+});
+
+triggerDragGroup.addEventListener("pointercancel",function(){
+ draggingTrigger=false;
+});
+
+
+/* DRAG THE VOLTAGE SCALE / CHANNEL POSITION */
+function scalePointerY(evt){
+ var svg=document.getElementById("scope");
+ var rect=svg.getBoundingClientRect();
+ return (evt.clientY-rect.top)*(650/rect.height);
+}
+
+voltageScaleDrag.addEventListener("pointerdown",function(e){
+ draggingScale=true;
+ scaleDragStartY=scalePointerY(e);
+ scaleDragStartOffset=offsetVal();
+ voltageScaleDrag.setPointerCapture(e.pointerId);
+ e.preventDefault();
+ e.stopPropagation();
+});
+
+voltageScaleDrag.addEventListener("pointermove",function(e){
+ if(!draggingScale)return;
+
+ var currentY=scalePointerY(e);
+ var deltaY=currentY-scaleDragStartY;
+
+ /*
+   One full half-screen corresponds to the selected ±range.
+   Dragging upward increases vertical offset and therefore moves the
+   waveform upward; dragging down decreases it.
+ */
+ var voltsPerPixel=rangeVal()/265;
+ var newOffset=scaleDragStartOffset-(deltaY*voltsPerPixel);
+
+ newOffset=Math.max(-5,Math.min(5,newOffset));
+ verticalOffset.value=newOffset.toFixed(1);
+
+ updateAxes();
+ buildTrace();
+ e.preventDefault();
+});
+
+voltageScaleDrag.addEventListener("pointerup",function(e){
+ draggingScale=false;
+ try{voltageScaleDrag.releasePointerCapture(e.pointerId);}catch(err){}
+ e.preventDefault();
+});
+
+voltageScaleDrag.addEventListener("pointercancel",function(){
+ draggingScale=false;
+});
+
+
+/* CAM/CRANK — INDEPENDENT DRAGGABLE VOLTAGE SCALES */
+function dualScalePointerY(evt){
+ var svg=document.getElementById("scope");
+ var rect=svg.getBoundingClientRect();
+ return (evt.clientY-rect.top)*(650/rect.height);
+}
+
+function beginChannelDrag(evt,isCrank){
+ dualDragStartY=dualScalePointerY(evt);
+ dualDragStartOffset=isCrank?crankOffset:camOffset;
+ if(isCrank)draggingCrankScale=true;
+ else draggingCamScale=true;
+ evt.currentTarget.setPointerCapture(evt.pointerId);
+ evt.preventDefault();
+ evt.stopPropagation();
+}
+
+function moveChannelDrag(evt,isCrank){
+ if((isCrank&&!draggingCrankScale)||(!isCrank&&!draggingCamScale))return;
+ var dy=dualScalePointerY(evt)-dualDragStartY;
+ var voltsPerPixel=rangeVal()/265;
+ var next=dualDragStartOffset-(dy*voltsPerPixel);
+
+ // Wide travel deliberately allows Channel A and B to be separated,
+ // crossed, or placed directly over one another.
+ next=Math.max(-rangeVal()*1.8,Math.min(rangeVal()*1.8,next));
+
+ if(isCrank)crankOffset=next;
+ else camOffset=next;
+
+ updateAxes();
+ buildTrace();
+ evt.preventDefault();
+}
+
+crankScaleDrag.addEventListener("pointerdown",function(e){beginChannelDrag(e,true);});
+crankScaleDrag.addEventListener("pointermove",function(e){moveChannelDrag(e,true);});
+crankScaleDrag.addEventListener("pointerup",function(e){
+ draggingCrankScale=false;
+ try{crankScaleDrag.releasePointerCapture(e.pointerId);}catch(err){}
+});
+crankScaleDrag.addEventListener("pointercancel",function(){draggingCrankScale=false;});
+
+camScaleDrag.addEventListener("pointerdown",function(e){beginChannelDrag(e,false);});
+camScaleDrag.addEventListener("pointermove",function(e){moveChannelDrag(e,false);});
+camScaleDrag.addEventListener("pointerup",function(e){
+ draggingCamScale=false;
+ try{camScaleDrag.releasePointerCapture(e.pointerId);}catch(err){}
+});
+camScaleDrag.addEventListener("pointercancel",function(){draggingCamScale=false;});
+
+/* TOOLBAR DROPDOWNS */
+var dropdownPairs=[
+ ["waveBtn","waveDrop"],["voltageBtn","voltageDrop"],["timeBtn","timeDrop"],["triggerBtn","triggerDrop"]
+];
+function closeDrops(except){
+ dropdownPairs.forEach(function(p){
+  if(p[1]!==except)document.getElementById(p[1]).classList.remove("show");
+ });
+}
+dropdownPairs.forEach(function(p){
+ document.getElementById(p[0]).onclick=function(e){
+  e.stopPropagation();
+  var drop=document.getElementById(p[1]);
+  var opening=!drop.classList.contains("show");
+  closeDrops(p[1]);
+  drop.classList.toggle("show",opening);
+ };
+ document.getElementById(p[1]).onclick=function(e){e.stopPropagation();};
+});
+document.addEventListener("click",function(){closeDrops();});
+
+document.getElementById("runBtn").onclick=function(){running=true;triggerArmed=false;singleCapture=false;lastTime=performance.now();};
+document.getElementById("stopBtn").onclick=function(){
+ frozenPhase=chooseDisplayPhase();running=false;triggerArmed=false;singleCapture=false;repeatVisualJitter=0;
+ triggerState.textContent="STOPPED / FROZEN";triggerState.className="trigger-state stopped";
+};
+
+document.getElementById("autoBtn").onclick=autoSetup;
+document.getElementById("resetBtn").onclick=resetForWaveform;
+
+waveformSelect.onchange=function(){
+ camFaultWrap.style.display=this.value==="camCrank"?"block":"none";
+ updateWaveGuide();
+ if(this.value==="camCrank"){
+   voltageRange.value="5";
+   timebase.value="5";
+   triggerVoltage=2.5;
+   triggerX=400;
+   crankOffset=2.4;
+   camOffset=-2.4;
+   triggerMode.value="repeat";
+   verticalOffset.value="0";
+   signalSpeed.value="1";
+   running=true;
+   phase=0;
+   frozenPhase=0;
+   repeatLocked=false;
+   updateAxes();
+   buildTrace();
+ }else{
+   resetForWaveform();
+ }
+};
+voltageRange.onchange=function(){repeatLocked=false;updateAxes();buildTrace();};
+timebase.onchange=function(){repeatLocked=false;updateAxes();buildTrace();};
+verticalOffset.oninput=function(){updateAxes();buildTrace();};
+signalSpeed.oninput=function(){repeatLocked=false;updateAxes();buildTrace();};
+triggerMode.onchange=function(){
+ triggerArmed=false;
+ singleCapture=false;
+ repeatLocked=false;
+ if(triggerMode.value==="single")running=true;
+ updateAxes();
+ buildTrace();
+};
+refToggle.onchange=buildTrace;
+camFault.onchange=function(){repeatLocked=false;buildTrace();};
+
+/* HELP */
+var help={
+ runstop:["Run / Stop","Run starts live acquisition. Stop freezes the current waveform so it can be inspected."],
+ reference:["Reference","Choose an automotive example signal and optionally show or hide the dashed known-good overlay."],
+ voltage:["Voltage","Sets the vertical input range. For single-channel waveforms, drag the blue voltage-scale handle to move the waveform. In Cam/Crank mode there are two independent voltage scales: cyan A for crank and yellow B for cam. Drag either scale up or down independently, so you can separate the waveforms or place them directly over each other for correlation comparison."],
+ timebase:["Timebase","Sets time per horizontal division. The scope has 10 divisions, so 5 ms/div gives a 50 ms total capture. Signal Speed changes the signal itself, so you then need to correct the timebase."],
+ trigger:["Trigger","There is one trigger only. Drag the red trigger dot up/down to choose voltage and left/right to choose where the triggered edge appears. In Cam/Crank mode, Repeat locks the cyan crank edge to that trigger position. The yellow cam channel then remains free to move relative to the crank, which makes advanced, retarded and loose belt/chain timing movement visible. The triggered display keeps a very small live movement so it still looks like a running scope rather than a frozen screenshot. Changing the timebase reacquires the crank trigger at the same dot position."],
+ auto:["Auto Setup","Automatically selects sensible starting values for voltage range, timebase and trigger for the selected waveform."]
+};
+
+var overlay=document.getElementById("helpOverlay");
+var helpTitle=document.getElementById("helpTitle");
+var helpText=document.getElementById("helpText");
+
+document.querySelectorAll("[data-help]").forEach(function(btn){
+ btn.onclick=function(e){
+  e.stopPropagation();
+  var h=help[this.dataset.help];
+  helpTitle.textContent=h[0];
+  helpText.textContent=h[1];
+  overlay.classList.add("show");
+ };
+});
+document.getElementById("closeHelp").onclick=function(){overlay.classList.remove("show");};
+overlay.onclick=function(e){if(e.target===overlay)overlay.classList.remove("show");};
+
+updateAxes();
+updateWaveGuide();
+buildTrace();
+requestAnimationFrame(animate);
+
+})();
+</script>
+
+
+<!-- COPYRIGHT FOOTER -->
+
+<footer class="copyright-footer">
+
+  <div class="copyright-main">
+    © 2026 RRainbow. All Rights Reserved.
+  </div>
+
+  <div class="copyright-sub">
+    Automotive Oscilloscope Practice Trainer · RRainbow Learning Hub
+  </div>
+
+</footer>
+
+
+</body>
+</html>
