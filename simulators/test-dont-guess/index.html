@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - DIAGNOSTIC DECISION-TREE SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This resource contains original software, graphics,
+written educational content and interactive learning
+resource design.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of protected
+content is prohibited except where permitted by law or
+expressly authorised by the rights holder.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Language" content="en">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base target="_top">
+<title>Diagnostic Decision-Tree Simulator</title>
+<style>
+:root{--navy:#0f172a;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--amber:#d97706;--bg:#eef2f6;--line:#d8e0e8;--muted:#64748b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:#1e293b}
+header{background:var(--navy);color:white;padding:16px 20px}
+header h1{margin:0;font-size:24px} header p{margin:5px 0 0;color:#cbd5e1;font-size:13px}
+.wrap{max-width:1350px;margin:auto;padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:14px}
+.card{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 12px #0000000d;padding:16px}
+.complaint{background:linear-gradient(135deg,#111827,#26364c);color:white;border-radius:12px;padding:18px}
+.complaint small{color:#93a4b4;font-weight:bold}.complaint h2{margin:6px 0}.complaint p{margin:0;color:#d8e3ea}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.metric{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:9px}
+.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:17px}
+.stage{border:1px solid var(--line);border-radius:12px;padding:15px;margin-top:12px}
+.stage h3{margin:0 0 5px}.stage p{font-size:13px;color:#475569;line-height:1.5}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+.choice{border:1px solid #cfd8e3;background:#f8fafc;border-radius:9px;padding:12px;text-align:left;cursor:pointer;font-weight:bold;color:#17212b}
+.choice:hover{border-color:#93bdf4;background:#eff6ff}.choice:disabled{cursor:default;opacity:.75}
+.choice.correct{border-color:#74c989;background:#effbf2}.choice.poor{border-color:#efaaaa;background:#fff2f2}
+.result{margin-top:12px;padding:12px;border-radius:9px;background:#f8fafc;border:1px solid var(--line);font-size:13px;line-height:1.55}
+.result.good{background:#effbf2;border-color:#8bd09b}.result.bad{background:#fff3f0;border-color:#efb0a7}
+.next{border:0;background:var(--blue);color:white;border-radius:8px;padding:10px 16px;font-weight:bold;cursor:pointer;margin-top:10px}
+.timeline{position:relative;padding-left:18px}
+.timeline:before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:#dbe3ea}
+.log{position:relative;border-bottom:1px solid #edf1f4;padding:0 0 12px 9px;margin-bottom:12px;font-size:12px;line-height:1.45}
+.log:before{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:var(--blue);left:-17px;top:4px}
+.log b{display:block;font-size:13px}.log span{color:#64748b}
+.action{width:100%;border:0;border-radius:8px;padding:11px;font-weight:bold;cursor:pointer;margin-top:8px}
+.green{background:var(--green);color:white}.grey{background:#e2e8f0}
+.info{float:right;width:34px;height:34px;border:0;border-radius:50%;background:var(--blue);color:white;font:bold 20px Georgia;cursor:pointer}
+.infobox{display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:9px;padding:11px;margin:10px 0;font-size:13px;line-height:1.5}.infobox.show{display:block}
+.badge{display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:bold;background:#e2e8f0}
+.wave{background:#07131d;border-radius:8px;margin-top:8px;padding:5px}.wave svg{width:100%;display:block}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}.choices{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header><h1>🌳 Diagnostic Decision-Tree Simulator</h1><p>Choose the most appropriate next diagnostic step. Your route through the fault matters.</p></header>
+<div class="wrap"><div class="layout">
+
+<main class="card">
+<button class="info" id="info">i</button>
+<div class="complaint">
+<small>CUSTOMER COMPLAINT</small>
+<h2 id="complaintTitle">Vehicle will not crank.</h2>
+<p id="complaintText">Customer reports that the ignition switches on normally, but the starter does not turn the engine.</p>
+</div>
+<div class="infobox" id="infobox"><b>How it works</b><br>The simulator does not give you every test at once. At each stage, choose the <b>most defensible next diagnostic action</b>. Several options may appear reasonable, but only one gives the strongest evidence at that point in the diagnosis. Less efficient choices do not necessarily end the challenge, but they reduce your efficiency score.</div>
+
+<div class="metrics">
+<div class="metric"><small>Stage</small><strong id="stageMetric">1</strong></div>
+<div class="metric"><small>Tests/actions</small><strong id="actionMetric">0</strong></div>
+<div class="metric"><small>Efficiency</small><strong id="effMetric">100%</strong></div>
+<div class="metric"><small>Challenge</small><strong id="challengeMetric">1</strong></div>
+</div>
+
+<section class="stage">
+<span class="badge" id="stageBadge">INITIAL ASSESSMENT</span>
+<h3 id="question">What is the most appropriate first diagnostic step?</h3>
+<p id="context">Choose an action below.</p>
+<div class="choices" id="choices"></div>
+<div id="result"></div>
+<button class="next" id="nextBtn" style="display:none">Continue →</button>
+</section>
+</main>
+
+<aside class="card">
+<h3 style="margin-top:0">Diagnostic Route</h3>
+<p style="font-size:12px;color:#64748b">Your decisions and test evidence appear here.</p>
+<div class="timeline" id="timeline"><div class="log"><b>Job received</b><span>Awaiting first diagnostic decision.</span></div></div>
+<button class="action green" id="newBtn">New Challenge</button>
+<button class="action grey" id="restartBtn">Restart This Challenge</button>
+</aside>
+
+</div></div>
+
+<script>
+(function(){
+"use strict";
+
+var challengeNo=1, scenarioIndex=-1, scenario, nodeId, pendingNext=null, actions=0, penalty=0, locked=false;
+
+function wave(type){
+ if(type==="flat") return '<div class="wave"><svg viewBox="0 0 360 85"><g stroke="#173447"><path d="M0 20H360M0 42H360M0 64H360"/><path d="M40 0V85M80 0V85M120 0V85M160 0V85M200 0V85M240 0V85M280 0V85M320 0V85"/></g><path d="M8 43H352" stroke="#00d4ff" stroke-width="3" fill="none"/><text x="10" y="78" fill="#00d4ff" font-size="11">No CKP signal while cranking</text></svg></div>';
+ if(type==="ckp") return '<div class="wave"><svg viewBox="0 0 360 85"><g stroke="#173447"><path d="M0 20H360M0 42H360M0 64H360"/></g><path d="M5 43 Q15 8 25 43 Q35 78 45 43 Q55 8 65 43 Q75 78 85 43 Q95 8 105 43 L135 43 Q145 8 155 43 Q165 78 175 43 Q185 8 195 43 Q205 78 215 43 Q225 8 235 43 L265 43 Q275 8 285 43 Q295 78 305 43 Q315 8 325 43 Q335 78 350 43" stroke="#00d4ff" stroke-width="3" fill="none"/><text x="10" y="78" fill="#00d4ff" font-size="11">CKP signal present</text></svg></div>';
+ return "";
+}
+
+var scenarios=[
+{
+ complaint:"Vehicle will not crank.",
+ detail:"Ignition switches on normally, the instrument cluster remains active, but the starter does not turn the engine.",
+ start:"s1",
+ nodes:{
+  s1:{badge:"INITIAL ASSESSMENT",q:"Which test gives the most useful first piece of evidence?",c:"Start with a test that establishes whether the electrical supply is likely to support starter operation before moving deeper into the circuit.",choices:[
+   ["Check battery open-circuit voltage and note the condition before applying load","s2",0,"Battery voltage is 12.6 V with the ignition off.","good"],
+   ["Check for a starter-related DTC and review any available network data","s2",7,"This may provide useful supporting information on some vehicles, but it does not yet prove the battery or high-current starter supply condition.","bad"],
+   ["Check for voltage at the starter motor main B+ terminal with the circuit unloaded","s2",10,"A static B+ check can be useful, but it does not establish battery condition or circuit performance under load.","bad"],
+   ["Carry out a quick starter relay output check before testing the battery","s2",8,"This is a plausible early test, but confirming the battery condition first gives a cleaner baseline for the rest of the diagnosis.","bad"]
+  ]},
+  s2:{badge:"BATTERY TEST",q:"Battery OCV is 12.6 V. Which next test best separates a battery problem from a no-load starter-circuit fault?",c:"Open-circuit voltage alone does not show what happens when a crank request is made.",choices:[
+   ["Monitor battery voltage while a crank request is made","s3",0,"Cranking attempt: battery remains at 12.2 V and the starter does not operate.","good"],
+   ["Measure resistance through the starter motor main cable with the ignition off","s3",8,"A resistance check may reveal a severe open circuit, but it is less useful than seeing whether the battery is actually being loaded during the failed crank attempt.","bad"],
+   ["Check the starter relay command from the control side first","s3",7,"This is a reasonable direction, but the battery voltage response during the crank request gives faster evidence about whether a heavy load is being applied.","bad"],
+   ["Substitute a known-good battery and compare the symptom","s3",12,"Substitution could change the symptom, but it introduces a replacement step before the existing battery has been tested under load.","bad"]
+  ]},
+  s3:{badge:"STARTER CIRCUIT",q:"Battery voltage stays at 12.2 V during the failed crank attempt. Which test now gives the strongest evidence about the control side of the starter circuit?",c:"The battery is not being heavily loaded, so establish whether the starter solenoid is actually receiving a crank command.",choices:[
+   ["Measure terminal 50 voltage at the starter solenoid during the crank request","s4",0,"Terminal 50 receives 12.1 V when START is selected.","good"],
+   ["Measure the starter motor B+ terminal during the crank request","s4",7,"This is relevant and may confirm main supply voltage, but it does not directly prove whether the solenoid is receiving the start command.","bad"],
+   ["Check starter relay output voltage at the relay before testing at the starter","s4",5,"This is a sensible intermediate test, but testing terminal 50 at the starter proves the command at the component itself and also includes the downstream wiring.","bad"],
+   ["Carry out a voltage-drop test on the ground path before checking the crank command","s4",8,"Ground-side testing is important, but first confirming whether terminal 50 is being commanded avoids testing a high-current path without proving solenoid activation.","bad"]
+  ]},
+  s4:{badge:"PROVE THE FAULT",q:"Terminal 50 receives 12.1 V, but the starter remains inactive. Which final check best justifies condemning the starter assembly?",c:"The control signal is present. Now prove that the starter also has a satisfactory high-current feed and return path.",choices:[
+   ["Measure positive-side and ground-side voltage drop during the crank request","endStarter",0,"Positive-side drop: 0.12 V. Ground-side drop: 0.09 V. Both high-current paths are satisfactory.","good"],
+   ["Measure battery voltage directly at the posts again during the crank request","endStarter",6,"This confirms battery behaviour again, but it does not prove the voltage loss through the positive and ground paths to the starter.","bad"],
+   ["Check continuity of the starter positive cable and engine ground strap with the ignition off","endStarter",7,"Continuity can identify a complete open circuit, but a loaded voltage-drop test is more effective for finding excessive resistance in high-current paths.","bad"],
+   ["Bypass the starter relay and observe whether the starter responds","endStarter",9,"This can be informative on some systems, but terminal 50 is already receiving a valid command, so the key remaining evidence is the loaded high-current supply and earth path.","bad"]
+  ]},
+  endStarter:{end:true,title:"Diagnosis: Starter motor / solenoid assembly fault",explain:"The battery state was satisfactory, the battery did not collapse under the crank request, terminal 50 received a valid start command, and both high-current voltage-drop tests were within acceptable limits. The remaining fault is therefore within the starter motor / solenoid assembly."}
+ }
+},
+{
+ complaint:"Vehicle cranks normally but will not start.",
+ detail:"Starter speed sounds normal and consistent. The engine does not attempt to fire.",
+ start:"n1",
+ nodes:{
+  n1:{badge:"INITIAL ASSESSMENT",q:"Which first test gives the quickest evidence about whether the ECU recognises engine rotation?",c:"Choose a test that can quickly separate an engine-speed input problem from fuel or ignition causes.",choices:[
+   ["Observe engine-speed live data while cranking","n2",0,"Live data shows 0 rpm while the engine is physically cranking.","good"],
+   ["Check fuel-rail pressure during cranking","n2",7,"Fuel pressure is a valid no-start test, but a missing engine-speed input can prevent both injection and ignition and can be identified very quickly in live data.","bad"],
+   ["Check for ignition output at one cylinder","n2",6,"This is a reasonable test, but a loss of crankshaft-speed information could remove ignition output as a consequence rather than being the root cause.","bad"],
+   ["Check injector command with a noid light or scope","n2",7,"Injector command is relevant, but an absent crank signal could also remove injector triggering. Engine-speed live data is a faster discriminator.","bad"]
+  ]},
+  n2:{badge:"LIVE DATA",q:"Engine-speed data remains at 0 rpm while the engine is clearly cranking. What is the most informative next step?",c:"The ECU is not showing an engine-speed input, but the cause could still be the sensor, its circuit, or the ECU input.",choices:[
+   ["Scope the crankshaft position sensor signal during cranking","n3",0,"The crankshaft sensor scope trace is flat while cranking."+wave("flat"),"good"],
+   ["Check continuity from the crank sensor connector to the ECU before scoping the signal","n3",7,"Continuity testing may find an open circuit, but scoping the signal first shows whether the sensor is actually producing a usable output under operating conditions.","bad"],
+   ["Check camshaft sensor synchronisation data before testing the crank sensor","n3",8,"Camshaft information may be useful, but the ECU is already reporting 0 rpm, making the crankshaft-speed signal the stronger lead.","bad"],
+   ["Check fuel pressure now to rule out a second fault","n3",9,"Fuel pressure may still matter later, but the 0 rpm data provides a more direct diagnostic path that should be resolved first.","bad"]
+  ]},
+  n3:{badge:"CKP CIRCUIT",q:"The CKP waveform is absent while cranking. Which test should be carried out before replacing the sensor?",c:"Prove whether the sensor has the electrical conditions it needs to operate and whether its circuit can carry the signal.",choices:[
+   ["Check CKP power/ground or circuit integrity as appropriate to the sensor type","endCKP",0,"Power supply and ground are correct, wiring continuity is satisfactory, but the sensor produces no switching signal.","good"],
+   ["Measure resistance of the sensor only and replace it if the value is outside a typical range","endCKP",8,"Resistance can be useful for some inductive sensors, but it does not fully prove supply, ground, wiring integrity or dynamic signal output for all sensor types.","bad"],
+   ["Check ECU reference voltage at another sensor and infer the CKP supply is also correct","endCKP",10,"A shared reference check can be useful, but it does not directly prove the CKP circuit at the sensor connector.","bad"],
+   ["Check cam/crank correlation before proving the CKP electrical supply","endCKP",9,"Correlation requires usable crank information. With no CKP waveform present, the sensor circuit should be proved first.","bad"]
+  ]},
+  endCKP:{end:true,title:"Diagnosis: Crankshaft position sensor fault",explain:"The engine physically cranks, but live data remains at 0 rpm. The CKP waveform is absent and the required sensor supply/ground or circuit integrity has been proved. This isolates the crankshaft position sensor as the most likely fault."}
+ }
+},
+{
+ complaint:"Engine management light on and engine lacks power.",
+ detail:"The engine starts and idles normally, but acceleration is poor and the vehicle feels weak under load.",
+ start:"p1",
+ nodes:{
+  p1:{badge:"INITIAL ASSESSMENT",q:"Which first action is most likely to give useful direction without assuming the failed component?",c:"The warning lamp indicates that the control system may already have stored evidence from the fault event.",choices:[
+   ["Read stored DTCs together with freeze-frame data","p2",0,"DTC P0299 — Turbo/Supercharger Underboost. Freeze frame shows the fault occurred under load.","good"],
+   ["Compare MAF and MAP readings at idle before reading fault memory","p2",7,"Those values may be useful later, but the stored fault and freeze-frame data can identify the operating conditions present when the issue occurred.","bad"],
+   ["Carry out a visual inspection of boost hoses before connecting diagnostic equipment","p2",6,"A visual inspection is sensible, but the warning lamp means stored diagnostic evidence is available and should normally be reviewed first.","bad"],
+   ["Road-test the vehicle while monitoring boost pressure only","p2",8,"A road test can reproduce the symptom, but reading the stored fault and freeze-frame first gives context for what should be monitored.","bad"]
+  ]},
+  p2:{badge:"UNDERBOOST",q:"P0299 is stored and freeze-frame data shows the fault occurred under load. Which test best determines whether the boost system is meeting ECU demand?",c:"You need to compare what the ECU is requesting with what the engine actually achieves under similar conditions.",choices:[
+   ["Log desired boost and actual boost during a controlled road test","p3",0,"Desired boost rises substantially under load, but actual boost remains low.","good"],
+   ["Check MAP sensor key-on/engine-off reading before carrying out a road test","p3",6,"A plausibility check is useful, but it does not show whether actual boost follows the ECU demand under load.","bad"],
+   ["Command the boost-control actuator with a scan tool while stationary","p3",7,"Actuator testing may help later, but first comparing desired and actual boost establishes whether an underboost condition is genuinely present under load.","bad"],
+   ["Inspect the air filter and intake tract for restriction before logging boost","p3",7,"An intake restriction is possible, but desired-versus-actual boost data gives a clearer first direction after P0299 is confirmed.","bad"]
+  ]},
+  p3:{badge:"AIR PATH",q:"Desired boost rises under load, but actual boost remains significantly lower. What is the best next test before condemning the turbocharger?",c:"The turbo may be producing pressure that is being lost before it reaches the engine.",choices:[
+   ["Inspect and pressure/smoke-test the charge-air hoses and intercooler system","endBoost",0,"Smoke test reveals a split intercooler hose opening under pressure.","good"],
+   ["Check turbo actuator movement and commanded position","endBoost",6,"This is a credible next step because actuator faults can cause underboost, but the charge-air system should be proved for leaks before the turbocharger assembly is condemned.","bad"],
+   ["Check MAP sensor output against a known-good mechanical pressure gauge","endBoost",7,"Sensor plausibility is relevant, but a charge-air leak is a common cause of low actual boost and can be directly proved with a pressure/smoke test.","bad"],
+   ["Inspect the exhaust side for restriction before testing the charge-air system","endBoost",9,"An exhaust restriction can affect boost, but the most direct next step is to prove whether generated boost is escaping through the charge-air path.","bad"]
+  ]},
+  endBoost:{end:true,title:"Diagnosis: Split charge-air / intercooler hose",explain:"Stored DTC and freeze-frame data established an underboost event under load. Desired boost increased while actual boost failed to follow. A charge-air pressure/smoke test then directly proved a split intercooler hose, avoiding unnecessary turbocharger replacement."}
+ }
+}
+];
+
+function pickScenario(newOne){
+ if(newOne){
+  var n;
+  do{n=Math.floor(Math.random()*scenarios.length)}while(scenarios.length>1&&n===scenarioIndex);
+  scenarioIndex=n;
+ }
+ scenario=scenarios[scenarioIndex<0?0:scenarioIndex];
+ nodeId=scenario.start; actions=0; penalty=0; pendingNext=null; locked=false;
+ document.getElementById("complaintTitle").textContent=scenario.complaint;
+ document.getElementById("complaintText").textContent=scenario.detail;
+ document.getElementById("timeline").innerHTML='<div class="log"><b>Job received</b><span>'+scenario.complaint+' '+scenario.detail+'</span></div>';
+ render();
+}
+
+
+function shuffledChoices(list){
+  var copy=list.slice();
+
+  for(var i=copy.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var temp=copy[i];
+    copy[i]=copy[j];
+    copy[j]=temp;
+  }
+
+  return copy;
+}
+
+function render(){
+ var n=scenario.nodes[nodeId];
+ document.getElementById("stageMetric").textContent=n.end?"Complete":actions+1;
+ document.getElementById("actionMetric").textContent=actions;
+ document.getElementById("effMetric").textContent=Math.max(0,100-penalty)+"%";
+ document.getElementById("challengeMetric").textContent=challengeNo;
+ document.getElementById("result").innerHTML="";
+ document.getElementById("nextBtn").style.display="none";
+ var choices=document.getElementById("choices"); choices.innerHTML="";
+ if(n.end){
+  document.getElementById("stageBadge").textContent="DIAGNOSIS COMPLETE";
+  document.getElementById("question").textContent=n.title;
+  document.getElementById("context").textContent=n.explain;
+  document.getElementById("result").innerHTML='<div class="result good"><b>Diagnostic route complete.</b><br>'+n.explain+'<br><br><b>Final efficiency: '+Math.max(0,100-penalty)+'%</b></div>';
+  return;
+ }
+ document.getElementById("stageBadge").textContent=n.badge;
+ document.getElementById("question").textContent=n.q;
+ document.getElementById("context").textContent=n.c;
+ shuffledChoices(n.choices).forEach(function(ch){
+  var b=document.createElement("button");
+  b.className="choice";
+  b.textContent=ch[0];
+  b.onclick=function(){choose(ch,b);};
+  choices.appendChild(b);
+ });
+}
+
+function choose(ch,btn){
+ if(locked)return; locked=true; actions++; penalty+=ch[2]; pendingNext=ch[1];
+ document.querySelectorAll(".choice").forEach(function(x){x.disabled=true});
+ btn.classList.add(ch[4]==="good"?"correct":"poor");
+ var cls=ch[4]==="good"?"good":"bad";
+ document.getElementById("result").innerHTML='<div class="result '+cls+'"><b>'+(ch[4]==="good"?"Good diagnostic choice":"Less efficient choice")+'</b><br>'+ch[3]+'</div>';
+ addLog(ch[0],ch[3],ch[4]);
+ document.getElementById("actionMetric").textContent=actions;
+ document.getElementById("effMetric").textContent=Math.max(0,100-penalty)+"%";
+ document.getElementById("nextBtn").style.display="inline-block";
+}
+
+function addLog(title,text,type){
+ var d=document.createElement("div");d.className="log";
+ d.innerHTML='<b>'+title+'</b><span>'+text+'</span>';
+ document.getElementById("timeline").prepend(d);
+}
+
+document.getElementById("nextBtn").onclick=function(){nodeId=pendingNext;locked=false;render()};
+document.getElementById("newBtn").onclick=function(){challengeNo++;pickScenario(true)};
+document.getElementById("restartBtn").onclick=function(){pickScenario(false)};
+document.getElementById("info").onclick=function(){document.getElementById("infobox").classList.toggle("show")};
+
+
+scenarioIndex=Math.floor(Math.random()*scenarios.length);
+pickScenario(false);
+})();
+</script>
+
+
+<!-- COPYRIGHT FOOTER -->
+
+<footer class="copyright-footer">
+
+  <div class="copyright-main">
+    © 2026 RRainbow. All Rights Reserved.
+  </div>
+
+  <div class="copyright-sub">
+    Diagnostic Decision-Tree Simulator · RRainbow Learning Hub
+  </div>
+
+</footer>
+
+
+</body>
+</html>
