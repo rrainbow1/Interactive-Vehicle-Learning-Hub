@@ -749,38 +749,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
               <option value="earth">High-resistance earth</option>
               <option value="stator">Open stator phase</option>
             </select>
-            <button id="submitDiagnosis" class="success" style="width:100%;margin-top:8px">Submit Diagnosis</button>
-            <div id="diagnosisResult" class="result"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="card-title">Fault Challenge</div>
-        <div class="side-content">
-          <select id="faultSelect" style="width:100%">
-            <option value="good">Known good alternator</option>
-            <option value="diode">Rectifier / regulator pack overcharging fault</option>
-            <option value="regulator">Voltage regulator undercharging fault</option>
-            <option value="brushes">Worn brushes</option>
-            <option value="belt">Slipping drive belt</option>
-            <option value="earth">High-resistance earth</option>
-            <option value="stator">Open stator phase</option>
-          </select>
-
-          <div class="question">
-            <b>Most likely diagnosis</b>
-            <select id="diagnosisSelect">
-              <option value="">Select diagnosis</option>
-              <option value="good">Alternator operating correctly</option>
-              <option value="diode">Rectifier / regulator pack overcharging fault</option>
-              <option value="regulator">Voltage regulator undercharging fault</option>
-              <option value="brushes">Worn brushes</option>
-              <option value="belt">Slipping drive belt</option>
-              <option value="earth">High-resistance earth</option>
-              <option value="stator">Open stator phase</option>
-            </select>
-            <button id="submitDiagnosis" class="success" style="width:100%;margin-top:8px">Submit Diagnosis</button>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+              <button id="hiddenBtn" class="primary" type="button">🎲 New Hidden Fault</button>
+              <button id="submitDiagnosis" class="success" type="button">Submit Diagnosis</button>
+            </div>
             <div id="diagnosisResult" class="result"></div>
           </div>
         </div>
@@ -876,12 +848,15 @@ const statusBox=document.getElementById("statusBox");
 const rpmSlider=document.getElementById("rpmSlider");
 const loadSlider=document.getElementById("loadSlider");
 const faultSelect=document.getElementById("faultSelect");
+const hiddenBtn=document.getElementById("hiddenBtn");
 const rippleTrace=document.getElementById("rippleTrace");
 
 let running=false;
 let exploded=false;
 let currentVisible=false;
 let extraLoad=0;
+let hiddenFaultMode=false;
+let hiddenFaultValue="good";
 
 const info={
   rotor:{
@@ -1013,12 +988,19 @@ document.querySelectorAll(".loadBtn").forEach(btn=>{
 
 rpmSlider.oninput=updateSystem;
 loadSlider.oninput=updateSystem;
-faultSelect.onchange=updateSystem;
+faultSelect.onchange=()=>{
+  hiddenFaultMode=false;
+  hiddenFaultValue="good";
+  faultSelect.disabled=false;
+  hiddenBtn.textContent="🎲 New Hidden Fault";
+  document.getElementById("diagnosisResult").innerHTML="";
+  updateSystem();
+};
 
 function calculate(){
   const rpm=Number(rpmSlider.value);
   const load=Number(loadSlider.value)+extraLoad;
-  const fault=faultSelect.value;
+  const fault=hiddenFaultMode ? hiddenFaultValue : faultSelect.value;
 
   let voltage=running?14.3:12.4;
   let maxCurrent=Math.min(140,Math.max(20,(rpm-500)/35));
@@ -1069,7 +1051,15 @@ function updateSystem(){
     statusBox.innerHTML="<b>Normal charging operation.</b><br>The pulley drives the shaft and rotor. The rotor magnetic field sweeps past the stationary stator windings, generating three-phase AC. The rectifier converts this to DC and the regulator adjusts field current to hold system voltage.";
   }else{
     statusBox.className="status warn";
-    statusBox.innerHTML="<b>Fault active:</b> "+faultName(d.fault)+".<br>Observe system voltage, output current, field duty and the ripple waveform before submitting a diagnosis.";
+
+    if(hiddenFaultMode){
+      statusBox.innerHTML=
+        "<b>Hidden fault active.</b><br>Use the voltage, current, field duty and ripple waveform to identify the fault.";
+    }else{
+      statusBox.innerHTML=
+        "<b>Fault active:</b> "+faultName(d.fault)+
+        ".<br>Observe system voltage, output current, field duty and the ripple waveform before submitting a diagnosis.";
+    }
   }
 }
 
@@ -1101,6 +1091,32 @@ function drawRipple(d){
   rippleTrace.setAttribute("points",pts.join(" "));
 }
 
+
+hiddenBtn.onclick=()=>{
+  const possibleFaults=[
+    "diode",
+    "regulator",
+    "brushes",
+    "belt",
+    "earth",
+    "stator"
+  ];
+
+  hiddenFaultValue=
+    possibleFaults[Math.floor(Math.random()*possibleFaults.length)];
+
+  hiddenFaultMode=true;
+  faultSelect.value="good";
+  faultSelect.disabled=true;
+  hiddenBtn.textContent="🎲 Generate Another Fault";
+
+  document.getElementById("diagnosisSelect").value="";
+  document.getElementById("diagnosisResult").innerHTML=
+    "🔒 <b>Hidden fault active.</b> Start the alternator, inspect the readings and waveform, then submit your diagnosis.";
+
+  updateSystem();
+};
+
 document.getElementById("submitDiagnosis").onclick=()=>{
   const choice=document.getElementById("diagnosisSelect").value;
   const result=document.getElementById("diagnosisResult");
@@ -1110,10 +1126,12 @@ document.getElementById("submitDiagnosis").onclick=()=>{
     return;
   }
 
-  if(choice===faultSelect.value){
+  const correctFault=hiddenFaultMode ? hiddenFaultValue : faultSelect.value;
+
+  if(choice===correctFault){
     result.innerHTML="✅ <b>Correct.</b> "+faultExplanation(choice);
   }else{
-    result.innerHTML="❌ <b>Incorrect.</b> The simulated fault is <b>"+faultName(faultSelect.value)+"</b>.<br>"+faultExplanation(faultSelect.value);
+    result.innerHTML="❌ <b>Incorrect.</b> Review the voltage, current, field duty and ripple waveform, then try again.";
   }
 };
 
@@ -1207,7 +1225,11 @@ resetBtn.onclick=()=>{
 
   rpmSlider.value=1800;
   loadSlider.value=20;
+  hiddenFaultMode=false;
+  hiddenFaultValue="good";
   faultSelect.value="good";
+  faultSelect.disabled=false;
+  hiddenBtn.textContent="🎲 New Hidden Fault";
   document.getElementById("diagnosisSelect").value="";
   document.getElementById("diagnosisResult").innerHTML="";
   document.getElementById("componentPopup").classList.remove("show");
@@ -1218,7 +1240,8 @@ resetBtn.onclick=()=>{
 };
 
 setInterval(()=>{
-  if(running && faultSelect.value==="brushes")updateSystem();
+  const activeFault=hiddenFaultMode ? hiddenFaultValue : faultSelect.value;
+  if(running && activeFault==="brushes")updateSystem();
 },300);
 
 stage.classList.add("paused");
