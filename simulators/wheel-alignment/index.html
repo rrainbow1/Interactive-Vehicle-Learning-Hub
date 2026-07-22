@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - WHEEL ALIGNMENT INTERACTIVE DIAGNOSTIC SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This software forms part of the RRainbow Learning Hub.
+
+The source code, interactive learning resources, simulations,
+graphics, diagnostic scenarios and associated educational
+content may not be copied, reproduced, redistributed,
+republished or commercially exploited without permission,
+except where permitted by law.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base target="_top">
+<title>Wheel Alignment Interactive Diagnostic Simulator</title>
+
+<style>
+:root{
+  --bg:#eef2f6;
+  --panel:#ffffff;
+  --line:#d8e0e8;
+  --text:#1e293b;
+  --muted:#64748b;
+  --navy:#0f172a;
+  --blue:#2563eb;
+  --green:#16a34a;
+  --red:#dc2626;
+  --amber:#d97706;
+  --cyan:#06b6d4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+header{
+  background:#101820;
+  color:#fff;
+  padding:16px 20px;
+}
+header h1{margin:0;font-size:24px}
+header p{margin:5px 0 0;color:#cbd5e1;font-size:13px}
+.wrap{max-width:1550px;margin:auto;padding:14px}
+
+.topbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+}
+.group{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+label{font-size:12px;font-weight:800;color:#475569}
+select,button{
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  padding:9px 11px;
+  font-weight:700;
+  background:#fff;
+  color:#17212b;
+}
+button{cursor:pointer}
+button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+button.success{background:#15803d;color:#fff;border-color:#15803d}
+
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 390px;
+  gap:14px;
+}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 3px 12px rgba(15,23,42,.06);
+}
+.card-title{
+  padding:11px 14px;
+  background:#f8fafc;
+  border-bottom:1px solid var(--line);
+  font-size:14px;
+  font-weight:900;
+}
+.main-pad{padding:14px}
+
+.view-tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.view-tab{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  border-radius:8px;
+  padding:8px 11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.view-tab.active{
+  background:#0f172a;
+  color:#fff;
+  border-color:#0f172a;
+}
+
+.diagram{
+  background:#111827;
+  border-radius:12px;
+  overflow:hidden;
+}
+svg{display:block;width:100%;height:auto}
+
+.reading-strip{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(120px,1fr));
+  gap:9px;
+  margin-top:12px;
+}
+.reading{
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px;
+}
+.reading .k{
+  font-size:11px;
+  color:#64748b;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.reading .v{
+  margin-top:4px;
+  font-size:19px;
+  font-weight:900;
+  color:#0f172a;
+}
+.reading.ok .v{color:#15803d}
+.reading.bad .v{color:#dc2626}
+
+.controls{
+  display:grid;
+  gap:12px;
+}
+.control{
+  padding:12px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:10px;
+}
+.control-row{
+  display:grid;
+  grid-template-columns:1fr 90px;
+  gap:10px;
+  align-items:center;
+}
+.control input[type="range"]{width:100%}
+.control .value{
+  text-align:right;
+  font-weight:900;
+  color:#0f172a;
+}
+.control small{
+  display:block;
+  margin-top:5px;
+  color:#64748b;
+  line-height:1.4;
+}
+
+.explain-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+.explain-card{
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+}
+.explain-card h3{
+  margin:0;
+  padding:10px 12px;
+  background:#f8fafc;
+  border-bottom:1px solid var(--line);
+  font-size:14px;
+}
+.explain-card p{
+  margin:0;
+  padding:10px 12px 12px;
+  color:#475569;
+  font-size:12px;
+  line-height:1.5;
+}
+.explain-svg{
+  background:#111827;
+  height:170px;
+}
+.explain-svg svg{height:100%}
+
+.side{display:flex;flex-direction:column;gap:14px}
+.side-content{padding:14px}
+.side-content h3{margin:0 0 10px;font-size:15px}
+.side-content select{width:100%}
+
+.status{
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  font-size:13px;
+  line-height:1.5;
+}
+.status.good{background:#ecfdf3;border-color:#86efac}
+.status.warn{background:#fffbeb;border-color:#fcd34d}
+.status.bad{background:#fef2f2;border-color:#fca5a5}
+
+.result{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  border-radius:9px;
+  background:#eef2ff;
+  border:1px solid #c7d2fe;
+  font-size:13px;
+  line-height:1.5;
+}
+.result.show{display:block}
+
+.copyright-footer{
+  margin-top:22px;
+  padding:18px 15px 8px;
+  border-top:1px solid var(--line);
+  text-align:center;
+}
+.copyright-main{font-size:13px;font-weight:900}
+.copyright-sub{margin-top:5px;font-size:12px;color:var(--muted);font-weight:600}
+
+@media(max-width:1100px){
+  .layout{grid-template-columns:1fr}
+}
+@media(max-width:800px){
+  .explain-grid{grid-template-columns:1fr}
+  .reading-strip{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Wheel Alignment Interactive Diagnostic Simulator</h1>
+  <p>Adjust toe, camber and caster, view the angles from the correct direction and diagnose alignment faults visually.</p>
+</header>
+
+<div class="wrap">
+
+<div class="topbar">
+
+  <div class="group">
+    <label>Training scenario</label>
+    <select id="scenarioSelect">
+      <option value="manual">Manual adjustment mode</option>
+      <option value="good">Known-good alignment</option>
+      <option value="toeOut">Excessive front toe-out</option>
+      <option value="toeIn">Excessive front toe-in</option>
+      <option value="negativeCamber">Excessive negative camber</option>
+      <option value="positiveCamber">Excessive positive camber</option>
+      <option value="lowCaster">Low positive caster</option>
+      <option value="casterSplit">Caster split left-to-right</option>
+    </select>
+  </div>
+
+  <button class="primary" id="hiddenBtn">🎲 New Hidden Fault</button>
+  <button class="primary" id="randomSetBtn">🎯 Random Set &amp; Adjust</button>
+  <button id="resetBtn">Reset</button>
+  <button class="success" id="submitBtn">Submit Diagnosis</button>
+
+</div>
+
+<div class="layout">
+
+<div class="card">
+  <div class="card-title">Interactive Alignment Views</div>
+  <div class="main-pad">
+
+    <div class="view-tabs">
+      <button class="view-tab active" data-view="top">Top View — Toe</button>
+      <button class="view-tab" data-view="front">Front View — Camber</button>
+      <button class="view-tab" data-view="side">Side View — Caster</button>
+    </div>
+
+    <div class="diagram">
+
+      <svg id="mainSvg" viewBox="0 0 1200 650" xmlns="http://www.w3.org/2000/svg">
+
+        <rect width="1200" height="650" fill="#111827"/>
+
+        <!-- TOP VIEW -->
+        <g id="topView">
+
+          <text x="600" y="45" fill="#e2e8f0" font-size="24" font-weight="bold" text-anchor="middle">TOP VIEW — TOE</text>
+          <text x="600" y="75" fill="#94a3b8" font-size="15" text-anchor="middle">Toe is viewed from above the vehicle</text>
+
+          <!-- vehicle -->
+          <rect x="400" y="105" width="400" height="440" rx="90" fill="#334155" stroke="#64748b" stroke-width="7"/>
+          <rect x="455" y="155" width="290" height="140" rx="50" fill="#1e3a5f"/>
+          <text x="600" y="335" fill="#cbd5e1" font-size="20" font-weight="bold" text-anchor="middle">VEHICLE CENTRELINE</text>
+          <line x1="600" y1="95" x2="600" y2="565" stroke="#94a3b8" stroke-width="3" stroke-dasharray="10 10"/>
+
+          <!-- front arrow -->
+          <path d="M600 85 L580 115 H620 Z" fill="#22c55e"/>
+          <text x="600" y="595" fill="#cbd5e1" font-size="15" text-anchor="middle">FRONT OF VEHICLE ↑</text>
+
+          <!-- wheels -->
+          <g id="topLeftWheel" style="transform-origin:370px 185px">
+            <rect x="315" y="135" width="110" height="100" rx="18" fill="#0f172a" stroke="#cbd5e1" stroke-width="6"/>
+            <line x1="370" y1="135" x2="370" y2="235" stroke="#60a5fa" stroke-width="4"/>
+          </g>
+
+          <g id="topRightWheel" style="transform-origin:830px 185px">
+            <rect x="775" y="135" width="110" height="100" rx="18" fill="#0f172a" stroke="#cbd5e1" stroke-width="6"/>
+            <line x1="830" y1="135" x2="830" y2="235" stroke="#60a5fa" stroke-width="4"/>
+          </g>
+
+          <!-- rear wheels fixed -->
+          <rect x="315" y="435" width="110" height="100" rx="18" fill="#0f172a" stroke="#64748b" stroke-width="6"/>
+          <rect x="775" y="435" width="110" height="100" rx="18" fill="#0f172a" stroke="#64748b" stroke-width="6"/>
+
+          <!-- toe angle guides -->
+          <line x1="370" y1="105" x2="370" y2="265" stroke="#475569" stroke-width="2" stroke-dasharray="6 6"/>
+          <line x1="830" y1="105" x2="830" y2="265" stroke="#475569" stroke-width="2" stroke-dasharray="6 6"/>
+
+          <text id="toeLabelL" x="270" y="120" fill="#22c55e" font-size="16" font-weight="bold">LF: 0.0 mm</text>
+          <text id="toeLabelR" x="865" y="120" fill="#22c55e" font-size="16" font-weight="bold">RF: 0.0 mm</text>
+
+        </g>
+
+        <!-- FRONT VIEW -->
+        <g id="frontView" style="display:none">
+
+          <text x="600" y="45" fill="#e2e8f0" font-size="24" font-weight="bold" text-anchor="middle">FRONT VIEW — CAMBER</text>
+          <text x="600" y="75" fill="#94a3b8" font-size="15" text-anchor="middle">Camber is viewed from the front of the vehicle</text>
+
+          <!-- body -->
+          <path d="M315 280 Q360 165 465 155 H735 Q840 165 885 280 L920 360 H280 Z"
+                fill="#334155" stroke="#64748b" stroke-width="7"/>
+          <rect x="470" y="180" width="260" height="95" rx="25" fill="#1e3a5f"/>
+
+          <!-- road -->
+          <line x1="150" y1="530" x2="1050" y2="530" stroke="#64748b" stroke-width="8"/>
+
+          <!-- vertical datum -->
+          <line x1="340" y1="250" x2="340" y2="545" stroke="#475569" stroke-width="2" stroke-dasharray="7 7"/>
+          <line x1="860" y1="250" x2="860" y2="545" stroke="#475569" stroke-width="2" stroke-dasharray="7 7"/>
+
+          <g id="frontLeftWheel" style="transform-origin:340px 430px">
+            <rect x="295" y="315" width="90" height="230" rx="22" fill="#0f172a" stroke="#cbd5e1" stroke-width="7"/>
+            <line x1="340" y1="320" x2="340" y2="540" stroke="#60a5fa" stroke-width="4"/>
+          </g>
+
+          <g id="frontRightWheel" style="transform-origin:860px 430px">
+            <rect x="815" y="315" width="90" height="230" rx="22" fill="#0f172a" stroke="#cbd5e1" stroke-width="7"/>
+            <line x1="860" y1="320" x2="860" y2="540" stroke="#60a5fa" stroke-width="4"/>
+          </g>
+
+          <text id="camberLabelL" x="230" y="300" fill="#22c55e" font-size="16" font-weight="bold">LF: 0.0°</text>
+          <text id="camberLabelR" x="905" y="300" fill="#22c55e" font-size="16" font-weight="bold">RF: 0.0°</text>
+
+        </g>
+
+        <!-- SIDE VIEW -->
+        <g id="sideView" style="display:none">
+
+          <text x="600" y="45" fill="#e2e8f0" font-size="24" font-weight="bold" text-anchor="middle">SIDE VIEW — CASTER</text>
+          <text x="600" y="75" fill="#94a3b8" font-size="15" text-anchor="middle">Caster is viewed from the side of the vehicle</text>
+
+          <!-- car side -->
+          <path d="M245 380 L310 285 Q360 220 455 210 H690 Q770 215 835 295 L940 330 L965 380 Z"
+                fill="#334155" stroke="#64748b" stroke-width="7"/>
+          <path d="M455 220 H690 Q745 225 790 290 H410 Z" fill="#1e3a5f"/>
+
+          <!-- wheel -->
+          <circle cx="780" cy="445" r="105" fill="#0f172a" stroke="#cbd5e1" stroke-width="8"/>
+          <circle cx="780" cy="445" r="47" fill="#374151" stroke="#94a3b8" stroke-width="5"/>
+
+          <!-- vertical datum -->
+          <line x1="780" y1="240" x2="780" y2="555" stroke="#475569" stroke-width="3" stroke-dasharray="8 8"/>
+
+          <!-- steering axis -->
+          <line id="casterAxis" x1="740" y1="265" x2="815" y2="535"
+                stroke="#22c55e" stroke-width="7" stroke-linecap="round"
+                style="transform-origin:780px 445px"/>
+
+          <!-- upper/lower pivot markers -->
+          <circle id="upperPivot" cx="740" cy="265" r="13" fill="#facc15"/>
+          <circle id="lowerPivot" cx="815" cy="535" r="13" fill="#facc15"/>
+
+          <!-- direction -->
+          <text x="905" y="540" fill="#cbd5e1" font-size="14">FRONT OF VEHICLE →</text>
+
+          <text id="casterLabel" x="490" y="280" fill="#22c55e" font-size="18" font-weight="bold">Caster: +4.0°</text>
+
+        </g>
+
+      </svg>
+
+    </div>
+
+    <div class="reading-strip">
+      <div class="reading" id="readToeL"><div class="k">LF Toe</div><div class="v" id="rToeL">0.0 mm</div></div>
+      <div class="reading" id="readToeR"><div class="k">RF Toe</div><div class="v" id="rToeR">0.0 mm</div></div>
+      <div class="reading" id="readCamber"><div class="k">Camber Average</div><div class="v" id="rCamber">0.0°</div></div>
+      <div class="reading" id="readCaster"><div class="k">Caster Average</div><div class="v" id="rCaster">+4.0°</div></div>
+    </div>
+
+    <div class="explain-grid">
+
+      <!-- TOE EXPLAINER -->
+      <div class="explain-card">
+        <h3>Toe — viewed from above</h3>
+        <div class="explain-svg">
+          <svg viewBox="0 0 360 180">
+            <rect width="360" height="180" fill="#111827"/>
+            <text x="180" y="22" fill="#e2e8f0" font-size="13" font-weight="bold" text-anchor="middle">TOP VIEW</text>
+            <line x1="180" y1="35" x2="180" y2="158" stroke="#64748b" stroke-width="2" stroke-dasharray="6 6"/>
+            <g transform="rotate(7 110 100)">
+              <rect x="78" y="55" width="64" height="95" rx="12" fill="#0f172a" stroke="#cbd5e1" stroke-width="4"/>
+            </g>
+            <g transform="rotate(-7 250 100)">
+              <rect x="218" y="55" width="64" height="95" rx="12" fill="#0f172a" stroke="#cbd5e1" stroke-width="4"/>
+            </g>
+            <text x="180" y="170" fill="#fbbf24" font-size="12" text-anchor="middle">Front edges closer = toe-in</text>
+          </svg>
+        </div>
+        <p>Toe is the direction the wheels point relative to the vehicle centreline when viewed from above. Front edges closer together = toe-in; further apart = toe-out.</p>
+      </div>
+
+      <!-- CAMBER EXPLAINER -->
+      <div class="explain-card">
+        <h3>Camber — viewed from the front</h3>
+        <div class="explain-svg">
+          <svg viewBox="0 0 360 180">
+            <rect width="360" height="180" fill="#111827"/>
+            <text x="180" y="22" fill="#e2e8f0" font-size="13" font-weight="bold" text-anchor="middle">FRONT VIEW</text>
+            <line x1="180" y1="35" x2="180" y2="155" stroke="#64748b" stroke-width="2" stroke-dasharray="6 6"/>
+            <g transform="rotate(8 105 105)">
+              <rect x="75" y="50" width="60" height="110" rx="12" fill="#0f172a" stroke="#cbd5e1" stroke-width="4"/>
+            </g>
+            <g transform="rotate(8 255 105)">
+              <rect x="225" y="50" width="60" height="110" rx="12" fill="#0f172a" stroke="#cbd5e1" stroke-width="4"/>
+            </g>
+            <text x="180" y="173" fill="#fbbf24" font-size="12" text-anchor="middle">Top inward = negative camber</text>
+          </svg>
+        </div>
+        <p>Camber is wheel tilt viewed from the front. Top of wheel inward = negative camber; top outward = positive camber.</p>
+      </div>
+
+      <!-- CASTER EXPLAINER -->
+      <div class="explain-card">
+        <h3>Caster — viewed from the side</h3>
+        <div class="explain-svg">
+          <svg viewBox="0 0 360 180">
+            <rect width="360" height="180" fill="#111827"/>
+            <text x="180" y="22" fill="#e2e8f0" font-size="13" font-weight="bold" text-anchor="middle">SIDE VIEW</text>
+            <circle cx="180" cy="112" r="48" fill="#0f172a" stroke="#cbd5e1" stroke-width="4"/>
+            <line x1="180" y1="42" x2="180" y2="165" stroke="#64748b" stroke-width="2" stroke-dasharray="6 6"/>
+            <line x1="155" y1="45" x2="198" y2="160" stroke="#22c55e" stroke-width="5"/>
+            <text x="180" y="176" fill="#fbbf24" font-size="12" text-anchor="middle">Top rearward = positive caster</text>
+          </svg>
+        </div>
+        <p>Caster is the steering-axis tilt viewed from the side. Positive caster means the upper steering-axis point is behind the lower point.</p>
+      </div>
+
+    </div>
+
+    <div id="statusBox" class="status">
+      Use the sliders to change alignment angles and watch the wheel positions move in the correct viewing direction.
+    </div>
+
+  </div>
+</div>
+
+<div class="side">
+
+  <div class="card">
+    <div class="card-title">Alignment Adjustments</div>
+    <div class="side-content">
+
+      <div class="controls">
+
+        <div class="control">
+          <div class="control-row">
+            <div>
+              <label>Left-front toe</label>
+              <input id="toeL" type="range" min="-5" max="5" step="0.1" value="0">
+            </div>
+            <div class="value" id="toeLVal">0.0 mm</div>
+          </div>
+          <small>Negative = toe-out. Positive = toe-in. Viewed from above.</small>
+        </div>
+
+        <div class="control">
+          <div class="control-row">
+            <div>
+              <label>Right-front toe</label>
+              <input id="toeR" type="range" min="-5" max="5" step="0.1" value="0">
+            </div>
+            <div class="value" id="toeRVal">0.0 mm</div>
+          </div>
+          <small>Negative = toe-out. Positive = toe-in. Viewed from above.</small>
+        </div>
+
+        <div class="control">
+          <div class="control-row">
+            <div>
+              <label>Left-front camber</label>
+              <input id="camberL" type="range" min="-5" max="5" step="0.1" value="0">
+            </div>
+            <div class="value" id="camberLVal">0.0°</div>
+          </div>
+          <small>Negative = top of wheel inward. Positive = top outward. Viewed from the front.</small>
+        </div>
+
+        <div class="control">
+          <div class="control-row">
+            <div>
+              <label>Right-front camber</label>
+              <input id="camberR" type="range" min="-5" max="5" step="0.1" value="0">
+            </div>
+            <div class="value" id="camberRVal">0.0°</div>
+          </div>
+          <small>Negative = top of wheel inward. Positive = top outward. Viewed from the front.</small>
+        </div>
+
+        <div class="control">
+          <div class="control-row">
+            <div>
+              <label>Left caster</label>
+              <input id="casterL" type="range" min="-2" max="8" step="0.1" value="4">
+            </div>
+            <div class="value" id="casterLVal">+4.0°</div>
+          </div>
+          <small>Positive caster places the upper steering-axis point rearward of the lower point when viewed from the side.</small>
+        </div>
+
+        <div class="control">
+          <div class="control-row">
+            <div>
+              <label>Right caster</label>
+              <input id="casterR" type="range" min="-2" max="8" step="0.1" value="4">
+            </div>
+            <div class="value" id="casterRVal">+4.0°</div>
+          </div>
+          <small>Compare left/right caster split as well as absolute values.</small>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Alignment Specification</div>
+    <div class="side-content">
+
+      <div id="specBox" class="status">
+        <b>Generic training specification:</b><br>
+        LF Toe: <span id="specToeL">0.0 mm ± 1.0 mm</span><br>
+        RF Toe: <span id="specToeR">0.0 mm ± 1.0 mm</span><br>
+        LF Camber: <span id="specCamberL">0.0° ± 1.0°</span><br>
+        RF Camber: <span id="specCamberR">0.0° ± 1.0°</span><br>
+        LF Caster: <span id="specCasterL">+4.0° ± 1.0°</span><br>
+        RF Caster: <span id="specCasterR">+4.0° ± 1.0°</span><br><br>
+        <span id="specInstruction">Use manufacturer data for the actual vehicle being aligned.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" id="taskCardTitle">Diagnosis</div>
+    <div class="side-content">
+
+      <h3 id="taskQuestion">Most likely alignment condition</h3>
+
+      <select id="diagnosisSelect">
+        <option value="">Select diagnosis</option>
+        <option value="good">Alignment within training specification</option>
+        <option value="toeOut">Excessive front toe-out</option>
+        <option value="toeIn">Excessive front toe-in</option>
+        <option value="negativeCamber">Excessive negative camber</option>
+        <option value="positiveCamber">Excessive positive camber</option>
+        <option value="lowCaster">Insufficient positive caster</option>
+        <option value="casterSplit">Excessive caster split left-to-right</option>
+      </select>
+
+      <div id="adjustmentModeNote" class="status" style="display:none">
+        Adjust all six values so they are within the specification shown above, then click <b>Submit Alignment</b>.
+      </div>
+
+      <div class="result" id="resultBox"></div>
+
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+<footer class="copyright-footer">
+  <div class="copyright-main">© 2026 RRainbow. All Rights Reserved.</div>
+  <div class="copyright-sub">Wheel Alignment Interactive Diagnostic Simulator · RRainbow Learning Hub</div>
+</footer>
+
+</div>
+
+<!--
+============================================================
+RRainbow - PROTECTED INTERACTIVE SIMULATOR CODE
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+The JavaScript logic, alignment calculations, animated
+wheel positions, diagnostic scenarios and educational
+explanations below form part of the RRainbow Learning Hub
+and are protected content.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation is prohibited
+except where permitted by law or expressly authorised by
+the rights holder.
+
+============================================================
+-->
+
+<script>
+(function(){
+"use strict";
+
+var activeScenario="manual";
+var hiddenScenario=null;
+var adjustmentTaskActive=false;
+
+var targetSpec={
+  toeL:{target:0,tol:1},
+  toeR:{target:0,tol:1},
+  camberL:{target:0,tol:1},
+  camberR:{target:0,tol:1},
+  casterL:{target:4,tol:1},
+  casterR:{target:4,tol:1}
+};
+
+var scenarioSelect=document.getElementById("scenarioSelect");
+var diagnosisSelect=document.getElementById("diagnosisSelect");
+var resultBox=document.getElementById("resultBox");
+var statusBox=document.getElementById("statusBox");
+var specBox=document.getElementById("specBox");
+var taskCardTitle=document.getElementById("taskCardTitle");
+var taskQuestion=document.getElementById("taskQuestion");
+var adjustmentModeNote=document.getElementById("adjustmentModeNote");
+
+var toeL=document.getElementById("toeL");
+var toeR=document.getElementById("toeR");
+var camberL=document.getElementById("camberL");
+var camberR=document.getElementById("camberR");
+var casterL=document.getElementById("casterL");
+var casterR=document.getElementById("casterR");
+
+function n(el){return parseFloat(el.value)}
+
+function fmtSigned(v,suffix){
+  return (v>0?"+":"")+v.toFixed(1)+suffix;
+}
+
+
+function round1(v){
+  return Math.round(v*10)/10;
+}
+
+function randomBetween(min,max,step){
+  var steps=Math.round((max-min)/step);
+  return round1(min + Math.floor(Math.random()*(steps+1))*step);
+}
+
+function displayTarget(target,suffix){
+  return (target>0?"+":"")+target.toFixed(1)+suffix;
+}
+
+function updateSpecificationDisplay(){
+
+  document.getElementById("specToeL").textContent=
+    displayTarget(targetSpec.toeL.target," mm")+" ± "+targetSpec.toeL.tol.toFixed(1)+" mm";
+
+  document.getElementById("specToeR").textContent=
+    displayTarget(targetSpec.toeR.target," mm")+" ± "+targetSpec.toeR.tol.toFixed(1)+" mm";
+
+  document.getElementById("specCamberL").textContent=
+    displayTarget(targetSpec.camberL.target,"°")+" ± "+targetSpec.camberL.tol.toFixed(1)+"°";
+
+  document.getElementById("specCamberR").textContent=
+    displayTarget(targetSpec.camberR.target,"°")+" ± "+targetSpec.camberR.tol.toFixed(1)+"°";
+
+  document.getElementById("specCasterL").textContent=
+    displayTarget(targetSpec.casterL.target,"°")+" ± "+targetSpec.casterL.tol.toFixed(1)+"°";
+
+  document.getElementById("specCasterR").textContent=
+    displayTarget(targetSpec.casterR.target,"°")+" ± "+targetSpec.casterR.tol.toFixed(1)+"°";
+}
+
+function randomiseTrainingSpecification(){
+
+  /*
+    Creates a plausible training specification rather than using one fixed target.
+    These are generic simulator values, not manufacturer data.
+  */
+  targetSpec={
+    toeL:{target:randomBetween(-0.2,0.4,0.1),tol:0.6},
+    toeR:{target:randomBetween(-0.2,0.4,0.1),tol:0.6},
+
+    camberL:{target:randomBetween(-0.8,0.2,0.1),tol:0.6},
+    camberR:{target:randomBetween(-0.8,0.2,0.1),tol:0.6},
+
+    casterL:{target:randomBetween(3.2,5.0,0.1),tol:0.7},
+    casterR:{target:randomBetween(3.2,5.0,0.1),tol:0.7}
+  };
+
+  updateSpecificationDisplay();
+}
+
+function valueWithin(value,spec){
+  return value >= (spec.target-spec.tol) &&
+         value <= (spec.target+spec.tol);
+}
+
+function generateOutOfSpecValue(spec,min,max){
+
+  var value;
+  var guard=0;
+
+  do{
+    value=randomBetween(min,max,0.1);
+    guard++;
+  }while(valueWithin(value,spec) && guard<100);
+
+  return value;
+}
+
+function beginRandomAdjustmentTask(){
+
+  adjustmentTaskActive=true;
+  hiddenScenario=null;
+  activeScenario="manual";
+
+  scenarioSelect.value="manual";
+  diagnosisSelect.value="";
+  resultBox.classList.remove("show");
+
+  randomiseTrainingSpecification();
+
+  /*
+    Start the learner with deliberately incorrect alignment.
+    At least several readings will be outside specification.
+  */
+  toeL.value=generateOutOfSpecValue(targetSpec.toeL,-5,5);
+  toeR.value=generateOutOfSpecValue(targetSpec.toeR,-5,5);
+  camberL.value=generateOutOfSpecValue(targetSpec.camberL,-5,5);
+  camberR.value=generateOutOfSpecValue(targetSpec.camberR,-5,5);
+  casterL.value=generateOutOfSpecValue(targetSpec.casterL,-2,8);
+  casterR.value=generateOutOfSpecValue(targetSpec.casterR,-2,8);
+
+  taskCardTitle.textContent="Wheel Alignment Adjustment Task";
+  taskQuestion.textContent="Adjust the vehicle to specification";
+  diagnosisSelect.style.display="none";
+  adjustmentModeNote.style.display="block";
+
+  document.getElementById("submitBtn").textContent="✅ Submit Alignment";
+
+  document.getElementById("specInstruction").innerHTML=
+    "<b>Adjustment task:</b> Move the sliders until all six readings fall within the specification above.";
+
+  updateAll();
+
+  statusBox.className="status warn";
+  statusBox.innerHTML=
+    "<b>Random alignment set loaded.</b><br>"+
+    "The vehicle is currently out of specification. Use the correct top, front and side views, compare each reading with the specification and adjust all six values.";
+}
+
+function leaveAdjustmentTask(){
+
+  adjustmentTaskActive=false;
+
+  taskCardTitle.textContent="Diagnosis";
+  taskQuestion.textContent="Most likely alignment condition";
+  diagnosisSelect.style.display="block";
+  adjustmentModeNote.style.display="none";
+
+  document.getElementById("submitBtn").textContent="Submit Diagnosis";
+
+  targetSpec={
+    toeL:{target:0,tol:1},
+    toeR:{target:0,tol:1},
+    camberL:{target:0,tol:1},
+    camberR:{target:0,tol:1},
+    casterL:{target:4,tol:1},
+    casterR:{target:4,tol:1}
+  };
+
+  updateSpecificationDisplay();
+
+  document.getElementById("specInstruction").textContent=
+    "Use manufacturer data for the actual vehicle being aligned.";
+}
+
+function submitAlignmentTask(){
+
+  var values={
+    toeL:n(toeL),
+    toeR:n(toeR),
+    camberL:n(camberL),
+    camberR:n(camberR),
+    casterL:n(casterL),
+    casterR:n(casterR)
+  };
+
+  var checks={
+    toeL:valueWithin(values.toeL,targetSpec.toeL),
+    toeR:valueWithin(values.toeR,targetSpec.toeR),
+    camberL:valueWithin(values.camberL,targetSpec.camberL),
+    camberR:valueWithin(values.camberR,targetSpec.camberR),
+    casterL:valueWithin(values.casterL,targetSpec.casterL),
+    casterR:valueWithin(values.casterR,targetSpec.casterR)
+  };
+
+  var failed=[];
+
+  if(!checks.toeL)failed.push("left-front toe");
+  if(!checks.toeR)failed.push("right-front toe");
+  if(!checks.camberL)failed.push("left-front camber");
+  if(!checks.camberR)failed.push("right-front camber");
+  if(!checks.casterL)failed.push("left caster");
+  if(!checks.casterR)failed.push("right caster");
+
+  resultBox.classList.add("show");
+
+  if(failed.length===0){
+
+    resultBox.innerHTML=
+      "✅ <b>Alignment completed correctly.</b><br>"+
+      "All six wheel-alignment readings are within the specified tolerance.";
+
+    statusBox.className="status good";
+    statusBox.innerHTML=
+      "<b>Vehicle is now within specification.</b><br>"+
+      "Toe, camber and caster have all been adjusted correctly.";
+
+  }else{
+
+    resultBox.innerHTML=
+      "❌ <b>The alignment is not yet within specification.</b><br><br>"+
+      "Recheck: <b>"+failed.join(", ")+"</b>.<br>"+
+      "Compare the current readings with the specification and make further adjustments.";
+
+    statusBox.className="status warn";
+    statusBox.innerHTML=
+      "<b>Further adjustment required.</b><br>"+
+      "Not all readings are within the specified tolerance.";
+
+  }
+}
+
+function setScenario(name){
+
+  activeScenario=name;
+
+  var vals={
+    manual:[0,0,0,0,4,4],
+    good:[0.2,0.2,-0.2,-0.2,4.2,4.3],
+    toeOut:[-3.2,-2.8,-0.2,-0.1,4.1,4.0],
+    toeIn:[3.0,2.7,-0.2,-0.2,4.0,4.1],
+    negativeCamber:[0.2,0.1,-3.2,-2.8,4.1,4.0],
+    positiveCamber:[0.1,0.1,2.8,3.1,4.0,4.2],
+    lowCaster:[0.2,0.1,-0.2,-0.1,1.8,2.0],
+    casterSplit:[0.1,0.2,-0.2,-0.1,2.1,5.8]
+  }[name];
+
+  if(vals){
+    [toeL,toeR,camberL,camberR,casterL,casterR].forEach(function(el,i){
+      el.value=vals[i];
+    });
+  }
+
+  updateAll();
+}
+
+function updateAll(){
+
+  var tl=n(toeL),tr=n(toeR),cl=n(camberL),cr=n(camberR),cal=n(casterL),car=n(casterR);
+
+  document.getElementById("toeLVal").textContent=fmtSigned(tl," mm");
+  document.getElementById("toeRVal").textContent=fmtSigned(tr," mm");
+  document.getElementById("camberLVal").textContent=fmtSigned(cl,"°");
+  document.getElementById("camberRVal").textContent=fmtSigned(cr,"°");
+  document.getElementById("casterLVal").textContent=fmtSigned(cal,"°");
+  document.getElementById("casterRVal").textContent=fmtSigned(car,"°");
+
+  document.getElementById("rToeL").textContent=fmtSigned(tl," mm");
+  document.getElementById("rToeR").textContent=fmtSigned(tr," mm");
+  document.getElementById("rCamber").textContent=fmtSigned((cl+cr)/2,"°");
+  document.getElementById("rCaster").textContent=fmtSigned((cal+car)/2,"°");
+
+  document.getElementById("toeLabelL").textContent="LF: "+fmtSigned(tl," mm");
+  document.getElementById("toeLabelR").textContent="RF: "+fmtSigned(tr," mm");
+  document.getElementById("camberLabelL").textContent="LF: "+fmtSigned(cl,"°");
+  document.getElementById("camberLabelR").textContent="RF: "+fmtSigned(cr,"°");
+  document.getElementById("casterLabel").textContent="Caster avg: "+fmtSigned((cal+car)/2,"°");
+
+  // Visual scale factors deliberately exaggerated for teaching clarity.
+  document.getElementById("topLeftWheel").style.transform="rotate("+(tl*2.2)+"deg)";
+  document.getElementById("topRightWheel").style.transform="rotate("+(-tr*2.2)+"deg)";
+
+  document.getElementById("frontLeftWheel").style.transform="rotate("+(-cl*3)+"deg)";
+  document.getElementById("frontRightWheel").style.transform="rotate("+(-cr*3)+"deg)";
+
+  var casterAvg=(cal+car)/2;
+  document.getElementById("casterAxis").style.transform="rotate("+(-(casterAvg-4)*2.2)+"deg)";
+
+  updateReadingClass("readToeL",Math.abs(tl)<=1);
+  updateReadingClass("readToeR",Math.abs(tr)<=1);
+  updateReadingClass("readCamber",Math.abs((cl+cr)/2)<=1);
+  updateReadingClass("readCaster",Math.abs(casterAvg-4)<=1);
+
+  if(activeScenario==="manual"){
+    statusBox.className="status";
+    statusBox.innerHTML="<b>Manual adjustment mode.</b><br>Move the sliders and switch between top, front and side views to see how each alignment angle is viewed.";
+  }
+}
+
+function updateReadingClass(id,ok){
+  var el=document.getElementById(id);
+  el.classList.remove("ok","bad");
+  el.classList.add(ok?"ok":"bad");
+}
+
+[toeL,toeR,camberL,camberR,casterL,casterR].forEach(function(el){
+  el.addEventListener("input",function(){
+
+    if(!adjustmentTaskActive && activeScenario!=="manual"){
+      activeScenario="manual";
+      scenarioSelect.value="manual";
+    }
+
+    updateAll();
+
+  });
+});
+
+document.querySelectorAll(".view-tab").forEach(function(btn){
+  btn.onclick=function(){
+
+    document.querySelectorAll(".view-tab").forEach(function(b){b.classList.remove("active")});
+    this.classList.add("active");
+
+    var view=this.dataset.view;
+
+    document.getElementById("topView").style.display=view==="top"?"block":"none";
+    document.getElementById("frontView").style.display=view==="front"?"block":"none";
+    document.getElementById("sideView").style.display=view==="side"?"block":"none";
+
+  };
+});
+
+scenarioSelect.onchange=function(){
+
+  leaveAdjustmentTask();
+  hiddenScenario=null;
+  diagnosisSelect.value="";
+  resultBox.classList.remove("show");
+  setScenario(this.value);
+
+  if(this.value!=="manual"){
+    statusBox.className="status warn";
+    statusBox.innerHTML="<b>Practice scenario loaded.</b><br>Use the readings and all three views to identify the alignment condition.";
+  }
+};
+
+document.getElementById("hiddenBtn").onclick=function(){
+
+  leaveAdjustmentTask();
+
+  var list=["toeOut","toeIn","negativeCamber","positiveCamber","lowCaster","casterSplit"];
+  hiddenScenario=list[Math.floor(Math.random()*list.length)];
+
+  scenarioSelect.value="manual";
+  setScenario(hiddenScenario);
+  activeScenario=hiddenScenario;
+
+  diagnosisSelect.value="";
+  resultBox.classList.remove("show");
+
+  statusBox.className="status warn";
+  statusBox.innerHTML="<b>Hidden alignment fault active.</b><br>Use the top, front and side views plus the readings to identify the condition.";
+
+};
+
+document.getElementById("randomSetBtn").onclick=function(){
+  beginRandomAdjustmentTask();
+};
+
+document.getElementById("resetBtn").onclick=function(){
+
+  leaveAdjustmentTask();
+  hiddenScenario=null;
+  scenarioSelect.value="manual";
+  diagnosisSelect.value="";
+  resultBox.classList.remove("show");
+  setScenario("manual");
+};
+
+function scenarioName(s){
+  return {
+    good:"Alignment within training specification",
+    toeOut:"Excessive front toe-out",
+    toeIn:"Excessive front toe-in",
+    negativeCamber:"Excessive negative camber",
+    positiveCamber:"Excessive positive camber",
+    lowCaster:"Insufficient positive caster",
+    casterSplit:"Excessive caster split left-to-right"
+  }[s];
+}
+
+function explanation(s){
+  return {
+    good:"Toe, camber and caster values are all within the generic training specification used by this simulator.",
+    toeOut:"Both front wheels point outward when viewed from above. Excessive toe-out can contribute to tyre scrub, instability and rapid tyre wear.",
+    toeIn:"Both front wheels point inward when viewed from above. Excessive toe-in can also create tyre scrub and abnormal tyre wear.",
+    negativeCamber:"The tops of the front wheels lean too far inward when viewed from the front. Excessive negative camber commonly increases inner-edge tyre wear.",
+    positiveCamber:"The tops of the front wheels lean too far outward when viewed from the front. Excessive positive camber commonly increases outer-edge tyre wear.",
+    lowCaster:"The steering axis has insufficient positive rearward tilt when viewed from the side. This can reduce steering self-centering and straight-line stability.",
+    casterSplit:"There is a large left-to-right caster difference. A significant caster split can contribute to steering pull even when the individual readings may appear plausible."
+  }[s];
+}
+
+document.getElementById("submitBtn").onclick=function(){
+
+  if(adjustmentTaskActive){
+    submitAlignmentTask();
+    return;
+  }
+
+  var choice=diagnosisSelect.value;
+  resultBox.classList.add("show");
+
+  if(!choice){
+    resultBox.innerHTML="<b>Select a diagnosis first.</b>";
+    return;
+  }
+
+  var target=hiddenScenario || (activeScenario==="manual" ? null : activeScenario);
+
+  if(!target){
+    resultBox.innerHTML="<b>You are in manual adjustment mode.</b><br>Load a scenario or use Hidden Fault mode before submitting a diagnosis.";
+    return;
+  }
+
+  if(choice===target){
+    resultBox.innerHTML="✅ <b>Correct diagnosis.</b><br>"+explanation(target);
+  }else{
+    resultBox.innerHTML="❌ <b>That is not the most likely alignment condition.</b><br><br>The simulated condition was <b>"+
+      scenarioName(target)+"</b>.<br>"+explanation(target);
+  }
+
+};
+
+setScenario("manual");
+
+})();
+</script>
+
+<!--
+============================================================
+END OF RRAINBOW WHEEL ALIGNMENT INTERACTIVE DIAGNOSTIC SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+RRainbow Learning Hub.
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of this software
+or its educational content is prohibited except where
+permitted by law.
+
+============================================================
+-->
+
+</body>
+</html>
