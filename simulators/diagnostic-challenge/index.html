@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - DIAGNOSTIC CHALLENGE SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This resource contains original software, graphics,
+written educational content and interactive learning
+resource design.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of protected
+content is prohibited except where permitted by law or
+expressly authorised by the rights holder.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Diagnostic Challenge Simulator</title>
+<style>
+:root{
+ --bg:#eef2f6;--panel:#fff;--ink:#17212b;--muted:#64748b;
+ --blue:#1565c0;--green:#2e7d32;--amber:#f59e0b;--red:#d32f2f;
+ --line:#d7dee5;--navy:#101820;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+header{background:var(--navy);color:#fff;padding:15px 18px}
+header h1{margin:0;font-size:23px}
+header p{margin:4px 0 0;color:#cbd5df;font-size:13px}
+.wrap{max-width:1450px;margin:auto;padding:14px}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) 390px;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 2px 10px #0000000c}
+.pad{padding:15px}
+.complaint{
+ background:linear-gradient(135deg,#111827,#243247);
+ color:#fff;border-radius:11px;padding:18px;margin-bottom:14px
+}
+.complaint small{display:block;color:#9fb0bd;font-weight:bold;letter-spacing:.5px;margin-bottom:6px}
+.complaint h2{margin:0;font-size:22px}
+.complaint p{margin:8px 0 0;color:#dce6ed;font-size:14px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.metric{border:1px solid var(--line);border-radius:9px;padding:10px;background:#f8fafc}
+.metric small{display:block;color:var(--muted);font-size:11px}
+.metric strong{font-size:17px}
+.test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.test-btn{
+ border:1px solid #cfd8e0;background:#f8fafc;border-radius:10px;padding:12px;
+ cursor:pointer;text-align:left;transition:.15s;min-height:86px
+}
+.test-btn:hover{transform:translateY(-2px);box-shadow:0 6px 15px #00000010;border-color:#9ec5ff}
+.test-btn.done{background:#eef6ff;border-color:#9ec5ff}
+.test-btn .ico{font-size:22px;display:block;margin-bottom:5px}
+.test-btn b{display:block;font-size:13px;color:#0f172a}
+.test-btn span{font-size:11px;color:#64748b}
+.results{margin-top:14px}
+.result-card{border:1px solid var(--line);border-radius:10px;margin-top:8px;overflow:hidden}
+.result-head{display:flex;justify-content:space-between;gap:10px;background:#f6f8fa;padding:9px 11px;font-weight:bold;font-size:13px}
+.result-body{padding:11px;font-size:13px;line-height:1.5}
+.normal{color:var(--green);font-weight:bold}
+.abnormal{color:var(--red);font-weight:bold}
+.neutral{color:#475569;font-weight:bold}
+.wavebox{margin-top:8px;background:#07131d;border-radius:8px;padding:7px}
+.wavebox svg{display:block;width:100%;height:auto}
+.side h3{margin:0 0 10px}
+.option{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px;margin-top:7px;cursor:pointer}
+.option.selected{border-color:#1565c0;background:#eaf3ff}
+.option.correct{border-color:#2e7d32;background:#edf9f0}
+.option.wrong{border-color:#d32f2f;background:#fff0f0}
+.action{width:100%;border:0;border-radius:8px;padding:11px;font-weight:bold;cursor:pointer;margin-top:10px}
+.primary{background:#1565c0;color:white}.green{background:#2e7d32;color:white}.grey{background:#dfe5ea}
+.feedback{margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:9px;background:#f8fafc;font-size:13px;line-height:1.5}
+.feedback.good{background:#edf9f0;border-color:#96d7a7}
+.feedback.bad{background:#fff0f0;border-color:#efaaaa}
+.history{max-height:470px;overflow:auto}
+.info-btn{float:right;border:0;width:34px;height:34px;border-radius:50%;background:#1565c0;color:#fff;font:bold 20px Georgia;cursor:pointer}
+.popup{display:none;margin-top:10px;border:2px solid #1565c0;border-radius:9px;padding:12px;font-size:13px;line-height:1.5}
+.popup.show{display:block}
+.progressbar{height:10px;background:#e7edf3;border-radius:999px;overflow:hidden;margin-top:6px}
+.progressfill{
+  height:100%;
+  background:#1565c0;
+  width:0%;
+}
+
+
+/* COPYRIGHT FOOTER */
+
+.copyright-footer{
+  max-width:1450px;
+  margin:10px auto 20px;
+  padding:18px 16px;
+  border-top:1px solid var(--line);
+  text-align:center;
+}
+
+.copyright-main{
+  color:var(--navy);
+  font-size:13px;
+  font-weight:bold;
+}
+
+.copyright-sub{
+  margin-top:5px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+}
+
+
+@media(max-width:980px){
+  .grid{grid-template-columns:1fr}
+  .test-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:600px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .test-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<header>
+<h1>🔍 Diagnostic Challenge / Fault-Finding Simulator</h1>
+<p>Use test results to diagnose a hidden cranks-but-won’t-start fault.</p>
+</header>
+
+<div class="wrap">
+<div class="grid">
+
+<div class="card pad">
+
+<button class="info-btn" id="infoBtn">i</button>
+
+<div class="complaint">
+<small>CUSTOMER COMPLAINT</small>
+<h2>Vehicle cranks normally but will not start.</h2>
+<p>The fault is hidden. Choose your tests carefully, interpret the evidence, then select the most likely cause.</p>
+</div>
+
+<div id="infoPopup" class="popup">
+<b>How to use the challenge</b><br><br>
+Each test reveals one piece of diagnostic evidence. Not every test is necessary. A good diagnostic process uses the fewest useful tests needed to prove the fault. Once you have enough evidence, select the most likely diagnosis and submit your answer.<br><br>
+<b>Scoring:</b> unnecessary tests reduce efficiency points, but an accurate diagnosis is more important than guessing quickly.
+</div>
+
+<div class="metrics">
+<div class="metric"><small>Tests carried out</small><strong id="testCount">0</strong></div>
+<div class="metric"><small>Diagnostic cost</small><strong id="costScore">0 pts</strong></div>
+<div class="metric"><small>Evidence found</small><strong id="evidenceScore">0%</strong></div>
+<div class="metric"><small>Challenge</small><strong id="challengeNo">1</strong></div>
+</div>
+
+<div>
+<b>Diagnostic progress</b>
+<div class="progressbar"><div id="progressFill" class="progressfill"></div></div>
+</div>
+
+<h3>Choose a Test</h3>
+
+<div class="test-grid">
+
+<button class="test-btn" data-test="codes">
+<span class="ico">🧾</span>
+<b>Read fault codes</b>
+<span>Scan ECU diagnostic memory</span>
+</button>
+
+<button class="test-btn" data-test="live">
+<span class="ico">📊</span>
+<b>Check live data</b>
+<span>View RPM, sync and sensor data</span>
+</button>
+
+<button class="test-btn" data-test="battery">
+<span class="ico">🔋</span>
+<b>Test battery voltage</b>
+<span>Check voltage while cranking</span>
+</button>
+
+<button class="test-btn" data-test="fuel">
+<span class="ico">⛽</span>
+<b>Check fuel pressure</b>
+<span>Test low-pressure fuel supply</span>
+</button>
+
+<button class="test-btn" data-test="crank">
+<span class="ico">📈</span>
+<b>Scope crank sensor</b>
+<span>Inspect CKP waveform</span>
+</button>
+
+<button class="test-btn" data-test="cam">
+<span class="ico">📉</span>
+<b>Scope cam sensor</b>
+<span>Inspect CMP waveform / correlation</span>
+</button>
+
+<button class="test-btn" data-test="injector">
+<span class="ico">💉</span>
+<b>Check injector signal</b>
+<span>Check injector command</span>
+</button>
+
+<button class="test-btn" data-test="ignition">
+<span class="ico">⚡</span>
+<b>Check ignition</b>
+<span>Test spark / coil command</span>
+</button>
+
+<button class="test-btn" data-test="compression">
+<span class="ico">🔧</span>
+<b>Compression test</b>
+<span>Check mechanical cylinder condition</span>
+</button>
+
+</div>
+
+<div class="results">
+<h3>Evidence / Test Results</h3>
+<div id="resultsList" class="history">
+<div class="feedback">No tests carried out yet.</div>
+</div>
+</div>
+
+</div>
+
+<div class="card pad side">
+
+<h3>Most Likely Fault</h3>
+<p style="font-size:13px;color:#64748b;margin-top:0">
+Select your diagnosis when you think you have enough evidence.
+</p>
+
+<div id="diagnosisOptions">
+<button class="option" data-answer="ckp">Crankshaft position sensor / CKP circuit fault</button>
+<button class="option" data-answer="fuelPump">Low-pressure fuel pump / fuel supply fault</button>
+<button class="option" data-answer="timing">Cam timing incorrect / jumped timing belt or chain</button>
+<button class="option" data-answer="ignition">Ignition system / coil supply fault</button>
+<button class="option" data-answer="compression">Low compression / mechanical engine fault</button>
+<button class="option" data-answer="injector">Injector control / ECU output fault</button>
+</div>
+
+<button id="submitBtn" class="action primary">Submit Diagnosis</button>
+<button id="newBtn" class="action green">New Challenge</button>
+<button id="revealBtn" class="action grey">Reveal Fault / Teaching Explanation</button>
+
+<div id="diagnosisFeedback" class="feedback">
+Carry out tests and select the most likely fault.
+</div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var challengeNumber=1;
+var selectedAnswer=null;
+var completed={};
+var cost=0;
+var submitted=false;
+
+/*
+ Hidden scenarios:
+ All use the same customer complaint but give different evidence.
+ Values are generic teaching examples and should not be treated as
+ manufacturer specifications.
+*/
+var scenarios={
+
+ckp:{
+ answer:"ckp",
+ title:"Crankshaft position sensor / CKP circuit fault",
+ tests:{
+  codes:["ABNORMAL","DTC P0335 — Crankshaft Position Sensor A Circuit recorded."],
+  live:["ABNORMAL","Engine speed remains at 0 rpm while the engine is physically cranking. Cam status changes but crank synchronisation is not achieved."],
+  battery:["NORMAL","Battery voltage before cranking: 12.5 V. During cranking: 10.7 V. Cranking speed is normal."],
+  fuel:["NORMAL","Low-pressure fuel supply is approximately 3.5 bar and remains stable while cranking."],
+  crank:["ABNORMAL","CKP scope trace is absent / flat during cranking.", "ckpBad"],
+  cam:["NORMAL","Camshaft Hall signal switches normally between approximately 0 V and 5 V.", "camGood"],
+  injector:["ABNORMAL","No injector command is present because the ECU has no valid crankshaft speed reference."],
+  ignition:["ABNORMAL","No ignition triggering is present because engine position / speed is not confirmed."],
+  compression:["NORMAL","Compression is even across all cylinders and mechanically plausible."]
+ },
+ explanation:"The decisive evidence is 0 rpm in live data and an absent CKP waveform during normal cranking. Without a valid crank signal the ECU cannot determine engine speed/position, so injector and ignition commands may be inhibited."
+},
+
+fuelPump:{
+ answer:"fuelPump",
+ title:"Low-pressure fuel pump / fuel supply fault",
+ tests:{
+  codes:["NEUTRAL","No relevant engine management fault codes stored."],
+  live:["NORMAL","Engine speed is approximately 230 rpm while cranking. Cam/crank synchronisation = YES."],
+  battery:["NORMAL","Battery voltage before cranking: 12.6 V. During cranking: 10.8 V."],
+  fuel:["ABNORMAL","Fuel pressure is 0.4 bar while cranking. Expected system pressure for this generic teaching case is around 3.5 bar."],
+  crank:["NORMAL","Crankshaft sensor waveform is present and stable.", "ckpGood"],
+  cam:["NORMAL","Camshaft signal is present and correctly correlated to the crank signal.", "camGood"],
+  injector:["NORMAL","Injector command is present while cranking."],
+  ignition:["NORMAL","Strong, regular ignition triggering / spark is present."],
+  compression:["NORMAL","Compression is even and mechanically plausible."]
+ },
+ explanation:"Crank/cam synchronisation, injector control and ignition are all present, but fuel pressure is extremely low. This points to a low-pressure fuel supply problem such as an in-tank pump, supply circuit or severe restriction."
+},
+
+timing:{
+ answer:"timing",
+ title:"Cam timing incorrect / jumped timing belt or chain",
+ tests:{
+  codes:["ABNORMAL","DTC P0016 — Crankshaft / Camshaft Position Correlation recorded."],
+  live:["ABNORMAL","Engine speed is approximately 225 rpm. Crank signal is present but cam/crank synchronisation alternates between YES and NO."],
+  battery:["NORMAL","Battery voltage before cranking: 12.5 V. During cranking: 10.6 V."],
+  fuel:["NORMAL","Fuel pressure is approximately 3.5 bar while cranking."],
+  crank:["NORMAL","Crankshaft waveform is present and regular.", "ckpGood"],
+  cam:["ABNORMAL","Cam waveform is present but shifted approximately 20° crank angle from the known-good relationship.", "camShift"],
+  injector:["NEUTRAL","Injector command is present but synchronisation is inconsistent."],
+  ignition:["NEUTRAL","Ignition command is present but engine timing relationship is incorrect."],
+  compression:["ABNORMAL","Compression is lower than expected and unevenly affected because valve timing is displaced."]
+ },
+ explanation:"Both sensors produce signals, so this is not simply a missing CKP/CMP circuit. The correlation DTC and shifted cam waveform relative to the crank are the strongest evidence of incorrect mechanical timing."
+},
+
+ignition:{
+ answer:"ignition",
+ title:"Ignition system / coil supply fault",
+ tests:{
+  codes:["NEUTRAL","No relevant engine management fault codes stored."],
+  live:["NORMAL","Engine speed approximately 235 rpm. Cam/crank synchronisation = YES."],
+  battery:["NORMAL","Battery voltage before cranking: 12.6 V. During cranking: 10.9 V."],
+  fuel:["NORMAL","Fuel pressure approximately 3.6 bar while cranking."],
+  crank:["NORMAL","Crankshaft waveform is present and stable.", "ckpGood"],
+  cam:["NORMAL","Camshaft waveform is present and correctly correlated.", "camGood"],
+  injector:["NORMAL","Injector command is present while cranking."],
+  ignition:["ABNORMAL","No spark output. Coil supply voltage is missing even though ECU ignition command is present."],
+  compression:["NORMAL","Compression is even across all cylinders."]
+ },
+ explanation:"The engine has valid speed/synchronisation, fuel pressure, injector command and compression. The missing coil supply / no spark isolates the problem to the ignition power supply or associated circuit."
+},
+
+compression:{
+ answer:"compression",
+ title:"Low compression / mechanical engine fault",
+ tests:{
+  codes:["NEUTRAL","No relevant engine management fault codes stored."],
+  live:["NORMAL","Engine speed approximately 255 rpm. Cam/crank synchronisation = YES."],
+  battery:["NORMAL","Battery voltage before cranking: 12.5 V. During cranking: 10.8 V."],
+  fuel:["NORMAL","Fuel pressure approximately 3.5 bar while cranking."],
+  crank:["NORMAL","Crankshaft waveform is present and stable.", "ckpGood"],
+  cam:["NORMAL","Camshaft waveform is present and correlated.", "camGood"],
+  injector:["NORMAL","Injector command is present."],
+  ignition:["NORMAL","Ignition triggering and spark are present."],
+  compression:["ABNORMAL","Compression readings: Cyl 1 3.2 bar, Cyl 2 3.4 bar, Cyl 3 3.1 bar, Cyl 4 3.3 bar — consistently far too low for this generic teaching case."]
+ },
+ explanation:"Fuel, ignition, crank/cam synchronisation and injector control are present. Uniformly very low compression points toward a mechanical problem affecting all cylinders, such as valve timing or severe internal sealing loss."
+},
+
+injector:{
+ answer:"injector",
+ title:"Injector control / ECU output fault",
+ tests:{
+  codes:["ABNORMAL","DTC P0200 — Injector Circuit Malfunction stored."],
+  live:["NORMAL","Engine speed approximately 230 rpm. Cam/crank synchronisation = YES."],
+  battery:["NORMAL","Battery voltage before cranking: 12.6 V. During cranking: 10.8 V."],
+  fuel:["NORMAL","Fuel pressure approximately 3.5 bar while cranking."],
+  crank:["NORMAL","Crankshaft waveform is present and stable.", "ckpGood"],
+  cam:["NORMAL","Camshaft waveform is present and correctly correlated.", "camGood"],
+  injector:["ABNORMAL","Injector supply is present but no ECU low-side switching command is seen on any injector."],
+  ignition:["NORMAL","Ignition triggering / spark is present."],
+  compression:["NORMAL","Compression is even and mechanically plausible."]
+ },
+ explanation:"The engine has correct speed, timing reference, fuel pressure, spark and compression, but injector switching is absent despite injector supply being present. This points toward injector control wiring or ECU output/control."
+}
+
+};
+
+var currentKey=null;
+var current=null;
+
+function randomScenario(){
+ var keys=Object.keys(scenarios);
+ var next;
+ do{
+   next=keys[Math.floor(Math.random()*keys.length)];
+ }while(keys.length>1 && next===currentKey);
+ currentKey=next;
+ current=scenarios[next];
+}
+
+function waveSvg(kind){
+ var path="",color="#00d4ff",label="";
+ if(kind==="ckpGood"){
+   label="CKP — good";
+   path="M10 55 Q20 10 30 55 Q40 100 50 55 Q60 10 70 55 Q80 100 90 55 Q100 10 110 55 L130 55 L150 55 Q160 10 170 55 Q180 100 190 55 Q200 10 210 55 Q220 100 230 55 Q240 10 250 55 Q260 100 270 55";
+ }
+ if(kind==="ckpBad"){
+   label="CKP — no signal";
+   path="M10 55 L270 55";
+   color="#ef5350";
+ }
+ if(kind==="camGood"){
+   label="CMP — good";
+   color="#ffd54f";
+   path="M10 80 L10 30 L60 30 L60 80 L120 80 L120 30 L170 30 L170 80 L235 80 L235 30 L270 30";
+ }
+ if(kind==="camShift"){
+   label="CMP — shifted";
+   color="#ffd54f";
+   path="M10 80 L45 80 L45 30 L95 30 L95 80 L155 80 L155 30 L205 30 L205 80 L270 80";
+ }
+
+ return '<div class="wavebox"><svg viewBox="0 0 280 110">'+
+ '<rect width="280" height="110" fill="#07131d"/>'+
+ '<g stroke="#173447"><path d="M0 25H280 M0 55H280 M0 85H280"/><path d="M40 0V110 M80 0V110 M120 0V110 M160 0V110 M200 0V110 M240 0V110"/></g>'+
+ '<path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linejoin="round"/>'+
+ '<text x="10" y="103" fill="'+color+'" font-size="12" font-weight="bold">'+label+'</text></svg></div>';
+}
+
+function addResult(test){
+ var result=current.tests[test];
+ var status=result[0],text=result[1],wave=result[2]||null;
+
+ var statusClass=status==="NORMAL"?"normal":status==="ABNORMAL"?"abnormal":"neutral";
+
+ var labels={
+  codes:"Read fault codes",
+  live:"Check live data",
+  battery:"Battery voltage test",
+  fuel:"Fuel pressure test",
+  crank:"Crank sensor scope test",
+  cam:"Cam sensor scope test",
+  injector:"Injector signal test",
+  ignition:"Ignition test",
+  compression:"Compression test"
+ };
+
+ var card=document.createElement("div");
+ card.className="result-card";
+ card.innerHTML=
+  '<div class="result-head"><span>'+labels[test]+'</span><span class="'+statusClass+'">'+status+'</span></div>'+
+  '<div class="result-body">'+text+(wave?waveSvg(wave):"")+'</div>';
+
+ var list=document.getElementById("resultsList");
+ if(Object.keys(completed).length===1)list.innerHTML="";
+ list.prepend(card);
+}
+
+function performTest(test,button){
+ if(submitted)return;
+ if(completed[test])return;
+
+ completed[test]=true;
+ cost+=10;
+ button.classList.add("done");
+ addResult(test);
+ updateMetrics();
+}
+
+function updateMetrics(){
+ var n=Object.keys(completed).length;
+ document.getElementById("testCount").textContent=n;
+ document.getElementById("costScore").textContent=cost+" pts";
+
+ /*
+  Evidence progress is intentionally based on test count rather than
+  secretly showing how close the user is to the correct answer.
+ */
+ var progress=Math.min(100,Math.round(n/6*100));
+ document.getElementById("evidenceScore").textContent=progress+"%";
+ document.getElementById("progressFill").style.width=progress+"%";
+}
+
+function selectAnswer(btn){
+ if(submitted)return;
+ document.querySelectorAll(".option").forEach(function(b){b.classList.remove("selected");});
+ btn.classList.add("selected");
+ selectedAnswer=btn.dataset.answer;
+}
+
+function submit(){
+ if(submitted)return;
+
+ var box=document.getElementById("diagnosisFeedback");
+
+ if(!selectedAnswer){
+   box.className="feedback bad";
+   box.textContent="Select a diagnosis before submitting.";
+   return;
+ }
+
+ submitted=true;
+
+ document.querySelectorAll(".option").forEach(function(b){
+   if(b.dataset.answer===current.answer)b.classList.add("correct");
+   if(b.dataset.answer===selectedAnswer && selectedAnswer!==current.answer)b.classList.add("wrong");
+ });
+
+ if(selectedAnswer===current.answer){
+   var efficiency=Math.max(0,100-(Math.max(0,Object.keys(completed).length-4)*10));
+   box.className="feedback good";
+   box.innerHTML="<b>Correct diagnosis.</b><br>"+current.title+
+     "<br><br>"+current.explanation+
+     "<br><br><b>Diagnostic efficiency score: "+efficiency+"%</b>";
+ }else{
+   box.className="feedback bad";
+   box.innerHTML="<b>Diagnosis incorrect.</b><br>The hidden fault was: <b>"+current.title+"</b>"+
+     "<br><br>"+current.explanation;
+ }
+}
+
+function reveal(){
+ var box=document.getElementById("diagnosisFeedback");
+ box.className="feedback";
+ box.innerHTML="<b>Teaching answer:</b> "+current.title+"<br><br>"+current.explanation;
+}
+
+function resetChallenge(){
+ randomScenario();
+ completed={};
+ cost=0;
+ submitted=false;
+ selectedAnswer=null;
+
+ document.querySelectorAll(".test-btn").forEach(function(b){b.classList.remove("done");});
+ document.querySelectorAll(".option").forEach(function(b){
+   b.classList.remove("selected","correct","wrong");
+ });
+
+ document.getElementById("resultsList").innerHTML='<div class="feedback">No tests carried out yet.</div>';
+ document.getElementById("diagnosisFeedback").className="feedback";
+ document.getElementById("diagnosisFeedback").textContent="Carry out tests and select the most likely fault.";
+ document.getElementById("challengeNo").textContent=challengeNumber;
+ updateMetrics();
+}
+
+document.querySelectorAll(".test-btn").forEach(function(btn){
+ btn.onclick=function(){performTest(this.dataset.test,this);};
+});
+
+document.querySelectorAll(".option").forEach(function(btn){
+ btn.onclick=function(){selectAnswer(this);};
+});
+
+document.getElementById("submitBtn").onclick=submit;
+document.getElementById("revealBtn").onclick=reveal;
+document.getElementById("newBtn").onclick=function(){
+ challengeNumber++;
+ resetChallenge();
+};
+
+var infoBtn=document.getElementById("infoBtn");
+var popup=document.getElementById("infoPopup");
+infoBtn.onclick=function(e){e.stopPropagation();popup.classList.toggle("show");};
+popup.onclick=function(e){e.stopPropagation();};
+document.addEventListener("click",function(){popup.classList.remove("show");});
+
+
+resetChallenge();
+
+})();
+</script>
+
+
+<!-- COPYRIGHT FOOTER -->
+
+<footer class="copyright-footer">
+
+  <div class="copyright-main">
+    © 2026 RRainbow. All Rights Reserved.
+  </div>
+
+  <div class="copyright-sub">
+    Diagnostic Challenge Simulator · RRainbow Learning Hub
+  </div>
+
+</footer>
+
+
+</body>
+</html>
