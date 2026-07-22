@@ -8,30 +8,51 @@
 <style>
 :root{--navy:#0f172a;--blue:#2563eb;--bg:#eef3f8;--surface:#fff;--text:#1e293b;--muted:#64748b;--line:#d8e1eb}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:linear-gradient(#f8fafc,var(--bg));color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif}
-header{position:sticky;top:0;z-index:20;background:rgba(15,23,42,.97);color:#fff;border-bottom:1px solid #ffffff18}
-.header-inner{max-width:1450px;margin:auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:#fff}.logo{width:45px;height:45px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#2563eb,#06b6d4);font-size:22px}.brand b{display:block;font-size:19px}.brand small{color:#b9c6d8}
-nav{display:flex;gap:6px}nav a{padding:8px 10px;border-radius:8px;color:#dbe5f3;text-decoration:none;font-size:12px;font-weight:800}nav a:hover{background:#ffffff14}
+header.site-header{max-width:1450px;margin:0 auto;padding:20px 22px 0}
+.hub-banner{display:flex;align-items:center;gap:18px;min-height:112px;padding:22px 28px;border-radius:24px;background:linear-gradient(125deg,#142344,#172554);color:#fff;box-shadow:0 14px 34px rgba(15,23,42,.10)}
+.hub-logo{width:72px;height:72px;flex:0 0 72px;display:grid;place-items:center;border:11px solid #60a5fa;border-top-color:#e2e8f0;border-radius:50%;background:#fff;color:#16a34a;font-size:29px;font-weight:900;box-shadow:inset 0 0 0 1px #dbeafe}
+.hub-banner h1{margin:0;font-size:40px;line-height:1;letter-spacing:-1px}.hub-banner p{margin:8px 0 0;color:#dbeafe;font-size:16px;font-weight:700}
 main{max-width:1450px;margin:auto;padding:24px 22px 40px}
-.hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(270px,.6fr);gap:17px;margin-bottom:18px}
-.hero-main,.stats{border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 30px #0f172a12}
-.hero-main{padding:29px;background:linear-gradient(120deg,#0f172af7,#1e3a8aeb);color:#fff}.eyebrow{display:inline-block;padding:6px 9px;border:1px solid #93c5fd66;border-radius:999px;color:#bfdbfe;font-size:10px;font-weight:900;text-transform:uppercase}.hero h1{margin:14px 0 9px;font-size:clamp(29px,4vw,47px);line-height:1.05}.hero p{margin:0;color:#d4dfec;line-height:1.65}
-.stats{padding:14px;background:#fff;display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{padding:14px;border:1px solid #e2e8f0;border-radius:13px;background:#f8fafc}.stat strong{display:block;color:var(--blue);font-size:31px}.stat span{font-size:10px;font-weight:900;text-transform:uppercase;color:#475569}
-.tools{position:sticky;top:76px;z-index:15;padding:13px;margin-bottom:25px;border:1px solid var(--line);border-radius:15px;background:#fffffff5;box-shadow:0 9px 25px #0f172a12}
-.search{display:grid;grid-template-columns:1fr auto;gap:8px}.search input{width:100%;min-height:45px;padding:11px 13px;border:1px solid #cbd5e1;border-radius:10px;font:inherit}.search button,.chip{border:1px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:850;cursor:pointer}.search button{padding:0 15px}.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.chip{padding:7px 11px;border-radius:999px;color:#475569;font-size:11px}.chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
-.section{margin-bottom:29px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin:0 2px 12px}.section-head h2{margin:0;color:var(--navy);font-size:21px}.section-head p{margin:3px 0 0;color:var(--muted);font-size:12px}.count{padding:5px 8px;border-radius:999px;background:#e2e8f0;color:#475569;font-size:10px;font-weight:900}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:14px}.card{position:relative;display:flex;min-height:318px;overflow:hidden;flex-direction:column;border:1px solid var(--line);border-radius:15px;background:#fff;text-decoration:none;color:inherit;box-shadow:0 4px 13px #0f172a0d;transition:.18s}.card:hover{transform:translateY(-4px);border-color:#93c5fd;box-shadow:0 17px 34px #0f172a1e}.visual{height:145px;display:grid;place-items:center;background:linear-gradient(135deg,#111827,#1d4ed8);font-size:61px}.new{position:absolute;right:10px;top:10px;padding:5px 7px;border-radius:999px;background:#dc2626;color:#fff;font-size:9px;font-weight:900}.body{display:flex;flex:1;flex-direction:column;padding:15px 16px 16px}.category{margin-bottom:6px;color:var(--blue);font-size:10px;font-weight:900;text-transform:uppercase}.title{margin:0;color:var(--navy);font-size:17px;line-height:1.25}.desc{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}.meta span{padding:4px 7px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:9px;font-weight:800}.launch{display:flex;justify-content:space-between;margin-top:auto;padding-top:14px;color:var(--blue);font-size:11px;font-weight:900;text-transform:uppercase}
+.intro-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;margin-bottom:24px}
+.intro-card,.total-card{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 14px 34px rgba(15,23,42,.10)}
+.intro-card{padding:30px}.eyebrow{display:inline-block;padding:7px 12px;border-radius:999px;background:#dbeafe;color:#2455d6;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.2px}
+.intro-card h2{margin:18px 0 8px;color:#020617;font-size:clamp(28px,3vw,38px);line-height:1.18;letter-spacing:-.6px}.intro-card p{max-width:920px;margin:0;color:#64748b;font-size:18px;line-height:1.65}
+.total-card{display:flex;flex-direction:column;justify-content:center;padding:30px}.total-card strong{color:#2563eb;font-size:54px;line-height:1}.total-card h3{margin:10px 0 5px;color:#020617;font-size:19px}.total-card p{margin:0;color:#64748b;line-height:1.5}
+.tools{padding:18px;margin-bottom:28px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.10)}
+.search{display:grid;grid-template-columns:1fr auto;gap:12px}.search input{width:100%;min-height:57px;padding:13px 16px;border:1px solid #cbd5e1;border-radius:15px;font:inherit;font-size:17px}.search button,.chip{border:1px solid #cbd5e1;background:#fff;font-weight:850;cursor:pointer}.search button{min-width:96px;padding:0 18px;border-radius:15px}.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}.chip{padding:10px 17px;border-radius:999px;color:#475569;font-size:13px}.chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.section{margin-bottom:38px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin:0 4px 14px}.section-title-wrap{display:flex;align-items:flex-start;gap:12px}.section-icon{font-size:23px;line-height:1;margin-top:2px}.section-head h2{margin:0;color:var(--navy);font-size:25px}.section-head p{margin:4px 0 0;color:var(--muted);font-size:14px}.count{padding:6px 10px;border-radius:999px;background:#e2e8f0;color:#475569;font-size:11px;font-weight:900}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{position:relative;display:flex;min-height:430px;overflow:hidden;flex-direction:column;border:1px solid var(--line);border-radius:17px;background:#fff;text-decoration:none;color:inherit;box-shadow:0 8px 20px rgba(15,23,42,.07);transition:.18s}.card:hover{transform:translateY(-5px);border-color:#93c5fd;box-shadow:0 20px 38px rgba(15,23,42,.15)}.visual{height:225px;display:grid;place-items:center;overflow:hidden;background:#0b1324;font-size:64px}.visual img{width:100%;height:100%;object-fit:cover;display:block}.visual-fallback{width:100%;height:100%;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.09),transparent 25%),linear-gradient(135deg,#0b1324,#1d4ed8);font-size:66px}.new{position:absolute;right:10px;top:10px;padding:5px 7px;border-radius:999px;background:#dc2626;color:#fff;font-size:9px;font-weight:900}.body{display:flex;flex:1;flex-direction:column;padding:17px 18px 18px}.category{margin-bottom:8px;color:var(--blue);font-size:11px;font-weight:900;text-transform:uppercase}.title{margin:0;color:var(--navy);font-size:22px;line-height:1.24}.desc{margin:9px 0 0;color:var(--muted);font-size:14px;line-height:1.55}.meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}.meta span{padding:4px 7px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:9px;font-weight:800}.launch{display:flex;justify-content:space-between;margin-top:auto;padding-top:14px;color:var(--blue);font-size:11px;font-weight:900;text-transform:uppercase}
 .loading,.empty,.error{padding:34px;text-align:center;color:var(--muted)}.empty,.error{display:none;border:1px dashed #cbd5e1;border-radius:15px;background:#fff}.show{display:block!important}
 footer{background:#0f172a;color:#cbd5e1}.footer-inner{max-width:1450px;margin:auto;padding:24px 22px}.footer-inner b{color:#fff}.footer-inner div{margin-top:4px;color:#94a3b8;font-size:11px;line-height:1.5}
 [hidden]{display:none!important}
-@media(max-width:850px){nav{display:none}.hero{grid-template-columns:1fr}.tools{position:static}}
-@media(max-width:600px){main,.header-inner,.footer-inner{padding-left:12px;padding-right:12px}.brand small{display:none}.search{grid-template-columns:1fr}.search button{display:none}.grid{grid-template-columns:1fr}}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){.intro-grid{grid-template-columns:1fr}.hub-banner h1{font-size:32px}.intro-card h2{font-size:29px}}
+@media(max-width:700px){header.site-header{padding:12px 12px 0}main,.footer-inner{padding-left:12px;padding-right:12px}.hub-banner{padding:19px;border-radius:18px}.hub-logo{width:58px;height:58px;flex-basis:58px;border-width:9px;font-size:24px}.intro-card,.total-card{padding:22px}.intro-card p{font-size:16px}.search{grid-template-columns:1fr}.search button{display:none}.grid{grid-template-columns:1fr}.visual{height:210px}}
 </style>
 </head>
 <body>
-<header><div class="header-inner"><a class="brand" href="./"><div class="logo">🚗</div><div><b>Vehicle Learning Hub</b><small>Interactive automotive learning simulators</small></div></a><nav><a href="#featured">Featured</a><a href="#allTools">All Tools</a></nav></div></header>
+<header class="site-header">
+  <div class="hub-banner">
+    <div class="hub-logo">✓</div>
+    <div>
+      <h1>Learning Hub</h1>
+      <p>Motor Vehicle Learning Resources</p>
+    </div>
+  </div>
+</header>
 <main>
-<section class="hero"><div class="hero-main"><span class="eyebrow">Interactive Automotive Learning</span><h1>Explore, test, diagnose and learn by doing.</h1><p>Develop practical automotive knowledge and diagnostic reasoning through interactive simulations covering electrical, engine, chassis, oscilloscope and transmission systems.</p></div><div class="stats"><div class="stat"><strong id="total">0</strong><span>Learning tools</span></div><div class="stat"><strong id="categories">0</strong><span>Subject areas</span></div><div class="stat"><strong id="newCount">0</strong><span>Recently added</span></div><div class="stat"><strong>24/7</strong><span>Online access</span></div></div></section>
+<section class="intro-grid">
+  <div class="intro-card">
+    <span class="eyebrow">Interactive Automotive Learning</span>
+    <h2>Choose a learning tool and start exploring</h2>
+    <p>Practise diagnosis, electrical testing, oscilloscope interpretation, braking, wheel alignment, engine systems and transmission operation through interactive simulations.</p>
+  </div>
+  <div class="total-card">
+    <strong id="total">0</strong>
+    <h3>Interactive learning tools</h3>
+    <p>Organised by subject area for quicker access.</p>
+  </div>
+</section>
 <section class="tools"><div class="search"><input id="search" type="search" placeholder="Search learning tools, topics or skills..."><button id="clear" type="button">Clear</button></div><div class="chips" id="chips"><button class="chip active" data-category="all">All</button></div></section>
 <div id="loading" class="loading">Loading learning tools…</div>
 <div id="error" class="error"><b>Unable to load the tools.</b><br>Make sure <code>simulators.json</code> is uploaded beside <code>index.html</code>.</div>
@@ -42,7 +63,7 @@ footer{background:#0f172a;color:#cbd5e1}.footer-inner{max-width:1450px;margin:au
 <footer><div class="footer-inner"><b>Vehicle Learning Hub</b><div>© 2026 RRainbow. All Rights Reserved.<br>Interactive resources are for educational use and do not replace manufacturer procedures or safe workshop practice.</div></div></footer>
 <script>
 (()=>{"use strict";
-const details={Diagnostics:"Structured fault-finding and diagnostic decision-making.",Electrical:"Circuits, charging, testing and vehicle networks.",Oscilloscope:"Automotive waveform interpretation and scope practice.",Engine:"Engine mechanical, fuel and management systems.",Chassis:"Braking, steering and wheel alignment.",Transmission:"Gearboxes, differentials and drivetrain operation."};
+const details={Diagnostics:{text:"Structured fault-finding, evidence gathering and diagnostic decision-making.",icon:"🔍"},Electrical:{text:"Circuits, charging, testing and vehicle networks.",icon:"⚡"},Oscilloscope:{text:"Automotive waveform interpretation and scope practice.",icon:"📈"},Engine:{text:"Engine mechanical, fuel and management systems.",icon:"⚙️"},Chassis:{text:"Braking, steering and wheel alignment.",icon:"🛞"},Transmission:{text:"Gearboxes, differentials and drivetrain operation.",icon:"🔧"}};
 let data=[],active="all";
 const $=id=>document.getElementById(id);
 function url(t){if(t.url)return t.url;return "simulators/"+String(t.folder||"").replace(/^\/+|\/+$/g,"")+"/"}
@@ -50,7 +71,7 @@ function card(t){
  const a=document.createElement("a");a.className="card";a.href=url(t);
  a.dataset.category=t.category||"Other";a.dataset.search=[t.title,t.category,t.description,t.difficulty,t.duration,t.level,t.keywords].join(" ").toLowerCase();
  if(t.new){const n=document.createElement("span");n.className="new";n.textContent="NEW";a.appendChild(n)}
- const v=document.createElement("div");v.className="visual";v.textContent=t.icon||"🚗";
+ const v=document.createElement("div");v.className="visual";if(t.image){const img=document.createElement("img");img.src=t.image;img.alt=(t.title||"Learning tool")+" preview";img.loading="lazy";img.onerror=()=>{v.innerHTML="";const f=document.createElement("div");f.className="visual-fallback";f.textContent=t.icon||"🚗";v.appendChild(f)};v.appendChild(img)}else{const f=document.createElement("div");f.className="visual-fallback";f.textContent=t.icon||"🚗";v.appendChild(f)}
  const b=document.createElement("div");b.className="body";
  b.innerHTML=`<div class="category">${t.category||"Learning Tool"}</div><h3 class="title">${t.title||"Untitled Tool"}</h3><p class="desc">${t.description||"Open this interactive automotive resource."}</p><div class="meta"><span>${t.difficulty||"All levels"}</span><span>${t.duration||"Self-paced"}</span><span>${t.level||"Automotive"}</span></div><div class="launch"><span>Launch simulator</span><span>→</span></div>`;
  a.append(v,b);return a
@@ -60,7 +81,7 @@ function render(){
  const featured=data.filter(t=>t.featured);
  if(featured.length){featured.forEach(t=>$("featuredGrid").append(card(t)));$("featured").hidden=false;$("featuredCount").textContent=featured.length+" tools"}
  const groups={};data.forEach(t=>(groups[t.category]??=[]).push(t));
- Object.entries(groups).forEach(([cat,tools])=>{const s=document.createElement("section");s.className="section";s.dataset.category=cat;s.innerHTML=`<div class="section-head"><div><h2>${cat}</h2><p>${details[cat]||"Interactive automotive learning resources."}</p></div><span class="count">${tools.length} tools</span></div><div class="grid"></div>`;tools.forEach(t=>s.querySelector(".grid").append(card(t)));$("allTools").append(s)});
+ Object.entries(groups).forEach(([cat,tools])=>{const s=document.createElement("section");s.className="section";s.dataset.category=cat;const d=details[cat]||{text:"Interactive automotive learning resources.",icon:"🚗"};s.innerHTML=`<div class="section-head"><div class="section-title-wrap"><span class="section-icon">${d.icon}</span><div><h2>${cat}</h2><p>${d.text}</p></div></div><span class="count">${tools.length} ${tools.length===1?"tool":"tools"}</span></div><div class="grid"></div>`;tools.forEach(t=>s.querySelector(".grid").append(card(t)));$("allTools").append(s)});
  Object.keys(groups).forEach(cat=>{const b=document.createElement("button");b.className="chip";b.dataset.category=cat;b.textContent=cat;$("chips").append(b)});
  document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{active=b.dataset.category;document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x===b));filter()});
  $("total").textContent=data.length;$("categories").textContent=Object.keys(groups).length;$("newCount").textContent=data.filter(t=>t.new).length;filter()
