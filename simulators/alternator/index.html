@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Interactive automotive alternator training simulator.">
+<title>Automotive Alternator Training Simulator</title>
+
+<style>
+:root{
+  --bg:#eef2f6;
+  --panel:#fff;
+  --line:#d8e0e8;
+  --text:#1e293b;
+  --muted:#64748b;
+  --navy:#0f172a;
+  --blue:#2563eb;
+  --green:#16a34a;
+  --red:#dc2626;
+  --amber:#d97706;
+  --cyan:#06b6d4;
+  --purple:#8b5cf6;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+header{
+  background:#101820;
+  color:#fff;
+  padding:16px 20px;
+}
+header h1{margin:0;font-size:24px}
+header p{margin:5px 0 0;color:#cbd5e1;font-size:13px}
+
+.wrap{max-width:1550px;margin:auto;padding:14px}
+
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+}
+
+button,select{
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  padding:9px 11px;
+  font-weight:700;
+  background:#fff;
+  color:#17212b;
+}
+button{cursor:pointer}
+button:hover{background:#f8fafc}
+button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+button.success{background:#15803d;color:#fff;border-color:#15803d}
+button.warn{background:#b45309;color:#fff;border-color:#b45309}
+button.active{box-shadow:0 0 0 3px rgba(37,99,235,.14);border-color:#2563eb}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 390px;
+  gap:14px;
+  align-items:start;
+}
+
+.main-simulator{min-width:0}
+
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 3px 12px rgba(15,23,42,.06);
+}
+
+.card-title{
+  padding:11px 14px;
+  background:#f8fafc;
+  border-bottom:1px solid var(--line);
+  font-size:14px;
+  font-weight:900;
+}
+
+.stage-wrap{padding:14px}
+
+.stage{
+  position:relative;
+  min-height:565px;
+  border-radius:12px;
+  overflow:hidden;
+  background:#111827;
+}
+
+.stage svg{
+  display:block;
+  width:100%;
+  height:auto;
+  min-height:565px;
+}
+
+.side{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-self:start;
+}
+
+.side-content{padding:12px}
+.side-content h3{margin:0 0 10px;font-size:15px}
+
+.info-box{
+  padding:12px;
+  border-radius:10px;
+  background:#eff6ff;
+  border:1px solid #bfdbfe;
+  line-height:1.5;
+  font-size:13px;
+  color:#334155;
+}
+.info-box h3{margin:0 0 7px;color:#0f172a;font-size:16px}
+
+.readings{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+}
+
+.readout{
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px;
+}
+.readout small{
+  display:block;
+  color:#64748b;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.readout strong{
+  display:block;
+  margin-top:4px;
+  font-size:20px;
+  font-weight:900;
+  color:#0f172a;
+}
+
+.controls{display:grid;gap:11px}
+.control label{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:6px;
+  color:#475569;
+  font-size:12px;
+  font-weight:800;
+}
+.control input[type="range"]{width:100%}
+
+.toggle-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+}
+
+.component-list{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.component-btn{
+  width:100%;
+  text-align:left;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 9px;
+  font-size:12px;
+}
+.component-btn span:last-child{color:#2563eb}
+
+.status{
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  color:#334155;
+  font-size:13px;
+  line-height:1.5;
+}
+.status.good{background:#ecfdf3;border-color:#86efac}
+.status.warn{background:#fffbeb;border-color:#fcd34d}
+.status.bad{background:#fef2f2;border-color:#fca5a5}
+
+.hotspot{cursor:pointer;transition:.18s}
+.hotspot:hover{filter:drop-shadow(0 0 8px rgba(56,189,248,.95))}
+
+.label-tag{opacity:0;transition:.2s;pointer-events:none}
+.show-labels .label-tag{opacity:1}
+
+.fade{transition:opacity .35s ease,transform .35s ease}
+
+
+.current-path{
+  stroke-dasharray:12 10;
+  animation:flow 1s linear infinite;
+}
+@keyframes flow{to{stroke-dashoffset:-44}}
+
+#rotorSpin{transform-origin:535px 315px}
+#fieldRotor{transform-origin:535px 315px}
+
+.scope{
+  margin-top:9px;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid #314762;
+  background:#061018;
+}
+.scope svg{width:100%;height:auto;display:block}
+
+.question{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  margin-top:9px;
+}
+.question select{width:100%;margin-top:8px}
+.result{margin-top:8px;font-size:13px;line-height:1.5}
+
+.copyright-footer{
+  margin-top:22px;
+  padding:18px 15px 8px;
+  border-top:1px solid var(--line);
+  text-align:center;
+}
+.copyright-main{font-size:13px;font-weight:900}
+.copyright-sub{margin-top:5px;font-size:12px;color:var(--muted);font-weight:600}
+
+@media(max-width:1100px){
+  .layout{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .stage{min-height:480px}
+  .stage svg{min-height:480px}
+  .toggle-grid,.component-list{grid-template-columns:1fr}
+}
+
+#fieldFluxPaths{
+  transform-origin:535px 315px;
+  animation:fieldPulse 1.5s ease-in-out infinite alternate;
+}
+@keyframes fieldPulse{
+  from{opacity:.45}
+  to{opacity:1}
+}
+#slipRingRotor,
+#slipRingInsetRotor{
+  transform-box:view-box;
+}
+
+
+.component-popup{
+  display:none;
+  position:absolute;
+  right:18px;
+  bottom:18px;
+  width:min(360px,calc(100% - 36px));
+  padding:16px 18px;
+  border:1px solid #93c5fd;
+  border-radius:12px;
+  background:rgba(15,23,42,.96);
+  color:#e5edf8;
+  box-shadow:0 18px 45px rgba(0,0,0,.35);
+  z-index:12;
+}
+.component-popup.show{display:block}
+.component-popup h3{
+  margin:0 32px 7px 0;
+  color:#fff;
+  font-size:17px;
+}
+.component-popup p{
+  margin:0;
+  color:#cbd5e1;
+  font-size:13px;
+  line-height:1.55;
+}
+.component-popup-close{
+  position:absolute;
+  top:9px;
+  right:9px;
+  width:28px;
+  height:28px;
+  padding:0;
+  border:1px solid #64748b;
+  border-radius:50%;
+  background:#1e293b;
+  color:#fff;
+  font-size:18px;
+  line-height:1;
+}
+
+
+.component-marker{
+  display:none;
+  cursor:pointer;
+  filter:drop-shadow(0 3px 7px rgba(0,0,0,.55));
+}
+.show-labels .component-marker{display:block}
+.component-marker circle{fill:#2563eb;stroke:#fff;stroke-width:4}
+.component-marker text{
+  fill:#fff;font-size:15px;font-weight:900;text-anchor:middle;
+  dominant-baseline:middle;pointer-events:none
+}
+.component-marker:hover circle{fill:#1d4ed8;stroke:#bfdbfe}
+#beltTexture{stroke-dasharray:14 10}
+#beltGroup.loose-belt{animation:beltBounce .22s ease-in-out infinite}
+@keyframes beltBounce{
+  0%,100%{transform:translateY(0)}
+  25%{transform:translateY(-5px)}
+  50%{transform:translateY(6px)}
+  75%{transform:translateY(-3px)}
+}
+#fieldFluxPaths{animation:fieldPulse 1.4s ease-in-out infinite alternate}
+@keyframes fieldPulse{from{opacity:.42}to{opacity:1}}
+
+
+.component-marker .marker-line{
+  stroke:#93c5fd;
+  stroke-width:3;
+  stroke-linecap:round;
+  pointer-events:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>Automotive Alternator Training Simulator</h1>
+      <p>Remove the casing, inspect internal components and observe generation, rectification and regulation.</p>
+    </div>
+    
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="toolbar">
+    <button id="runBtn" class="primary">▶ Start Alternator</button>
+    <button id="explodeBtn">Exploded View</button>
+    <button id="labelsBtn">Show Labels</button>
+    <button id="fieldBtn">Show Magnetic Field</button>
+    <button id="currentBtn">Show Current Flow</button>
+    <button id="slowBtn">Slow Motion</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <div class="layout">
+
+    <section class="card main-simulator">
+      <div class="card-title">Interactive Alternator Cutaway</div>
+      <div class="stage-wrap">
+        <div class="stage" id="stage">
+
+          <svg viewBox="0 0 1320 650" xmlns="http://www.w3.org/2000/svg">
+
+            <defs>
+              <radialGradient id="metalGrad">
+                <stop offset="0" stop-color="#9aa6af"/>
+                <stop offset=".55" stop-color="#5f6c76"/>
+                <stop offset="1" stop-color="#313c45"/>
+              </radialGradient>
+              <radialGradient id="rotorGrad">
+                <stop offset="0" stop-color="#d28a2a"/>
+                <stop offset=".55" stop-color="#9a5a13"/>
+                <stop offset="1" stop-color="#4c2d0c"/>
+              </radialGradient>
+              <linearGradient id="copperGrad" x1="0" x2="1">
+                <stop stop-color="#f59e0b"/>
+                <stop offset=".5" stop-color="#fcd34d"/>
+                <stop offset="1" stop-color="#b45309"/>
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="5" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            
+            <g id="enginePulley">
+              <circle cx="120" cy="315" r="84" fill="#222b33" stroke="#aab4bd" stroke-width="8"/>
+              <circle cx="120" cy="315" r="57" fill="#111827" stroke="#64748b" stroke-width="7"/>
+              <circle cx="120" cy="315" r="18" fill="#020617"/>
+              <g id="enginePulleyMarker">
+                <line x1="120" y1="242" x2="120" y2="268" stroke="#facc15" stroke-width="8" stroke-linecap="round"/>
+                <line x1="120" y1="362" x2="120" y2="388" stroke="#facc15" stroke-width="8" stroke-linecap="round"/>
+              </g>
+              <text x="120" y="420" text-anchor="middle" fill="#cbd5e1" font-size="14" font-weight="800">ENGINE PULLEY</text>
+            </g>
+
+            <g id="beltGroup">
+              <path d="M120 231 C245 185 385 193 530 227 M120 399 C245 446 385 438 530 403"
+                    fill="none" stroke="#111827" stroke-width="25" stroke-linecap="round"/>
+              <path id="beltTexture"
+                    d="M120 231 C245 185 385 193 530 227 M120 399 C245 446 385 438 530 403"
+                    fill="none" stroke="#475569" stroke-width="6" stroke-linecap="round"/>
+            </g>
+
+            <!-- External drive markers, positioned beside the parts -->
+            <g class="component-marker" data-component="belt">
+              <line class="marker-line" x1="292" y1="170" x2="325" y2="205"/>
+              <circle cx="280" cy="158" r="18"/>
+              <text x="280" y="159">8</text>
+            </g>
+
+            <g class="component-marker" data-component="enginePulleyInfo">
+              <line class="marker-line" x1="72" y1="245" x2="102" y2="277"/>
+              <circle cx="60" cy="232" r="18"/>
+              <text x="60" y="233">9</text>
+            </g>
+
+<g id="alternatorAssembly" transform="translate(220 0)">
+
+            <!-- External drive shown on the alternator itself.
+                 The engine pulley is intentionally not drawn because it is outside
+                 the alternator assembly and previously made the motion misleading. -->
+
+            <!-- Alternator mounting bracket -->
+            <path d="M280 485 H765 L820 560 H270 Z" fill="#3d4a56" stroke="#8998a6" stroke-width="8"/>
+            <circle cx="330" cy="525" r="18" fill="#111827" stroke="#b3bdc6" stroke-width="5"/>
+            <circle cx="760" cy="525" r="18" fill="#111827" stroke="#b3bdc6" stroke-width="5"/>
+
+            <!-- Shaft -->
+            <line x1="285" y1="315" x2="805" y2="315" stroke="#c3cbd1" stroke-width="22"/>
+            <line x1="285" y1="315" x2="805" y2="315" stroke="#5a6670" stroke-width="7"/>
+
+            <!-- Alternator pulley -->
+            <g id="pulleyGroup" class="hotspot fade" data-component="pulley">
+              <circle cx="310" cy="315" r="88" fill="url(#metalGrad)" stroke="#c7d0d7" stroke-width="8"/>
+              <circle cx="310" cy="315" r="58" fill="#29343d" stroke="#8b98a2" stroke-width="6"/>
+              <g stroke="#bac4cb" stroke-width="5">
+                <circle cx="310" cy="315" r="73" fill="none"/>
+                <circle cx="310" cy="315" r="68" fill="none"/>
+              </g>
+              <circle cx="310" cy="315" r="18" fill="#101820"/>
+              <g id="frontPulleyMarker">
+                <line x1="310" y1="244" x2="310" y2="266"
+                      stroke="#facc15" stroke-width="7" stroke-linecap="round"/>
+                <line x1="310" y1="364" x2="310" y2="386"
+                      stroke="#facc15" stroke-width="7" stroke-linecap="round"/>
+                <line x1="239" y1="315" x2="261" y2="315"
+                      stroke="#facc15" stroke-width="7" stroke-linecap="round"/>
+                <line x1="359" y1="315" x2="381" y2="315"
+                      stroke="#facc15" stroke-width="7" stroke-linecap="round"/>
+              </g>
+            </g>
+
+            <!-- Stator -->
+            <g id="statorGroup" class="hotspot fade" data-component="stator">
+              <circle cx="535" cy="315" r="178" fill="#27343e" stroke="#a9b5bd" stroke-width="10"/>
+              <circle cx="535" cy="315" r="132" fill="#111827" stroke="#657582" stroke-width="8"/>
+              <g fill="none" stroke="url(#copperGrad)" stroke-width="18">
+                <path d="M535 153 A162 162 0 0 1 675 234"/>
+                <path d="M690 265 A162 162 0 0 1 675 400"/>
+                <path d="M643 445 A162 162 0 0 1 515 476"/>
+                <path d="M455 465 A162 162 0 0 1 383 365"/>
+                <path d="M375 315 A162 162 0 0 1 414 203"/>
+                <path d="M450 174 A162 162 0 0 1 535 153"/>
+              </g>
+            </g>
+
+            <!-- Rotor -->
+            <g id="rotorAssembly" class="hotspot fade" data-component="rotor">
+              <g id="rotorSpin" class="">
+                <circle cx="535" cy="315" r="110" fill="url(#rotorGrad)" stroke="#e3a949" stroke-width="8"/>
+                <circle cx="535" cy="315" r="50" fill="#2e2418" stroke="#d79533" stroke-width="6"/>
+                <g fill="#d88927" stroke="#f8c568" stroke-width="4">
+                  <path d="M535 205 L558 248 L535 265 L512 248 Z"/>
+                  <path d="M645 315 L602 338 L585 315 L602 292 Z"/>
+                  <path d="M535 425 L512 382 L535 365 L558 382 Z"/>
+                  <path d="M425 315 L468 292 L485 315 L468 338 Z"/>
+                  <path d="M613 237 L598 282 L570 278 L568 247 Z"/>
+                  <path d="M613 393 L568 383 L570 352 L598 348 Z"/>
+                  <path d="M457 393 L472 348 L500 352 L502 383 Z"/>
+                  <path d="M457 237 L502 247 L500 278 L472 282 Z"/>
+                </g>
+                
+                <g id="rotorMotionMarker">
+                  <line x1="535" y1="222" x2="535" y2="252"
+                        stroke="#fef3c7" stroke-width="8" stroke-linecap="round"/>
+                  <line x1="535" y1="378" x2="535" y2="408"
+                        stroke="#fef3c7" stroke-width="8" stroke-linecap="round"/>
+                  <line x1="442" y1="315" x2="472" y2="315"
+                        stroke="#fef3c7" stroke-width="8" stroke-linecap="round"/>
+                  <line x1="598" y1="315" x2="628" y2="315"
+                        stroke="#fef3c7" stroke-width="8" stroke-linecap="round"/>
+                </g>
+
+                <g id="rotorPoleMarker" opacity="0">
+                  <path d="M535 258 L554 285 L535 301 L516 285 Z"
+                        fill="rgba(56,189,248,.78)" stroke="#7dd3fc" stroke-width="4"/>
+                  <path d="M535 372 L516 345 L535 329 L554 345 Z"
+                        fill="rgba(239,68,68,.78)" stroke="#fca5a5" stroke-width="4"/>
+                  <text x="535" y="283" text-anchor="middle"
+                        fill="#e0f2fe" font-size="14" font-weight="900">N</text>
+                  <text x="535" y="352" text-anchor="middle"
+                        fill="#fee2e2" font-size="14" font-weight="900">S</text>
+                </g>
+
+              </g>
+            </g>
+
+            <!-- Slip rings / brushes -->
+            <g id="brushGroup" class="hotspot fade" data-component="brushes">
+              <!-- Rotating slip rings on rotor shaft -->
+              <g id="slipRingRotor">
+                <circle cx="730" cy="315" r="50" fill="#171d24"
+                        stroke="#6b7280" stroke-width="5"/>
+                <circle cx="730" cy="315" r="40" fill="none"
+                        stroke="#d88927" stroke-width="12"/>
+                <circle cx="730" cy="315" r="25" fill="none"
+                        stroke="#f2b45a" stroke-width="10"/>
+                <line x1="730" y1="268" x2="730" y2="285"
+                      stroke="#fff7d6" stroke-width="6" stroke-linecap="round"/>
+                <line x1="730" y1="345" x2="730" y2="362"
+                      stroke="#fff7d6" stroke-width="6" stroke-linecap="round"/>
+              </g>
+
+              <!-- Brushes stay stationary and press on the rotating rings -->
+              <g id="stationaryBrushes">
+                <rect x="763" y="266" width="42" height="98" rx="9"
+                      fill="#2d3742" stroke="#8ca0b3" stroke-width="5"/>
+                <rect x="750" y="284" width="31" height="25" rx="4"
+                      fill="#111827" stroke="#64748b" stroke-width="3"/>
+                <rect x="750" y="321" width="31" height="25" rx="4"
+                      fill="#111827" stroke="#64748b" stroke-width="3"/>
+                <line x1="781" y1="296" x2="793" y2="296"
+                      stroke="#cbd5e1" stroke-width="4"/>
+                <line x1="781" y1="333" x2="793" y2="333"
+                      stroke="#cbd5e1" stroke-width="4"/>
+              </g>
+
+              <text x="730" y="385" text-anchor="middle"
+                    fill="#cbd5e1" font-size="13" font-weight="800">
+                ROTATING RINGS / STATIONARY BRUSHES
+              </text>
+            </g>
+
+            <!-- Slip-ring close-up inset -->
+            <g id="slipRingInset" opacity="1">
+              <rect x="790" y="72" width="265" height="128" rx="14"
+                    fill="#0b1324" stroke="#64748b" stroke-width="4"/>
+              <text x="922" y="96" text-anchor="middle"
+                    fill="#f8fafc" font-size="14" font-weight="900">
+                SLIP-RING OPERATION
+              </text>
+
+              <g id="slipRingInsetRotor">
+                <circle cx="875" cy="145" r="38" fill="#171d24"
+                        stroke="#94a3b8" stroke-width="4"/>
+                <circle cx="875" cy="145" r="28" fill="none"
+                        stroke="#d88927" stroke-width="9"/>
+                <circle cx="875" cy="145" r="15" fill="none"
+                        stroke="#f2b45a" stroke-width="7"/>
+                <line x1="875" y1="110" x2="875" y2="124"
+                      stroke="#fff7d6" stroke-width="5" stroke-linecap="round"/>
+              </g>
+
+              <rect x="910" y="112" width="34" height="28" rx="4"
+                    fill="#111827" stroke="#64748b" stroke-width="3"/>
+              <rect x="910" y="150" width="34" height="28" rx="4"
+                    fill="#111827" stroke="#64748b" stroke-width="3"/>
+
+              <path id="fieldCurrentTop" class="current-path"
+                    d="M1015 123 H944"
+                    fill="none" stroke="#2563eb" stroke-width="5"/>
+              <path id="fieldCurrentBottom" class="current-path"
+                    d="M944 164 H1015"
+                    fill="none" stroke="#06b6d4" stroke-width="5"/>
+
+              <text x="980" y="115" fill="#93c5fd" font-size="11" font-weight="800">
+                FIELD CURRENT IN
+              </text>
+              <text x="980" y="186" fill="#67e8f9" font-size="11" font-weight="800">
+                RETURN PATH
+              </text>
+            </g>
+
+            <!-- Rectifier -->
+            <g id="rectifierGroup" class="hotspot fade" data-component="rectifier">
+              <path d="M790 210 Q895 235 910 315 Q895 395 790 420 Z" fill="#394957" stroke="#9cabb8" stroke-width="8"/>
+              <g fill="#ef4444" stroke="#fecaca" stroke-width="3">
+                <circle cx="830" cy="255" r="14"/><circle cx="865" cy="285" r="14"/><circle cx="840" cy="325" r="14"/>
+              </g>
+              <g fill="#111827" stroke="#cbd5e1" stroke-width="3">
+                <circle cx="875" cy="345" r="14"/><circle cx="830" cy="380" r="14"/><circle cx="895" cy="315" r="14"/>
+              </g>
+            </g>
+
+            <!-- Regulator -->
+            <g id="regulatorGroup" class="hotspot fade" data-component="regulator">
+              <rect x="800" y="430" width="135" height="75" rx="14" fill="#152a3e" stroke="#60a5fa" stroke-width="6"/>
+              <text x="868" y="460" text-anchor="middle" fill="#bfdbfe" font-size="14" font-weight="800">VOLTAGE</text>
+              <text x="868" y="482" text-anchor="middle" fill="#bfdbfe" font-size="14" font-weight="800">REGULATOR</text>
+            </g>
+
+            <!-- Rear terminal -->
+            <g id="terminalGroup" class="hotspot" data-component="terminal">
+              <rect x="930" y="265" width="75" height="95" rx="12" fill="#35414d" stroke="#9aa8b5" stroke-width="6"/>
+              <circle cx="968" cy="300" r="14" fill="#d97706"/>
+              <text x="968" y="335" text-anchor="middle" fill="#fff" font-size="16" font-weight="900">B+</text>
+            </g>
+<text x="535" y="125" text-anchor="middle" fill="#f8fafc" font-size="19" font-weight="900">ALTERNATOR CASING</text>
+            </g>
+<text x="535" y="100" text-anchor="middle"
+                    fill="#f8fafc" font-size="15" font-weight="900">
+                DRIVE PULLEY
+              </text>
+            </g>
+
+            </g>
+
+            <!-- Magnetic field -->
+            <g id="fieldLines" transform="translate(220 0)" opacity="0" filter="url(#glow)">
+              <g id="fieldFluxPaths" fill="none" stroke-linecap="round">
+                <ellipse cx="535" cy="315" rx="145" ry="104"
+                         stroke="#38bdf8" stroke-width="4" opacity=".5"/>
+                <ellipse cx="535" cy="315" rx="165" ry="124"
+                         stroke="#ef4444" stroke-width="4" opacity=".38"/>
+              </g>
+            </g>
+
+            <!-- Current flow -->
+            <g id="currentFlow" transform="translate(220 0)" opacity="0">
+              <path class="current-path" d="M430 185 Q535 125 640 185" fill="none" stroke="#38bdf8" stroke-width="6"/>
+              <path class="current-path" d="M390 315 Q535 250 680 315" fill="none" stroke="#facc15" stroke-width="6"/>
+              <path class="current-path" d="M430 445 Q535 505 640 445" fill="none" stroke="#c084fc" stroke-width="6"/>
+              <path class="current-path" d="M680 315 Q760 265 820 245" fill="none" stroke="#f59e0b" stroke-width="7"/>
+              <path class="current-path" d="M820 245 Q900 270 968 300" fill="none" stroke="#22c55e" stroke-width="7"/>
+              <path class="current-path" d="M968 300 H1050" fill="none" stroke="#22c55e" stroke-width="7"/>
+              <text x="470" y="120" fill="#7dd3fc" font-size="13" font-weight="800">3-PHASE AC</text>
+              <text x="990" y="280" fill="#86efac" font-size="15" font-weight="800">RECTIFIED DC</text>
+            </g>
+
+            <!-- Clickable component markers with leader lines -->
+            <g class="component-marker" data-component="pulley" transform="translate(220 0)">
+              <line class="marker-line" x1="265" y1="220" x2="295" y2="270"/>
+              <circle cx="255" cy="205" r="18"/>
+              <text x="255" y="206">1</text>
+            </g>
+
+            <g class="component-marker" data-component="rotor" transform="translate(220 0)">
+              <line class="marker-line" x1="535" y1="235" x2="535" y2="278"/>
+              <circle cx="535" cy="216" r="18"/>
+              <text x="535" y="217">2</text>
+            </g>
+
+            <g class="component-marker" data-component="stator" transform="translate(220 0)">
+              <line class="marker-line" x1="390" y1="145" x2="430" y2="188"/>
+              <circle cx="378" cy="132" r="18"/>
+              <text x="378" y="133">3</text>
+            </g>
+
+            <g class="component-marker" data-component="brushes" transform="translate(220 0)">
+              <line class="marker-line" x1="790" y1="225" x2="770" y2="278"/>
+              <circle cx="797" cy="207" r="18"/>
+              <text x="797" y="208">4</text>
+            </g>
+
+            <g class="component-marker" data-component="rectifier" transform="translate(220 0)">
+              <line class="marker-line" x1="925" y1="205" x2="885" y2="250"/>
+              <circle cx="938" cy="191" r="18"/>
+              <text x="938" y="192">5</text>
+            </g>
+
+            <g class="component-marker" data-component="regulator" transform="translate(220 0)">
+              <line class="marker-line" x1="948" y1="505" x2="906" y2="480"/>
+              <circle cx="965" cy="516" r="18"/>
+              <text x="965" y="517">6</text>
+            </g>
+
+            <g class="component-marker" data-component="terminal" transform="translate(220 0)">
+              <line class="marker-line" x1="1025" y1="258" x2="990" y2="288"/>
+              <circle cx="1040" cy="245" r="18"/>
+              <text x="1040" y="246">7</text>
+            </g>
+
+            <text x="660" y="610" text-anchor="middle" fill="#9fb0c6" font-size="16" font-weight="700">
+              Click a component to learn what it is, what it does and how it fails.
+            </text>
+
+          </svg>
+
+
+          <div id="componentPopup" class="component-popup" role="dialog" aria-live="polite">
+            <button id="componentPopupClose" class="component-popup-close" type="button" aria-label="Close">×</button>
+            <h3 id="componentPopupTitle">Component</h3>
+            <p id="componentPopupText"></p>
+          </div>
+        </div>
+
+        <div id="statusBox" class="status">
+          Alternator stopped. Start the alternator or remove the casing to inspect internal components.
+        </div>
+      </div>
+    </section>
+<aside class="side">
+
+      <section class="card">
+        <div class="card-title">Fault Challenge</div>
+        <div class="side-content">
+          <select id="faultSelect" style="width:100%">
+            <option value="good">Known good alternator</option>
+            <option value="diode">Rectifier / regulator pack overcharging fault</option>
+            <option value="regulator">Voltage regulator undercharging fault</option>
+            <option value="brushes">Worn brushes</option>
+            <option value="belt">Slipping drive belt</option>
+            <option value="earth">High-resistance earth</option>
+            <option value="stator">Open stator phase</option>
+          </select>
+
+          <div class="question">
+            <b>Most likely diagnosis</b>
+            <select id="diagnosisSelect">
+              <option value="">Select diagnosis</option>
+              <option value="good">Alternator operating correctly</option>
+              <option value="diode">Rectifier / regulator pack overcharging fault</option>
+              <option value="regulator">Voltage regulator undercharging fault</option>
+              <option value="brushes">Worn brushes</option>
+              <option value="belt">Slipping drive belt</option>
+              <option value="earth">High-resistance earth</option>
+              <option value="stator">Open stator phase</option>
+            </select>
+            <button id="submitDiagnosis" class="success" style="width:100%;margin-top:8px">Submit Diagnosis</button>
+            <div id="diagnosisResult" class="result"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">Fault Challenge</div>
+        <div class="side-content">
+          <select id="faultSelect" style="width:100%">
+            <option value="good">Known good alternator</option>
+            <option value="diode">Rectifier / regulator pack overcharging fault</option>
+            <option value="regulator">Voltage regulator undercharging fault</option>
+            <option value="brushes">Worn brushes</option>
+            <option value="belt">Slipping drive belt</option>
+            <option value="earth">High-resistance earth</option>
+            <option value="stator">Open stator phase</option>
+          </select>
+
+          <div class="question">
+            <b>Most likely diagnosis</b>
+            <select id="diagnosisSelect">
+              <option value="">Select diagnosis</option>
+              <option value="good">Alternator operating correctly</option>
+              <option value="diode">Rectifier / regulator pack overcharging fault</option>
+              <option value="regulator">Voltage regulator undercharging fault</option>
+              <option value="brushes">Worn brushes</option>
+              <option value="belt">Slipping drive belt</option>
+              <option value="earth">High-resistance earth</option>
+              <option value="stator">Open stator phase</option>
+            </select>
+            <button id="submitDiagnosis" class="success" style="width:100%;margin-top:8px">Submit Diagnosis</button>
+            <div id="diagnosisResult" class="result"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">Live Charging System</div>
+        <div class="side-content">
+
+          <div class="readings">
+            <div class="readout"><small>Engine speed</small><strong id="rpmRead">0 rpm</strong></div>
+            <div class="readout"><small>System voltage</small><strong id="voltRead">12.4 V</strong></div>
+            <div class="readout"><small>Output current</small><strong id="ampRead">0 A</strong></div>
+            <div class="readout"><small>Field duty</small><strong id="fieldRead">0%</strong></div>
+          </div>
+
+          <div class="controls" style="margin-top:14px">
+
+            <div class="control">
+              <label><span>Engine speed</span><span id="rpmVal">1800 rpm</span></label>
+              <input id="rpmSlider" type="range" min="700" max="6000" step="100" value="1800">
+            </div>
+
+            <div class="control">
+              <label><span>Electrical load</span><span id="loadVal">20 A</span></label>
+              <input id="loadSlider" type="range" min="0" max="120" step="5" value="20">
+            </div>
+
+            <div class="toggle-grid">
+              <button class="loadBtn" data-load="15">Headlamps</button>
+              <button class="loadBtn" data-load="25">Heated Screen</button>
+              <button class="loadBtn" data-load="20">Blower Motor</button>
+              <button class="loadBtn" data-load="30">Cooling Fan</button>
+            </div>
+
+          </div>
+
+          <div class="scope">
+            <svg viewBox="0 0 360 150">
+              <rect width="360" height="150" fill="#061018"/>
+              <g stroke="#17313f">
+                <path d="M0 30H360M0 60H360M0 90H360M0 120H360"/>
+                <path d="M45 0V150M90 0V150M135 0V150M180 0V150M225 0V150M270 0V150M315 0V150"/>
+              </g>
+              <polyline id="rippleTrace" fill="none" stroke="#00d4ff" stroke-width="3"/>
+              <text x="10" y="18" fill="#00d4ff" font-size="11">Alternator ripple</text>
+            </svg>
+          </div>
+
+        </div>
+      </section>
+
+
+
+
+
+    </aside>
+
+  </div>
+
+</div>
+
+<footer class="copyright-footer">
+  <div class="copyright-main">© 2026 RRainbow. All Rights Reserved.</div>
+  <div class="copyright-sub">
+    Automotive Alternator Training Simulator · Educational simulation only
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+const stage=document.getElementById("stage");
+const runBtn=document.getElementById("runBtn");
+const explodeBtn=document.getElementById("explodeBtn");
+const labelsBtn=document.getElementById("labelsBtn");
+const fieldBtn=document.getElementById("fieldBtn");
+const currentBtn=document.getElementById("currentBtn");
+const slowBtn=document.getElementById("slowBtn");
+const resetBtn=document.getElementById("resetBtn");
+const rotorSpin=document.getElementById("rotorSpin");
+const rotorMotionMarker=document.getElementById("rotorMotionMarker");
+const rotorPoleMarker=document.getElementById("rotorPoleMarker");
+const enginePulleyMarker=document.getElementById("enginePulleyMarker");
+const alternatorPulleyMarker=document.getElementById("frontPulleyMarker");
+const beltGroup=document.getElementById("beltGroup");
+const beltTexture=document.getElementById("beltTexture");
+const slipRingRotor=document.getElementById("slipRingRotor");
+const slipRingInsetRotor=document.getElementById("slipRingInsetRotor");
+const currentFlow=document.getElementById("currentFlow");
+const statusBox=document.getElementById("statusBox");
+const rpmSlider=document.getElementById("rpmSlider");
+const loadSlider=document.getElementById("loadSlider");
+const faultSelect=document.getElementById("faultSelect");
+const rippleTrace=document.getElementById("rippleTrace");
+
+let running=false;
+let exploded=false;
+let currentVisible=false;
+let extraLoad=0;
+
+const info={
+  rotor:{
+    title:"Rotor",
+    purpose:"The rotor is the rotating electromagnet on the alternator shaft. Field current passes through the brushes and slip rings to create north and south magnetic poles."
+  },
+  stator:{
+    title:"Stator",
+    purpose:"The stator is stationary — this is where the name stator comes from. Its three fixed windings surround the rotating rotor, and the changing magnetic field induces three-phase AC voltage in them."
+  },
+  rectifier:{
+    title:"Rectifier",
+    purpose:"The rectifier uses diodes to convert the stator's three-phase AC output into DC for the battery and vehicle electrical system."
+  },
+  regulator:{
+    title:"Voltage Regulator",
+    purpose:"The regulator controls rotor field current so charging voltage remains stable as engine speed and electrical load change."
+  },
+  brushes:{
+    title:"Brushes and Slip Rings",
+    purpose:"The slip rings rotate with the rotor shaft while the carbon brushes remain stationary and maintain electrical contact, supplying field current to the rotor winding."
+  },
+  pulley:{
+    title:"Pulley",
+    purpose:"The pulley transfers drive from the engine belt to the alternator shaft and rotor."
+  },
+  terminal:{
+    title:"B+ Output Terminal",
+    purpose:"The B+ terminal carries rectified DC output from the alternator to the battery and vehicle electrical system."
+  },
+  belt:{
+    title:"Drive Belt",
+    purpose:"The drive belt transfers rotation from the engine pulley to the alternator pulley. A loose belt can slip, bounce and reduce charging output."
+  },
+  enginePulleyInfo:{
+    title:"Engine Pulley",
+    purpose:"The engine pulley drives the belt. The smaller alternator pulley makes the alternator rotor turn faster than the engine pulley."
+  }
+};
+
+function showInfo(key){
+  const d=info[key];
+  if(!d)return;
+
+  document.getElementById("componentPopupTitle").textContent=d.title;
+  document.getElementById("componentPopupText").textContent=d.purpose;
+  document.getElementById("componentPopup").classList.add("show");
+}
+
+document.querySelectorAll("[data-component]").forEach(el=>{
+  el.addEventListener("click",()=>showInfo(el.dataset.component));
+});
+
+document.getElementById("componentPopupClose").onclick=()=>{
+  document.getElementById("componentPopup").classList.remove("show");
+};
+
+
+runBtn.onclick=()=>{
+  running=!running;
+  stage.classList.toggle("paused",!running);
+  runBtn.textContent=running?"⏸ Stop Alternator":"▶ Start Alternator";
+  runBtn.classList.toggle("active",running);
+
+  document.getElementById("fieldCurrentTop").style.opacity=running?"1":".2";
+  document.getElementById("fieldCurrentBottom").style.opacity=running?"1":".2";
+
+  updateSystem();
+};
+
+
+explodeBtn.onclick=()=>{
+  exploded=!exploded;
+  explodeBtn.classList.toggle("active",exploded);
+  explodeBtn.textContent=exploded?"Normal View":"Exploded View";
+
+  const shifts={
+    pulleyGroup:-80,
+    statorGroup:-20,
+    rotorAssembly:15,
+    brushGroup:60,
+    rectifierGroup:95,
+    regulatorGroup:95
+  };
+
+  Object.entries(shifts).forEach(([id,x])=>{
+    document.getElementById(id).style.transform=exploded?`translateX(${x}px)`:"translateX(0)";
+  });
+};
+
+labelsBtn.onclick=()=>{
+  stage.classList.toggle("show-labels");
+  labelsBtn.classList.toggle("active");
+  labelsBtn.textContent=stage.classList.contains("show-labels")?"Hide Labels":"Show Labels";
+};
+
+fieldBtn.onclick=()=>{
+  const field=document.getElementById("fieldLines");
+  const visible=field.getAttribute("opacity")!=="1";
+
+  field.setAttribute("opacity",visible ? "1" : "0");
+  rotorPoleMarker.setAttribute("opacity",visible ? "1" : "0");
+
+  fieldBtn.classList.toggle("active",visible);
+  fieldBtn.textContent=visible ? "Hide Magnetic Field" : "Show Magnetic Field";
+};
+
+currentBtn.onclick=()=>{
+  currentVisible=!currentVisible;
+  currentFlow.setAttribute("opacity",currentVisible?"1":"0");
+  currentBtn.classList.toggle("active",currentVisible);
+  currentBtn.textContent=currentVisible?"Hide Current Flow":"Show Current Flow";
+};
+
+slowBtn.onclick=()=>{
+  stage.classList.toggle("slow");
+  slowBtn.classList.toggle("active");
+  slowBtn.textContent=stage.classList.contains("slow")?"Normal Speed":"Slow Motion";
+};
+
+document.querySelectorAll(".loadBtn").forEach(btn=>{
+  btn.onclick=()=>{
+    btn.classList.toggle("active");
+    extraLoad=[...document.querySelectorAll(".loadBtn.active")]
+      .reduce((sum,b)=>sum+Number(b.dataset.load),0);
+    updateSystem();
+  };
+});
+
+rpmSlider.oninput=updateSystem;
+loadSlider.oninput=updateSystem;
+faultSelect.onchange=updateSystem;
+
+function calculate(){
+  const rpm=Number(rpmSlider.value);
+  const load=Number(loadSlider.value)+extraLoad;
+  const fault=faultSelect.value;
+
+  let voltage=running?14.3:12.4;
+  let maxCurrent=Math.min(140,Math.max(20,(rpm-500)/35));
+  let output=running?Math.min(load,maxCurrent):0;
+  let duty=running?Math.min(95,20+load*.55):0;
+  let ripple=.12;
+
+  if(running){
+    if(fault==="diode"){
+      voltage=rpm>2200?16.6:15.4;
+      ripple=.75;
+      output=Math.min(140,Math.max(load,55));
+      duty=95;
+    }
+    if(fault==="regulator"){
+      voltage=12.6;
+      ripple=.18;
+      output*=.28;
+      duty=18;
+    }
+    if(fault==="brushes"){voltage=12.7+Math.sin(Date.now()/450)*.35;output*=.25;duty=92}
+    if(fault==="belt"){voltage=rpm<2600?12.6:13.5;output*=.45;duty=88}
+    if(fault==="earth"){voltage=13.1;output*=.65;ripple=.25}
+    if(fault==="stator"){voltage=13.2;output*=.6;ripple=.8}
+  }
+
+  return {rpm,load,voltage,output,duty,ripple,fault};
+}
+
+function updateSystem(){
+  const d=calculate();
+
+  document.getElementById("rpmVal").textContent=d.rpm+" rpm";
+  document.getElementById("loadVal").textContent=d.load+" A";
+  document.getElementById("rpmRead").textContent=running?d.rpm+" rpm":"0 rpm";
+  document.getElementById("voltRead").textContent=d.voltage.toFixed(1)+" V";
+  document.getElementById("ampRead").textContent=Math.round(d.output)+" A";
+  document.getElementById("fieldRead").textContent=Math.round(d.duty)+"%";
+
+  beltGroup.classList.toggle("loose-belt",running && d.fault==="belt");
+  drawRipple(d);
+
+  if(!running){
+    statusBox.className="status";
+    statusBox.innerHTML="<b>Alternator stopped.</b><br>The battery supplies the electrical system at approximately 12.4 V.";
+  }else if(d.fault==="good"){
+    statusBox.className="status good";
+    statusBox.innerHTML="<b>Normal charging operation.</b><br>The pulley drives the shaft and rotor. The rotor magnetic field sweeps past the stationary stator windings, generating three-phase AC. The rectifier converts this to DC and the regulator adjusts field current to hold system voltage.";
+  }else{
+    statusBox.className="status warn";
+    statusBox.innerHTML="<b>Fault active:</b> "+faultName(d.fault)+".<br>Observe system voltage, output current, field duty and the ripple waveform before submitting a diagnosis.";
+  }
+}
+
+function faultName(f){
+  return {
+    good:"Known good alternator",
+    diode:"Rectifier / regulator pack overcharging fault",
+    regulator:"Voltage regulator undercharging fault",
+    brushes:"Worn brushes",
+    belt:"Slipping drive belt",
+    earth:"High-resistance earth",
+    stator:"Open stator phase"
+  }[f];
+}
+
+function drawRipple(d){
+  const pts=[];
+  const base=75;
+  for(let x=0;x<=360;x+=3){
+    let wave=Math.sin(x*.22)*d.ripple*18;
+    wave+=Math.sin(x*.66)*d.ripple*4;
+
+    if(d.fault==="diode" && x%72<18)wave+=22;
+    if(d.fault==="stator" && x%108<35)wave+=14;
+
+    const y=base-wave;
+    pts.push(x+","+y);
+  }
+  rippleTrace.setAttribute("points",pts.join(" "));
+}
+
+document.getElementById("submitDiagnosis").onclick=()=>{
+  const choice=document.getElementById("diagnosisSelect").value;
+  const result=document.getElementById("diagnosisResult");
+
+  if(!choice){
+    result.innerHTML="Select a diagnosis first.";
+    return;
+  }
+
+  if(choice===faultSelect.value){
+    result.innerHTML="✅ <b>Correct.</b> "+faultExplanation(choice);
+  }else{
+    result.innerHTML="❌ <b>Incorrect.</b> The simulated fault is <b>"+faultName(faultSelect.value)+"</b>.<br>"+faultExplanation(faultSelect.value);
+  }
+};
+
+function faultExplanation(f){
+  return {
+    good:"Charging voltage, output current and ripple are all consistent with normal operation.",
+    diode:"The simulated combined rectifier/regulator-pack fault drives field duty high, producing an overcharging voltage together with abnormal ripple. In normal diagnosis, a diode-only failure more commonly causes low output and high ripple.",
+    regulator:"The regulator is not supplying enough rotor field current, so charging voltage remains close to battery voltage.",
+    brushes:"Poor brush contact interrupts rotor field current, causing low or unstable output.",
+    belt:"The rotor cannot maintain sufficient speed under load, especially at lower engine speeds.",
+    earth:"Resistance in the alternator earth path causes voltage loss and reduced charging performance.",
+    stator:"One phase is missing, reducing output and creating an uneven ripple pattern."
+  }[f];
+}
+
+
+let rotorAngle=0;
+let engineAngle=0;
+let beltOffset=0;
+let lastFrame=performance.now();
+
+function animateMechanical(now){
+  const dt=Math.min(.05,(now-lastFrame)/1000);
+  lastFrame=now;
+
+  if(running){
+    const rpm=Number(rpmSlider.value);
+    const speedFactor=stage.classList.contains("slow") ? .08 : .25;
+
+    engineAngle=(engineAngle + rpm*2.2*dt*speedFactor) % 360;
+    rotorAngle=(rotorAngle + rpm*5.2*dt*speedFactor) % 360;
+    beltOffset=(beltOffset-rpm*.018*dt*speedFactor)%24;
+
+    enginePulleyMarker.setAttribute("transform",`rotate(${engineAngle} 120 315)`);
+    alternatorPulleyMarker.setAttribute("transform",`rotate(${rotorAngle} 310 315)`);
+    rotorMotionMarker.setAttribute("transform",`rotate(${rotorAngle} 535 315)`);
+    rotorPoleMarker.setAttribute("transform",`rotate(${rotorAngle} 535 315)`);
+    slipRingRotor.setAttribute("transform",`rotate(${rotorAngle} 730 315)`);
+    slipRingInsetRotor.setAttribute("transform",`rotate(${rotorAngle} 875 145)`);
+    beltTexture.style.strokeDashoffset=String(beltOffset);
+  }
+
+  requestAnimationFrame(animateMechanical);
+}
+
+requestAnimationFrame(animateMechanical);
+
+resetBtn.onclick=()=>{
+  running=false;
+  exploded=false;
+  currentVisible=false;
+  extraLoad=0;
+
+  stage.className="stage paused";
+  runBtn.textContent="▶ Start Alternator";
+  runBtn.classList.remove("active");
+  document.getElementById("fieldCurrentTop").style.opacity=".2";
+  document.getElementById("fieldCurrentBottom").style.opacity=".2";
+
+  explodeBtn.textContent="Exploded View";
+  explodeBtn.classList.remove("active");
+
+  labelsBtn.textContent="Show Labels";
+  labelsBtn.classList.remove("active");
+
+  fieldBtn.textContent="Show Magnetic Field";
+  fieldBtn.classList.remove("active");
+  document.getElementById("fieldLines").setAttribute("opacity","0");
+  rotorPoleMarker.setAttribute("opacity","0");
+
+  currentBtn.textContent="Show Current Flow";
+  currentBtn.classList.remove("active");
+  currentFlow.setAttribute("opacity","0");
+
+  slowBtn.textContent="Slow Motion";
+  slowBtn.classList.remove("active");
+
+  ["pulleyGroup","statorGroup","rotorAssembly","brushGroup","rectifierGroup","regulatorGroup"]
+    .forEach(id=>document.getElementById(id).style.transform="translateX(0)");
+
+  rotorAngle=0;
+  engineAngle=0;
+  beltOffset=0;
+  enginePulleyMarker.setAttribute("transform","rotate(0 120 315)");
+  alternatorPulleyMarker.setAttribute("transform","rotate(0 310 315)");
+  rotorMotionMarker.setAttribute("transform","rotate(0 535 315)");
+  rotorPoleMarker.setAttribute("transform","rotate(0 535 315)");
+  rotorPoleMarker.setAttribute("opacity","0");
+  slipRingRotor.setAttribute("transform","rotate(0 730 315)");
+  slipRingInsetRotor.setAttribute("transform","rotate(0 875 145)");
+
+  rpmSlider.value=1800;
+  loadSlider.value=20;
+  faultSelect.value="good";
+  document.getElementById("diagnosisSelect").value="";
+  document.getElementById("diagnosisResult").innerHTML="";
+  document.getElementById("componentPopup").classList.remove("show");
+  document.querySelectorAll(".loadBtn").forEach(b=>b.classList.remove("active"));
+  beltGroup.classList.remove("loose-belt");
+
+  updateSystem();
+};
+
+setInterval(()=>{
+  if(running && faultSelect.value==="brushes")updateSystem();
+},300);
+
+stage.classList.add("paused");
+document.getElementById("fieldCurrentTop").style.opacity=".2";
+document.getElementById("fieldCurrentBottom").style.opacity=".2";
+updateSystem();
+
+})();
+</script>
+
+</body>
+</html>
