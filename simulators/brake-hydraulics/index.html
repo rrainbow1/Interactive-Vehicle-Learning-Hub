@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+
+<!--
+============================================================
+RRainbow - BRAKE HYDRAULIC SYSTEM DIAGNOSTIC SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+This software forms part of the RRainbow Learning Hub.
+
+The source code, interactive learning resources, simulations,
+graphics, diagnostic scenarios and associated educational
+content may not be copied, reproduced, redistributed,
+republished or commercially exploited without permission,
+except where permitted by law.
+
+============================================================
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base target="_top">
+<title>Brake Hydraulic System Diagnostic Simulator</title>
+
+<style>
+:root{
+  --bg:#eef2f6;
+  --panel:#ffffff;
+  --line:#d8e0e8;
+  --text:#1e293b;
+  --muted:#64748b;
+  --navy:#0f172a;
+  --blue:#2563eb;
+  --green:#16a34a;
+  --red:#dc2626;
+  --amber:#d97706;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+header{
+  background:#101820;
+  color:#fff;
+  padding:16px 20px;
+}
+header h1{margin:0;font-size:24px}
+header p{margin:5px 0 0;color:#cbd5e1;font-size:13px}
+.wrap{max-width:1500px;margin:auto;padding:14px}
+.topbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+}
+.group{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+label{font-size:12px;font-weight:800;color:#475569}
+select,button{
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  padding:9px 11px;
+  font-weight:700;
+  background:#fff;
+  color:#17212b;
+}
+button{cursor:pointer}
+button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+button.success{background:#15803d;color:#fff;border-color:#15803d}
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 360px;
+  gap:14px;
+}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 3px 12px rgba(15,23,42,.06);
+}
+.card-title{
+  padding:11px 14px;
+  background:#f8fafc;
+  border-bottom:1px solid var(--line);
+  font-size:14px;
+  font-weight:900;
+}
+.main-pad{padding:14px}
+.sim-board{
+  background:#111827;
+  border-radius:12px;
+  overflow:hidden;
+}
+svg{display:block;width:100%;height:auto}
+
+.hyd-line{
+  fill:none;
+  stroke:#60a5fa;
+  stroke-width:9;
+  stroke-linecap:round;
+  transition:stroke .2s ease,opacity .2s ease;
+}
+.hyd-line.active{stroke:#22c55e}
+.hyd-line.low{stroke:#f59e0b}
+.hyd-line.off{stroke:#475569}
+.mech{fill:#6b7280;stroke:#cbd5e1;stroke-width:5}
+.dark{fill:#1f2937;stroke:#94a3b8;stroke-width:5}
+.label{fill:#e5e7eb;font-size:15px;font-weight:bold;text-anchor:middle}
+.small{fill:#cbd5e1;font-size:12px;text-anchor:middle}
+
+.pressure-badge{
+  fill:#0f172a;
+  stroke:#64748b;
+  stroke-width:3;
+}
+.pressure-text{
+  fill:#86efac;
+  font-size:15px;
+  font-weight:bold;
+  text-anchor:middle;
+}
+
+.side{display:flex;flex-direction:column;gap:14px}
+.side-content{padding:14px}
+.side-content h3{margin:0 0 10px;font-size:15px}
+.side-content select{width:100%}
+.readout-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+}
+.readout{
+  padding:10px;
+  border-radius:9px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+}
+.readout-label{
+  font-size:11px;
+  color:#64748b;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.readout-value{
+  margin-top:4px;
+  font-size:20px;
+  font-weight:900;
+  color:#0f172a;
+}
+.status{
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  font-size:13px;
+  line-height:1.5;
+}
+.status.good{background:#ecfdf3;border-color:#86efac}
+.status.warn{background:#fffbeb;border-color:#fcd34d}
+.status.bad{background:#fef2f2;border-color:#fca5a5}
+
+.result{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  border-radius:9px;
+  background:#eef2ff;
+  border:1px solid #c7d2fe;
+  font-size:13px;
+  line-height:1.5;
+}
+.result.show{display:block}
+
+.copyright-footer{
+  margin-top:22px;
+  padding:18px 15px 8px;
+  border-top:1px solid var(--line);
+  text-align:center;
+}
+.copyright-main{font-size:13px;font-weight:900}
+.copyright-sub{margin-top:5px;font-size:12px;color:var(--muted);font-weight:600}
+
+@media(max-width:1000px){
+  .layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Brake Hydraulic System Diagnostic Simulator</h1>
+  <p>Press the brake pedal, observe hydraulic pressure, compare wheel response and diagnose braking faults.</p>
+</header>
+
+<div class="wrap">
+
+<div class="topbar">
+
+  <div class="group">
+    <label>Brake condition</label>
+    <select id="faultSelect">
+      <option value="good">Known good braking system</option>
+      <option value="air">Air in hydraulic system</option>
+      <option value="externalLeak">External hydraulic leak</option>
+      <option value="masterBypass">Master cylinder internal bypass</option>
+      <option value="seizedCaliper">Front-right caliper seized</option>
+      <option value="restrictedHose">Front-left flexible hose restricted</option>
+      <option value="servoFault">Brake servo assistance fault</option>
+    </select>
+  </div>
+
+  <button class="primary" id="pedalBtn">🦶 Press Brake Pedal</button>
+  <button class="primary" id="hiddenBtn">🎲 New Hidden Fault</button>
+  <button id="resetBtn">Reset</button>
+  <button class="success" id="submitBtn">Submit Diagnosis</button>
+
+</div>
+
+<div class="layout">
+
+<div class="card">
+  <div class="card-title">Hydraulic Brake Circuit — Dual-Circuit Disc Brake System</div>
+
+  <div class="main-pad">
+
+    <div class="sim-board">
+
+      <svg viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+
+        <rect width="1200" height="720" fill="#111827"/>
+
+        <!-- PEDAL -->
+        <line id="pedalArm" x1="115" y1="165" x2="185" y2="260"
+              stroke="#cbd5e1" stroke-width="16" stroke-linecap="round"
+              style="transform-origin:115px 165px;transition:transform .2s ease"/>
+        <rect x="70" y="130" width="95" height="42" rx="8" class="mech"/>
+        <text x="117" y="157" class="label">PEDAL</text>
+
+        <!-- SERVO -->
+        <circle id="servo" cx="290" cy="255" r="92" class="dark"/>
+        <circle cx="290" cy="255" r="55" fill="#374151" stroke="#cbd5e1" stroke-width="4"/>
+        <text x="290" y="250" class="label">BRAKE</text>
+        <text x="290" y="274" class="label">SERVO</text>
+        <line x1="185" y1="260" x2="198" y2="260" stroke="#cbd5e1" stroke-width="10"/>
+
+        <!-- MASTER CYLINDER -->
+        <rect x="382" y="215" width="220" height="85" rx="12" class="mech"/>
+        <text x="492" y="250" class="label">MASTER CYLINDER</text>
+        <text x="492" y="276" class="small">TANDEM / DUAL CIRCUIT</text>
+
+        <!-- RESERVOIR -->
+        <rect x="425" y="145" width="135" height="65" rx="9"
+              fill="#dbeafe" stroke="#94a3b8" stroke-width="5"/>
+        <path id="fluidLevel" d="M435 170 H550 V198 H435 Z"
+              fill="#facc15" opacity=".8"/>
+        <text x="492" y="137" class="small">BRAKE FLUID RESERVOIR</text>
+
+        <!-- front/rear circuit lines -->
+        <path id="lineFL" d="M602 235 H790 V145 H940" class="hyd-line"/>
+        <path id="lineFR" d="M602 280 H790 V375 H940" class="hyd-line"/>
+        <path id="lineRL" d="M555 300 V515 H940" class="hyd-line"/>
+        <path id="lineRR" d="M430 300 V625 H940" class="hyd-line"/>
+
+        <!-- FRONT LEFT CALIPER -->
+        <circle cx="1000" cy="145" r="58" fill="#374151" stroke="#94a3b8" stroke-width="6"/>
+        <circle cx="1000" cy="145" r="34" fill="#111827" stroke="#cbd5e1" stroke-width="4"/>
+        <rect id="caliperFL" x="940" y="115" width="42" height="60" rx="7" fill="#ef4444" stroke="#fecaca" stroke-width="4"/>
+        <text x="1000" y="220" class="label">FRONT LEFT</text>
+
+        <!-- FRONT RIGHT -->
+        <circle cx="1000" cy="375" r="58" fill="#374151" stroke="#94a3b8" stroke-width="6"/>
+        <circle cx="1000" cy="375" r="34" fill="#111827" stroke="#cbd5e1" stroke-width="4"/>
+        <rect id="caliperFR" x="940" y="345" width="42" height="60" rx="7" fill="#ef4444" stroke="#fecaca" stroke-width="4"/>
+        <text x="1000" y="450" class="label">FRONT RIGHT</text>
+
+        <!-- REAR LEFT -->
+        <circle cx="1000" cy="515" r="48" fill="#374151" stroke="#94a3b8" stroke-width="6"/>
+        <circle cx="1000" cy="515" r="28" fill="#111827" stroke="#cbd5e1" stroke-width="4"/>
+        <rect id="caliperRL" x="950" y="490" width="34" height="50" rx="7" fill="#ef4444" stroke="#fecaca" stroke-width="4"/>
+        <text x="1000" y="580" class="label">REAR LEFT</text>
+
+        <!-- REAR RIGHT -->
+        <circle cx="1000" cy="625" r="48" fill="#374151" stroke="#94a3b8" stroke-width="6"/>
+        <circle cx="1000" cy="625" r="28" fill="#111827" stroke="#cbd5e1" stroke-width="4"/>
+        <rect id="caliperRR" x="950" y="600" width="34" height="50" rx="7" fill="#ef4444" stroke="#fecaca" stroke-width="4"/>
+        <text x="1000" y="690" class="label">REAR RIGHT</text>
+
+        <!-- pressure readout badges -->
+        <g>
+          <rect x="720" y="95" width="125" height="38" rx="8" class="pressure-badge"/>
+          <text id="pFL" x="782" y="120" class="pressure-text">0 bar</text>
+
+          <rect x="720" y="385" width="125" height="38" rx="8" class="pressure-badge"/>
+          <text id="pFR" x="782" y="410" class="pressure-text">0 bar</text>
+
+          <rect x="720" y="490" width="125" height="38" rx="8" class="pressure-badge"/>
+          <text id="pRL" x="782" y="515" class="pressure-text">0 bar</text>
+
+          <rect x="720" y="600" width="125" height="38" rx="8" class="pressure-badge"/>
+          <text id="pRR" x="782" y="625" class="pressure-text">0 bar</text>
+        </g>
+
+        <!-- leak marker -->
+        <g id="leakGroup" opacity="0">
+          <circle cx="690" cy="280" r="8" fill="#60a5fa"/>
+          <circle cx="705" cy="300" r="7" fill="#60a5fa"/>
+          <circle cx="720" cy="322" r="6" fill="#60a5fa"/>
+          <text x="730" y="305" fill="#93c5fd" font-size="14" font-weight="bold">FLUID LEAK</text>
+        </g>
+
+        <!-- air bubbles -->
+        <g id="airGroup" opacity="0">
+          <circle cx="660" cy="235" r="7" fill="#fff" opacity=".7"/>
+          <circle cx="690" cy="235" r="5" fill="#fff" opacity=".7"/>
+          <circle cx="720" cy="235" r="8" fill="#fff" opacity=".7"/>
+          <circle cx="675" cy="280" r="6" fill="#fff" opacity=".7"/>
+          <circle cx="710" cy="280" r="5" fill="#fff" opacity=".7"/>
+        </g>
+
+      </svg>
+
+    </div>
+
+    <div class="status" id="statusBox">
+      Select a brake condition or use Hidden Fault mode, then press the brake pedal to observe the system.
+    </div>
+
+  </div>
+</div>
+
+<div class="side">
+
+  <div class="card">
+    <div class="card-title">System Readings</div>
+    <div class="side-content">
+
+      <div class="readout-grid">
+
+        <div class="readout">
+          <div class="readout-label">Pedal Feel</div>
+          <div class="readout-value" id="pedalFeel">Normal</div>
+        </div>
+
+        <div class="readout">
+          <div class="readout-label">Pedal Travel</div>
+          <div class="readout-value" id="pedalTravel">Normal</div>
+        </div>
+
+        <div class="readout">
+          <div class="readout-label">Servo Assistance</div>
+          <div class="readout-value" id="servoAssist">Normal</div>
+        </div>
+
+        <div class="readout">
+          <div class="readout-label">Fluid Level</div>
+          <div class="readout-value" id="fluidReadout">MAX</div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Diagnosis</div>
+    <div class="side-content">
+
+      <h3>Most likely fault</h3>
+
+      <select id="diagnosisSelect">
+        <option value="">Select diagnosis</option>
+        <option value="good">Braking system operating correctly</option>
+        <option value="air">Air in hydraulic system</option>
+        <option value="externalLeak">External hydraulic leak</option>
+        <option value="masterBypass">Master cylinder internal bypass</option>
+        <option value="seizedCaliper">Front-right caliper seized</option>
+        <option value="restrictedHose">Front-left flexible hose restricted</option>
+        <option value="servoFault">Brake servo assistance fault</option>
+      </select>
+
+      <div class="result" id="resultBox"></div>
+
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+<footer class="copyright-footer">
+  <div class="copyright-main">© 2026 RRainbow. All Rights Reserved.</div>
+  <div class="copyright-sub">Brake Hydraulic System Diagnostic Simulator · RRainbow Learning Hub</div>
+</footer>
+
+</div>
+
+<!--
+============================================================
+RRainbow - PROTECTED INTERACTIVE SIMULATOR CODE
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+The JavaScript logic, hydraulic behaviour, simulated brake
+pressures, fault scenarios, animations and educational
+explanations below form part of the RRainbow Learning Hub
+and are protected content.
+
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation is prohibited
+except where permitted by law or expressly authorised by
+the rights holder.
+
+============================================================
+-->
+
+<script>
+(function(){
+"use strict";
+
+var selectedFault="good";
+var pedalPressed=false;
+
+var faultSelect=document.getElementById("faultSelect");
+var pedalBtn=document.getElementById("pedalBtn");
+var diagnosisSelect=document.getElementById("diagnosisSelect");
+var resultBox=document.getElementById("resultBox");
+var statusBox=document.getElementById("statusBox");
+
+var pedalFeel=document.getElementById("pedalFeel");
+var pedalTravel=document.getElementById("pedalTravel");
+var servoAssist=document.getElementById("servoAssist");
+var fluidReadout=document.getElementById("fluidReadout");
+
+var pedalArm=document.getElementById("pedalArm");
+var servo=document.getElementById("servo");
+var fluidLevel=document.getElementById("fluidLevel");
+
+var lineFL=document.getElementById("lineFL");
+var lineFR=document.getElementById("lineFR");
+var lineRL=document.getElementById("lineRL");
+var lineRR=document.getElementById("lineRR");
+
+var pFL=document.getElementById("pFL");
+var pFR=document.getElementById("pFR");
+var pRL=document.getElementById("pRL");
+var pRR=document.getElementById("pRR");
+
+var caliperFL=document.getElementById("caliperFL");
+var caliperFR=document.getElementById("caliperFR");
+var caliperRL=document.getElementById("caliperRL");
+var caliperRR=document.getElementById("caliperRR");
+
+var leakGroup=document.getElementById("leakGroup");
+var airGroup=document.getElementById("airGroup");
+
+function basePressure(){
+  return pedalPressed ? 70 : 0;
+}
+
+function pressures(){
+
+  var p={
+    fl:basePressure(),
+    fr:basePressure(),
+    rl:basePressure(),
+    rr:basePressure()
+  };
+
+  if(!pedalPressed)return p;
+
+  if(selectedFault==="air"){
+    p.fl=42;p.fr=42;p.rl=40;p.rr=40;
+  }
+
+  if(selectedFault==="externalLeak"){
+    p.fl=28;p.fr=30;p.rl=25;p.rr=25;
+  }
+
+  if(selectedFault==="masterBypass"){
+    p.fl=18;p.fr=18;p.rl=16;p.rr=16;
+  }
+
+  if(selectedFault==="seizedCaliper"){
+    p.fl=70;p.fr=70;p.rl=68;p.rr=68;
+  }
+
+  if(selectedFault==="restrictedHose"){
+    p.fl=18;p.fr=70;p.rl=68;p.rr=68;
+  }
+
+  if(selectedFault==="servoFault"){
+    p.fl=32;p.fr=32;p.rl=30;p.rr=30;
+  }
+
+  return p;
+}
+
+function setLineState(el,value){
+
+  el.classList.remove("active","low","off");
+
+  if(!pedalPressed){
+    el.classList.add("off");
+  }else if(value>=55){
+    el.classList.add("active");
+  }else{
+    el.classList.add("low");
+  }
+
+}
+
+function setCaliper(el,active){
+
+  if(active){
+    el.setAttribute("fill","#22c55e");
+    el.setAttribute("stroke","#bbf7d0");
+  }else{
+    el.setAttribute("fill","#ef4444");
+    el.setAttribute("stroke","#fecaca");
+  }
+
+}
+
+function updateReadouts(){
+
+  if(selectedFault==="good"){
+    pedalFeel.textContent="Firm";
+    pedalTravel.textContent="Normal";
+    servoAssist.textContent="Normal";
+    fluidReadout.textContent="MAX";
+  }
+
+  if(selectedFault==="air"){
+    pedalFeel.textContent="Spongy";
+    pedalTravel.textContent="Long";
+    servoAssist.textContent="Normal";
+    fluidReadout.textContent="MAX";
+  }
+
+  if(selectedFault==="externalLeak"){
+    pedalFeel.textContent="Soft";
+    pedalTravel.textContent="Long";
+    servoAssist.textContent="Normal";
+    fluidReadout.textContent="LOW";
+  }
+
+  if(selectedFault==="masterBypass"){
+    pedalFeel.textContent="Sinks";
+    pedalTravel.textContent="Excessive";
+    servoAssist.textContent="Normal";
+    fluidReadout.textContent="MAX";
+  }
+
+  if(selectedFault==="seizedCaliper"){
+    pedalFeel.textContent="Firm";
+    pedalTravel.textContent="Normal";
+    servoAssist.textContent="Normal";
+    fluidReadout.textContent="MAX";
+  }
+
+  if(selectedFault==="restrictedHose"){
+    pedalFeel.textContent="Firm";
+    pedalTravel.textContent="Normal";
+    servoAssist.textContent="Normal";
+    fluidReadout.textContent="MAX";
+  }
+
+  if(selectedFault==="servoFault"){
+    pedalFeel.textContent="Very Hard";
+    pedalTravel.textContent="Short";
+    servoAssist.textContent="None";
+    fluidReadout.textContent="MAX";
+  }
+
+}
+
+function updateVisuals(){
+
+  var p=pressures();
+
+  pedalArm.style.transform=pedalPressed?"rotate(12deg)":"rotate(0deg)";
+  pedalBtn.textContent=pedalPressed?"↩ Release Brake Pedal":"🦶 Press Brake Pedal";
+
+  setLineState(lineFL,p.fl);
+  setLineState(lineFR,p.fr);
+  setLineState(lineRL,p.rl);
+  setLineState(lineRR,p.rr);
+
+  pFL.textContent=Math.round(p.fl)+" bar";
+  pFR.textContent=Math.round(p.fr)+" bar";
+  pRL.textContent=Math.round(p.rl)+" bar";
+  pRR.textContent=Math.round(p.rr)+" bar";
+
+  setCaliper(caliperFL,pedalPressed && p.fl>=50);
+  setCaliper(caliperFR,pedalPressed && p.fr>=50 && selectedFault!=="seizedCaliper");
+  setCaliper(caliperRL,pedalPressed && p.rl>=50);
+  setCaliper(caliperRR,pedalPressed && p.rr>=50);
+
+  leakGroup.setAttribute("opacity",selectedFault==="externalLeak" && pedalPressed ? "1":"0");
+  airGroup.setAttribute("opacity",selectedFault==="air" && pedalPressed ? "1":"0");
+
+  if(selectedFault==="externalLeak"){
+    fluidLevel.setAttribute("d","M435 188 H550 V198 H435 Z");
+  }else{
+    fluidLevel.setAttribute("d","M435 170 H550 V198 H435 Z");
+  }
+
+  if(selectedFault==="servoFault"){
+    servo.setAttribute("stroke","#ef4444");
+  }else{
+    servo.setAttribute("stroke","#94a3b8");
+  }
+
+  updateReadouts();
+
+  if(!pedalPressed){
+    statusBox.className="status";
+    statusBox.innerHTML="<b>Pedal released.</b><br>Press the brake pedal to observe hydraulic pressure and component response.";
+    return;
+  }
+
+  if(selectedFault==="good"){
+    statusBox.className="status good";
+    statusBox.innerHTML="<b>Normal operation.</b><br>Pedal force is assisted by the servo, the master cylinder generates hydraulic pressure and pressure is transmitted to all four brakes.";
+  }
+
+  if(selectedFault==="air"){
+    statusBox.className="status warn";
+    statusBox.innerHTML="<b>Spongy pedal and reduced hydraulic pressure.</b><br>Compressible air within the hydraulic circuit reduces efficient pressure transmission.";
+  }
+
+  if(selectedFault==="externalLeak"){
+    statusBox.className="status bad";
+    statusBox.innerHTML="<b>Hydraulic pressure is being lost.</b><br>Fluid level is falling and the pedal feels soft/long. Inspect for an external leak.";
+  }
+
+  if(selectedFault==="masterBypass"){
+    statusBox.className="status bad";
+    statusBox.innerHTML="<b>Pedal sinks under steady pressure.</b><br>Hydraulic pressure cannot be maintained even though there is no visible external fluid loss.";
+  }
+
+  if(selectedFault==="seizedCaliper"){
+    statusBox.className="status warn";
+    statusBox.innerHTML="<b>Hydraulic pressure reaches the front-right brake but the caliper does not apply correctly.</b><br>This points toward a mechanical caliper fault rather than a pressure-supply fault.";
+  }
+
+  if(selectedFault==="restrictedHose"){
+    statusBox.className="status warn";
+    statusBox.innerHTML="<b>Front-left pressure is much lower than the other circuits.</b><br>A restriction in the flexible hose is limiting hydraulic pressure to that brake.";
+  }
+
+  if(selectedFault==="servoFault"){
+    statusBox.className="status warn";
+    statusBox.innerHTML="<b>Very hard pedal with reduced assistance.</b><br>The hydraulic system can still generate pressure, but much greater pedal effort is required because servo assistance is missing.";
+  }
+
+}
+
+pedalBtn.onclick=function(){
+  pedalPressed=!pedalPressed;
+  updateVisuals();
+};
+
+faultSelect.onchange=function(){
+  selectedFault=this.value;
+  pedalPressed=false;
+  diagnosisSelect.value="";
+  resultBox.classList.remove("show");
+  updateVisuals();
+};
+
+document.getElementById("resetBtn").onclick=function(){
+  pedalPressed=false;
+  diagnosisSelect.value="";
+  resultBox.classList.remove("show");
+  updateVisuals();
+};
+
+document.getElementById("hiddenBtn").onclick=function(){
+
+  var faults=[
+    "air",
+    "externalLeak",
+    "masterBypass",
+    "seizedCaliper",
+    "restrictedHose",
+    "servoFault"
+  ];
+
+  selectedFault=faults[Math.floor(Math.random()*faults.length)];
+  faultSelect.value="good";
+  pedalPressed=false;
+  diagnosisSelect.value="";
+  resultBox.classList.remove("show");
+
+  updateVisuals();
+
+  statusBox.className="status warn";
+  statusBox.innerHTML="<b>Hidden fault challenge active.</b><br>Press the brake pedal, compare the system readings and diagnose the fault.";
+
+};
+
+function faultName(f){
+
+  return {
+    good:"Braking system operating correctly",
+    air:"Air in hydraulic system",
+    externalLeak:"External hydraulic leak",
+    masterBypass:"Master cylinder internal bypass",
+    seizedCaliper:"Front-right caliper seized",
+    restrictedHose:"Front-left flexible hose restricted",
+    servoFault:"Brake servo assistance fault"
+  }[f];
+
+}
+
+function explanation(f){
+
+  return {
+
+    good:
+      "The brake pedal is firm, servo assistance is present and hydraulic pressure is transmitted evenly to all four brakes.",
+
+    air:
+      "Air is compressible, unlike brake fluid. This produces a spongy pedal, increased pedal travel and reduced pressure response.",
+
+    externalLeak:
+      "Brake fluid is escaping from the hydraulic circuit. The fluid level falls, hydraulic pressure drops and the pedal can become soft or travel further than normal.",
+
+    masterBypass:
+      "Internal seals within the master cylinder allow pressure to bypass internally. The pedal can slowly sink under steady pressure without an obvious external fluid leak.",
+
+    seizedCaliper:
+      "Hydraulic pressure reaches the affected brake, but the caliper does not move/apply correctly. This indicates a mechanical caliper fault rather than a loss of hydraulic pressure.",
+
+    restrictedHose:
+      "The restricted flexible hose limits pressure reaching the front-left brake, so pressure at that wheel is substantially lower than the other circuits.",
+
+    servoFault:
+      "The hydraulic circuit remains intact, but vacuum/servo assistance is lost. The brake pedal becomes very hard and the driver must apply much greater force."
+
+  }[f];
+
+}
+
+document.getElementById("submitBtn").onclick=function(){
+
+  var choice=diagnosisSelect.value;
+  resultBox.classList.add("show");
+
+  if(!choice){
+    resultBox.innerHTML="<b>Select a diagnosis first.</b>";
+    return;
+  }
+
+  if(choice===selectedFault){
+    resultBox.innerHTML="✅ <b>Correct diagnosis.</b><br>"+explanation(selectedFault);
+  }else{
+    resultBox.innerHTML=
+      "❌ <b>That is not the most likely fault.</b><br><br>"+
+      "The simulated fault was <b>"+
+      faultName(selectedFault)+
+      "</b>.<br>"+
+      explanation(selectedFault);
+  }
+
+};
+
+updateVisuals();
+
+})();
+</script>
+
+<!--
+============================================================
+END OF RRAINBOW BRAKE HYDRAULIC SYSTEM DIAGNOSTIC SIMULATOR
+============================================================
+
+© 2026 RRainbow. All Rights Reserved.
+
+RRainbow Learning Hub.
+Unauthorised copying, reproduction, redistribution,
+republication or commercial exploitation of this software
+or its educational content is prohibited except where
+permitted by law.
+
+============================================================
+-->
+
+</body>
+</html>
