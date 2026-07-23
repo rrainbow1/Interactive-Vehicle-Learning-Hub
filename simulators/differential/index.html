@@ -192,6 +192,14 @@ footer{
 }
 @media(max-width:1180px){.layout{grid-template-columns:1fr}}
 @media(max-width:820px){.metrics{grid-template-columns:repeat(2,1fr)}.readouts{grid-template-columns:1fr}}
+
+.fault-highlight-active{
+  animation:faultPulse .9s ease-in-out infinite alternate;
+}
+@keyframes faultPulse{
+  from{filter:drop-shadow(0 0 2px rgba(239,68,68,.25));opacity:.45}
+  to{filter:drop-shadow(0 0 14px rgba(239,68,68,.95));opacity:1}
+}
 </style>
 </head>
 
@@ -217,22 +225,31 @@ footer{
 
     <section class="card">
       <div class="card-title">
-        <span>Final Drive and Differential Cutaway</span>
+        <span>Final Drive and Differential — Kinematic Cutaway</span>
         <span id="modeTitle">Open Differential · Straight Ahead</span>
       </div>
 
       <div class="toolbar">
         <button class="active" data-diff="open">Open Differential</button>
         <button data-diff="lsd">Clutch LSD</button>
+        <button data-diff="helical">Helical LSD</button>
+        <button data-diff="electronic">Electronic LSD</button>
         <button data-diff="locked">Locked Differential</button>
-
         <span style="width:10px"></span>
-
         <button class="active" data-mode="straight">Straight</button>
-        <button data-mode="left">Left Turn</button>
-        <button data-mode="right">Right Turn</button>
+        <button data-mode="gentleLeft">Gentle Left</button>
+        <button data-mode="tightLeft">Tight Left</button>
+        <button data-mode="gentleRight">Gentle Right</button>
+        <button data-mode="tightRight">Tight Right</button>
         <button data-mode="ice">Right Wheel on Ice</button>
+        <button data-mode="lifted">Right Wheel Lifted</button>
+        <button data-mode="jacked">Vehicle Jacked Up</button>
+        <button data-mode="rollers">Both Wheels on Rollers</button>
       </div>
+      <div style="padding:10px 14px;background:#eff6ff;border-bottom:1px solid #bfdbfe;color:#1e3a8a;font-size:12px;line-height:1.5">
+        <b>Mechanically faithful teaching view:</b> speed relationships, carrier motion, sun-gear behaviour, planet-gear orbit/cross-pin rotation and open/LSD/locked functions follow real differential kinematics. Gear artwork is schematic so the internal motion remains visible.
+      </div>
+
 
       <div class="stage-wrap">
         <div class="stage" id="stage">
@@ -292,7 +309,7 @@ footer{
               <line x1="535" y1="102" x2="585" y2="102" stroke="#facc15" stroke-width="9" stroke-linecap="round"/>
             </g>
 
-            <!-- PINION GEAR -->
+            <!-- BEVEL PINION -->
             <g id="pinionGear">
               <circle cx="560" cy="205" r="55" fill="url(#steel)" stroke="#d1d5db" stroke-width="7"/>
               <g id="pinionMarker">
@@ -338,7 +355,7 @@ footer{
             <circle cx="560" cy="330" r="112" fill="#374151" stroke="#9aa6af" stroke-width="8"/>
             <circle cx="560" cy="330" r="94" fill="#111827" stroke="#64748b" stroke-width="5"/>
 
-            <!-- SIDE GEARS -->
+            <!-- SUN GEARS -->
             <g id="leftSideGear">
               <circle cx="500" cy="330" r="46" fill="url(#steel)" stroke="#d1d5db" stroke-width="6"/>
               <g id="leftSideMarker">
@@ -354,19 +371,28 @@ footer{
               </g>
             </g>
 
-            <!-- CROSS PIN + SPIDER GEARS -->
+            <!-- CROSS PIN + PLANET GEARS -->
             <g id="spiderCarrier">
               <line x1="510" y1="330" x2="610" y2="330" stroke="#d1d5db" stroke-width="10"/>
               <line x1="560" y1="280" x2="560" y2="380" stroke="#d1d5db" stroke-width="10"/>
               <circle cx="560" cy="330" r="20" fill="#d97706" stroke="#fcd34d" stroke-width="5"/>
 
               <g id="topSpiderGear">
-                <circle cx="560" cy="275" r="27" fill="url(#steel)" stroke="#d1d5db" stroke-width="5"/>
-                <line x1="560" y1="252" x2="560" y2="262" stroke="#facc15" stroke-width="6"/>
+                <ellipse cx="560" cy="275" rx="27" ry="27"
+                         fill="url(#steel)" stroke="#d1d5db" stroke-width="5"/>
+                <line x1="560" y1="248" x2="560" y2="259"
+                      stroke="#facc15" stroke-width="6" stroke-linecap="round"/>
+                <line x1="560" y1="291" x2="560" y2="302"
+                      stroke="#facc15" stroke-width="6" stroke-linecap="round"/>
               </g>
+
               <g id="bottomSpiderGear">
-                <circle cx="560" cy="385" r="27" fill="url(#steel)" stroke="#d1d5db" stroke-width="5"/>
-                <line x1="560" y1="362" x2="560" y2="372" stroke="#facc15" stroke-width="6"/>
+                <ellipse cx="560" cy="385" rx="27" ry="27"
+                         fill="url(#steel)" stroke="#d1d5db" stroke-width="5"/>
+                <line x1="560" y1="358" x2="560" y2="369"
+                      stroke="#facc15" stroke-width="6" stroke-linecap="round"/>
+                <line x1="560" y1="401" x2="560" y2="412"
+                      stroke="#facc15" stroke-width="6" stroke-linecap="round"/>
               </g>
               <g id="spiderMarker">
                 <line x1="540" y1="330" x2="580" y2="330" stroke="#facc15" stroke-width="7" stroke-linecap="round"/>
@@ -392,6 +418,20 @@ footer{
               </text>
             </g>
 
+            <!-- HELICAL LSD GEARS -->
+            <g id="helicalGears" opacity="0">
+              <g stroke="#22c55e" stroke-width="7" fill="none">
+                <path d="M430 280 L470 300 L430 320 L470 340 L430 360"/>
+                <path d="M690 280 L650 300 L690 320 L650 340 L690 360"/>
+              </g>
+              <text x="560" y="468" text-anchor="middle" fill="#86efac" font-size="14" font-weight="900">HELICAL GEARS GENERATE TORQUE BIAS</text>
+            </g>
+            <!-- ELECTRONIC LSD BRAKE APPLICATION -->
+            <g id="electronicBrake" opacity="0">
+              <rect x="930" y="255" width="36" height="150" rx="12" fill="#dc2626" stroke="#fecaca" stroke-width="6"/>
+              <text x="930" y="230" text-anchor="middle" fill="#fca5a5" font-size="14" font-weight="900">BRAKE APPLIED TO SPINNING WHEEL</text>
+            </g>
+
             <!-- LOCKING DOGS -->
             <g id="lockDogs" opacity="0">
               <rect x="448" y="310" width="40" height="40" rx="6" fill="#dc2626" stroke="#fecaca" stroke-width="5"/>
@@ -408,6 +448,30 @@ footer{
               <path class="flow" d="M560 205 C590 230 610 255 625 292" fill="none" stroke="#f59e0b" stroke-width="7"/>
               <path class="flow" d="M480 330 H225" fill="none" stroke="#06b6d4" stroke-width="8"/>
               <path class="flow" d="M640 330 H895" fill="none" stroke="#8b5cf6" stroke-width="8"/>
+            </g>
+
+            <!-- Fault-location highlights -->
+            <g id="faultHighlights" opacity="0" pointer-events="none">
+              <circle id="highlightBearing" cx="560" cy="205" r="78"
+                      fill="rgba(239,68,68,.16)" stroke="#ef4444" stroke-width="8" opacity="0"/>
+              <ellipse id="highlightBacklash" cx="560" cy="238" rx="120" ry="92"
+                       fill="rgba(245,158,11,.14)" stroke="#f59e0b" stroke-width="8" opacity="0"/>
+              <circle id="highlightSpider" cx="560" cy="330" r="82"
+                      fill="rgba(239,68,68,.14)" stroke="#ef4444" stroke-width="8" opacity="0"/>
+              <g id="highlightShaft" opacity="0">
+                <rect x="215" y="300" width="220" height="60" rx="20"
+                      fill="rgba(239,68,68,.14)" stroke="#ef4444" stroke-width="7"/>
+                <rect x="685" y="300" width="220" height="60" rx="20"
+                      fill="rgba(239,68,68,.14)" stroke="#ef4444" stroke-width="7"/>
+              </g>
+              <circle id="highlightLocked" cx="560" cy="330" r="128"
+                      fill="rgba(220,38,38,.12)" stroke="#dc2626" stroke-width="9" opacity="0"/>
+              <g id="highlightLsd" opacity="0">
+                <rect x="420" y="275" width="76" height="110" rx="18"
+                      fill="rgba(245,158,11,.16)" stroke="#f59e0b" stroke-width="8"/>
+                <rect x="624" y="275" width="76" height="110" rx="18"
+                      fill="rgba(245,158,11,.16)" stroke="#f59e0b" stroke-width="8"/>
+              </g>
             </g>
 
             <!-- COMPONENT MARKERS -->
@@ -452,8 +516,9 @@ footer{
           </div>
         </div>
 
+        
         <div id="status" class="status good">
-          Straight ahead: the carrier, side gears and wheels rotate together; spider gears do not spin on their own shafts.
+          Straight ahead: the carrier, sun gears and wheels rotate together; planet gears do not spin on their own shafts.
         </div>
       </div>
 
@@ -483,6 +548,8 @@ footer{
           <div class="mode-grid">
             <button class="active" data-diff="open">Open Differential</button>
             <button data-diff="lsd">Clutch LSD</button>
+            <button data-diff="helical">Helical LSD</button>
+            <button data-diff="electronic">Electronic LSD</button>
             <button data-diff="locked">Locked Differential</button>
           </div>
           <div id="diffHelp" class="status" style="margin-top:9px">
@@ -496,9 +563,14 @@ footer{
         <div class="side-content">
           <div class="mode-grid">
             <button class="active" data-mode="straight">Straight</button>
-            <button data-mode="left">Left Turn</button>
-            <button data-mode="right">Right Turn</button>
+            <button data-mode="gentleLeft">Gentle Left</button>
+            <button data-mode="tightLeft">Tight Left</button>
+            <button data-mode="gentleRight">Gentle Right</button>
+            <button data-mode="tightRight">Tight Right</button>
             <button data-mode="ice">Right Wheel on Ice</button>
+            <button data-mode="lifted">Right Wheel Lifted</button>
+            <button data-mode="jacked">Vehicle Jacked Up</button>
+            <button data-mode="rollers">Both Wheels on Rollers</button>
           </div>
         </div>
       </section>
@@ -508,7 +580,7 @@ footer{
         <div class="side-content">
           <div class="readouts">
             <div class="readout"><small>Carrier speed</small><strong id="carrierRead">385 rpm</strong></div>
-            <div class="readout"><small>Spider action</small><strong id="spiderRead">None</strong></div>
+            <div class="readout"><small>Planet-gear action</small><strong id="spiderRead">None</strong></div>
             <div class="readout"><small>Wheel-speed difference</small><strong id="differenceRead">0 rpm</strong></div>
             <div class="readout"><small>Torque bias</small><strong id="biasRead">1.0:1</strong></div>
           </div>
@@ -516,41 +588,29 @@ footer{
       </section>
 
       <section class="card">
-        <div class="card-title">Fault Challenge</div>
+        <div class="card-title">Fault Information</div>
         <div class="side-content">
-          <div class="fault-actions">
-            <button id="hiddenFaultBtn" class="primary">🎲 New Hidden Fault</button>
-            <button id="clearFaultBtn">Clear Fault</button>
-          </div>
+          <label for="faultSelect" style="display:block;margin-bottom:7px;font-size:12px;font-weight:900;color:#475569">
+            Select a differential or final-drive fault
+          </label>
 
-          <select id="faultSelect" style="width:100%;margin-top:9px">
+          <select id="faultSelect" style="width:100%">
             <option value="good">Known good differential</option>
-            <option value="bearing">Noisy pinion bearing</option>
+            <option value="bearing">Noisy bevel-bevel-pinion bearing</option>
             <option value="backlash">Excessive crown-wheel backlash</option>
-            <option value="spider">Worn spider gears</option>
+            <option value="spider">Worn planet gears or cross pin</option>
             <option value="shaft">Bent half shaft</option>
             <option value="locked">Differential seized</option>
             <option value="lsd">Worn LSD clutch plates</option>
           </select>
 
-          <div id="faultBanner" class="fault-banner">
-            <b>No active fault</b><br>The final drive is operating normally.
+          <div id="faultBanner" class="fault-banner" style="margin-top:10px">
+            <b>Known good differential</b><br>
+            The final drive and differential operate normally, with no abnormal noise, backlash, vibration or loss of torque bias.
           </div>
 
-          <div class="question" style="margin-top:10px">
-            <b>Most likely diagnosis</b>
-            <select id="diagnosisSelect">
-              <option value="">Select diagnosis</option>
-              <option value="good">Known good differential</option>
-              <option value="bearing">Noisy pinion bearing</option>
-              <option value="backlash">Excessive crown-wheel backlash</option>
-              <option value="spider">Worn spider gears</option>
-              <option value="shaft">Bent half shaft</option>
-              <option value="locked">Differential seized</option>
-              <option value="lsd">Worn LSD clutch plates</option>
-            </select>
-            <button id="submitDiagnosis" class="success" style="width:100%;margin-top:8px">Submit Diagnosis</button>
-            <div id="diagnosisResult" class="result"></div>
+          <div class="status" style="margin-top:10px">
+            The selected fault is highlighted in the main animation. Change the operating mode to see how the fault affects differential behaviour.
           </div>
         </div>
       </section>
@@ -575,7 +635,11 @@ const resetBtn=document.getElementById("resetBtn");
 const speedSlider=document.getElementById("speedSlider");
 const ratioSlider=document.getElementById("ratioSlider");
 const faultSelect=document.getElementById("faultSelect");
-const hiddenFaultBtn=document.getElementById("hiddenFaultBtn");
+const faultHighlights=document.getElementById("faultHighlights");
+const faultHighlightIds=[
+  "highlightBearing","highlightBacklash","highlightSpider",
+  "highlightShaft","highlightLocked","highlightLsd"
+];
 
 const propshaftMarker=document.getElementById("propshaftMarker");
 const pinionMarker=document.getElementById("pinionMarker");
@@ -589,13 +653,13 @@ const leftWheelMarker=document.getElementById("leftWheelMarker");
 const rightWheelMarker=document.getElementById("rightWheelMarker");
 const lsdClutches=document.getElementById("lsdClutches");
 const lockDogs=document.getElementById("lockDogs");
+const helicalGears=document.getElementById("helicalGears");
+const electronicBrake=document.getElementById("electronicBrake");
 const flowGroup=document.getElementById("flowGroup");
 
 let running=false;
 let differentialType="open";
 let mode="straight";
-let hiddenFaultMode=false;
-let hiddenFaultValue="good";
 
 let propAngle=0;
 let pinionAngle=0;
@@ -607,11 +671,11 @@ let lastFrame=performance.now();
 
 const info={
   propshaft:{title:"Propshaft",purpose:"Carries torque from the gearbox to the final-drive pinion."},
-  pinion:{title:"Pinion Gear",purpose:"The small pinion drives the larger crown wheel, reducing speed and multiplying torque."},
+  pinion:{title:"Bevel Pinion",purpose:"The small pinion drives the larger crown wheel, reducing speed and multiplying torque."},
   crown:{title:"Crown Wheel",purpose:"Bolted to the carrier, it turns the drive through approximately 90 degrees and provides final-drive reduction."},
-  spider:{title:"Spider Gears",purpose:"They orbit with the carrier and spin on their own shafts only when left and right wheel speeds differ."},
-  sideGears:{title:"Side Gears",purpose:"Each side gear drives one half shaft. One can speed up while the other slows down."},
-  halfShafts:{title:"Half Shafts",purpose:"Transfer torque from the side gears to the road wheels."},
+  spider:{title:"Planet Gears",purpose:"They are carried around by the rotating carrier. With equal wheel speeds they do not rotate on the cross-pin. When wheel speeds differ, they rotate about the cross-pin and make one side gear speed up by exactly the amount the other slows down."},
+  sideGears:{title:"Sun Gears",purpose:"Each side gear drives one half shaft. One can speed up while the other slows down."},
+  halfShafts:{title:"Half Shafts",purpose:"Transfer torque from the sun gears to the road wheels."},
   finalDrive:{title:"Final-Drive Ratio",purpose:"The crown-wheel and pinion ratio reduces output speed and increases torque."}
 };
 
@@ -665,149 +729,155 @@ speedSlider.oninput=updateSystem;
 ratioSlider.oninput=updateSystem;
 
 faultSelect.onchange=()=>{
-  hiddenFaultMode=false;
-  hiddenFaultValue="good";
-  faultSelect.disabled=false;
-  hiddenFaultBtn.textContent="🎲 New Hidden Fault";
-  document.getElementById("diagnosisResult").innerHTML="";
-  updateSystem();
-};
-
-document.getElementById("clearFaultBtn").onclick=()=>{
-  hiddenFaultMode=false;
-  hiddenFaultValue="good";
-  faultSelect.value="good";
-  faultSelect.disabled=false;
-  hiddenFaultBtn.textContent="🎲 New Hidden Fault";
-  document.getElementById("diagnosisResult").innerHTML="";
-  updateSystem();
-};
-
-hiddenFaultBtn.onclick=()=>{
-  const faults=["bearing","backlash","spider","shaft","locked","lsd"];
-  hiddenFaultValue=faults[Math.floor(Math.random()*faults.length)];
-  hiddenFaultMode=true;
-  faultSelect.value="good";
-  faultSelect.disabled=true;
-  hiddenFaultBtn.textContent="🎲 Generate Another Fault";
-  document.getElementById("diagnosisSelect").value="";
-  document.getElementById("diagnosisResult").innerHTML=
-    "🔒 <b>Hidden fault active.</b> Observe speed difference, spider action and torque bias, then diagnose the fault.";
+  updateFaultInformation();
   updateSystem();
 };
 
 function activeFault(){
-  return hiddenFaultMode?hiddenFaultValue:faultSelect.value;
+  return faultSelect.value;
+}
+
+function clearFaultHighlights(){
+  faultHighlightIds.forEach(id=>{
+    const element=document.getElementById(id);
+    element.setAttribute("opacity","0");
+    element.classList.remove("fault-highlight-active");
+  });
+  faultHighlights.setAttribute("opacity","0");
+}
+
+function showFaultHighlight(id){
+  clearFaultHighlights();
+  if(!id)return;
+
+  faultHighlights.setAttribute("opacity","1");
+  const element=document.getElementById(id);
+  element.setAttribute("opacity","1");
+  element.classList.add("fault-highlight-active");
+}
+
+function updateFaultInformation(){
+  const fault=faultSelect.value;
+  const banner=document.getElementById("faultBanner");
+
+  const details={
+    good:{
+      title:"Known good differential",
+      text:"The crown wheel, pinion, carrier, planet gears, sun gears, bearings and half shafts operate normally, with no abnormal noise, excessive backlash, vibration or loss of torque bias.",
+      highlight:null
+    },
+    bearing:{
+      title:"Noisy bevel-bevel-pinion bearing",
+      text:"A worn or incorrectly preloaded bevel-pinion bearing can produce a speed-related whine, rumble or growl. The noise may change between acceleration and overrun. Check bearing condition, pinion preload and oil level.",
+      highlight:"highlightBearing"
+    },
+    backlash:{
+      title:"Excessive crown-wheel backlash",
+      text:"Excessive clearance between the pinion and crown-wheel teeth can cause a clunk when drive is taken up, noise on acceleration or overrun and accelerated tooth wear. Backlash and tooth-contact pattern must be checked against manufacturer data.",
+      highlight:"highlightBacklash"
+    },
+    spider:{
+      title:"Worn planet gears",
+      text:"Worn planet gears or cross-pin surfaces can cause clicking, knocking or rough differential action, especially during cornering. Severe wear may produce metal debris and uneven relative movement between the sun gears.",
+      highlight:"highlightSpider"
+    },
+    shaft:{
+      title:"Bent half shaft",
+      text:"A bent half shaft can cause wheel run-out, vibration, seal leakage and uneven tyre rotation. The shaft should be checked for run-out and damage before replacement bearings or seals are fitted.",
+      highlight:"highlightShaft"
+    },
+    locked:{
+      title:"Differential seized",
+      text:"A seized differential prevents normal wheel-speed difference during cornering. Tyre scrub, driveline wind-up, steering resistance and abnormal noise may occur. Internal gear, cross-pin and bearing damage should be investigated.",
+      highlight:"highlightLocked"
+    },
+    lsd:{
+      title:"Worn LSD clutch plates",
+      text:"Worn or incorrectly lubricated clutch plates reduce the limited-slip unit's torque-bias ability. The slipping wheel behaves more like an open differential, while chatter or grabbing may occur if the wrong oil or friction modifier is used.",
+      highlight:"highlightLsd"
+    }
+  };
+
+  const item=details[fault]||details.good;
+  banner.className=fault==="good"?"fault-banner":"fault-banner active";
+  banner.innerHTML="<b>"+item.title+"</b><br>"+item.text;
+  showFaultHighlight(item.highlight);
 }
 
 function calculate(){
   const propRpm=Number(speedSlider.value);
   const ratio=Number(ratioSlider.value);
   const carrier=propRpm/ratio;
+  let delta=0,leftTorque=50,rightTorque=50,bias=1.0;
+  let planetAction="Orbiting only";
+  let brakeApplied=false;
+  const cornerDelta={gentleLeft:.16,tightLeft:.34,gentleRight:-.16,tightRight:-.34};
 
-  let left=carrier;
-  let right=carrier;
-  let leftTorque=50;
-  let rightTorque=50;
-  let bias=1.0;
-  let spiderAction="None";
-
-  if(mode==="left"){
-    left=carrier*.72;
-    right=carrier*1.28;
-    spiderAction="Differentiating";
+  if(Object.prototype.hasOwnProperty.call(cornerDelta,mode)){
+    delta=carrier*cornerDelta[mode];
+    planetAction="Orbiting + cross-pin rotation";
   }
 
-  if(mode==="right"){
-    left=carrier*1.28;
-    right=carrier*.72;
-    spiderAction="Differentiating";
-  }
-
-  if(mode==="ice"){
+  if(mode==="ice" || mode==="lifted"){
     if(differentialType==="open"){
-      left=carrier*.12;
-      right=carrier*1.88;
-      leftTorque=50;
-      rightTorque=50;
-      bias=1.0;
-      spiderAction="High";
+      delta=carrier*.94; planetAction="Very high cross-pin rotation";
     }else if(differentialType==="lsd"){
-      /*
-        A clutch LSD does not stop the slipping wheel.
-        It resists relative motion and biases more torque to the wheel with grip.
-      */
-      left=carrier*.62;
-      right=carrier*1.38;
-      leftTorque=74;
-      rightTorque=26;
-      bias=2.8;
-      spiderAction="Limited";
+      delta=carrier*.38; leftTorque=74; rightTorque=26; bias=2.8; planetAction="Slip limited by clutch packs";
+    }else if(differentialType==="helical"){
+      delta=mode==="lifted"?carrier*.78:carrier*.30; leftTorque=80; rightTorque=20; bias=4.0;
+      planetAction=mode==="lifted"?"Low preload — limited bias":"Helical torque bias active";
+    }else if(differentialType==="electronic"){
+      delta=carrier*.24; leftTorque=78; rightTorque=22; bias=3.5; brakeApplied=true; planetAction="Brake intervention limits slip";
     }else{
-      left=carrier;
-      right=carrier;
-      leftTorque=50;
-      rightTorque=50;
-      bias=999;
-      spiderAction="Locked";
+      delta=0; bias=999; planetAction="Locked";
     }
   }
 
-  if(differentialType==="lsd" && mode!=="ice"){
-    if(mode==="straight"){
-      bias=1.0;
-      leftTorque=50;
-      rightTorque=50;
-    }
-    if(mode==="left"){
-      bias=1.5;
-      leftTorque=42;
-      rightTorque=58;
-    }
-    if(mode==="right"){
-      bias=1.5;
-      leftTorque=58;
-      rightTorque=42;
+  if(mode==="jacked"){
+    if(differentialType==="locked"){delta=0;bias=999;planetAction="Locked";}
+    else{
+      delta=carrier*.70; planetAction="Free differential action";
+      if(differentialType==="lsd"){delta*=.55;bias=2.0;leftTorque=67;rightTorque=33}
+      if(differentialType==="helical"){delta*=.45;bias=2.5;leftTorque=71;rightTorque=29}
+      if(differentialType==="electronic"){delta*=.35;bias=3.0;leftTorque=75;rightTorque=25;brakeApplied=true}
     }
   }
 
+  if(mode==="rollers"){
+    delta=0; planetAction=differentialType==="locked"?"Locked":"Orbiting only";
+    bias=differentialType==="locked"?999:1.0;
+  }
+
+  if(differentialType==="lsd" && Object.prototype.hasOwnProperty.call(cornerDelta,mode)){
+    delta*=.82; bias=1.5; planetAction="Controlled cross-pin rotation";
+    if(delta>0){leftTorque=42;rightTorque=58}else{leftTorque=58;rightTorque=42}
+  }
+  if(differentialType==="helical" && Object.prototype.hasOwnProperty.call(cornerDelta,mode)){
+    delta*=.88; bias=1.8; planetAction="Helical bias during differentiation";
+    if(delta>0){leftTorque=40;rightTorque=60}else{leftTorque=60;rightTorque=40}
+  }
+  if(differentialType==="electronic" && Object.prototype.hasOwnProperty.call(cornerDelta,mode)){
+    bias=1.0; leftTorque=50; rightTorque=50; planetAction="Normal open-differential action";
+  }
   if(differentialType==="locked"){
-    left=carrier;
-    right=carrier;
-    bias=999;
-    spiderAction="Locked";
+    delta=0; bias=999; leftTorque=50; rightTorque=50; planetAction="Locked";
   }
 
+  let left=carrier-delta;
+  let right=carrier+delta;
   const fault=activeFault();
-
   if(fault==="spider"){
-    left=carrier*.82;
-    right=carrier*1.18;
-    spiderAction="Rough";
+    delta=carrier*.18; left=carrier-delta; right=carrier+delta; planetAction="Rough / irregular";
   }
-  if(fault==="shaft"){
-    left*=.92;
-  }
-  if(fault==="locked"){
-    left=carrier;
-    right=carrier;
-    spiderAction="Seized";
-    bias=999;
-  }
+  if(fault==="shaft") planetAction += " · shaft run-out";
+  if(fault==="locked"){left=carrier;right=carrier;delta=0;planetAction="Seized";bias=999;}
   if(fault==="lsd" && differentialType==="lsd"){
-    bias=1.1;
-    leftTorque=54;
-    rightTorque=46;
-    if(mode==="ice"){
-      left=carrier*.22;
-      right=carrier*1.78;
-      spiderAction="Excessive";
+    bias=1.1;leftTorque=54;rightTorque=46;
+    if(mode==="ice" || mode==="lifted"){
+      delta=carrier*.80;left=carrier-delta;right=carrier+delta;planetAction="Excessive slip — worn clutch packs";
     }
   }
-
-  return {
-    propRpm,ratio,carrier,left,right,leftTorque,rightTorque,bias,spiderAction,fault
-  };
+  return {propRpm,ratio,carrier,delta,left,right,leftTorque,rightTorque,bias,planetAction,brakeApplied,fault};
 }
 
 function updateSystem(){
@@ -819,79 +889,65 @@ function updateSystem(){
   document.getElementById("rightRpm").textContent=Math.round(d.right)+" rpm";
   document.getElementById("leftTorque").textContent=Math.round(d.leftTorque)+"%";
   document.getElementById("rightTorque").textContent=Math.round(d.rightTorque)+"%";
-
   document.getElementById("carrierRead").textContent=Math.round(d.carrier)+" rpm";
-  document.getElementById("spiderRead").textContent=d.spiderAction;
+  document.getElementById("spiderRead").textContent=d.planetAction;
   document.getElementById("differenceRead").textContent=Math.round(Math.abs(d.right-d.left))+" rpm";
   document.getElementById("biasRead").textContent=d.bias>=999?"Locked":d.bias.toFixed(1)+":1";
 
-  const diffName={
-    open:"Open Differential",
-    lsd:"Clutch LSD",
-    locked:"Locked Differential"
-  }[differentialType];
-
-  const modeName={
-    straight:"Straight Ahead",
-    left:"Left Turn",
-    right:"Right Turn",
-    ice:"Right Wheel on Ice"
-  }[mode];
-
+  const diffName={open:"Open Differential",lsd:"Clutch LSD",helical:"Helical LSD",electronic:"Electronic LSD",locked:"Locked Differential"}[differentialType];
+  const modeName={straight:"Straight Ahead",gentleLeft:"Gentle Left Turn",tightLeft:"Tight Left Turn",gentleRight:"Gentle Right Turn",tightRight:"Tight Right Turn",ice:"Right Wheel on Ice",lifted:"Right Wheel Lifted",jacked:"Vehicle Jacked Up",rollers:"Both Wheels on Rollers"}[mode];
   document.getElementById("modeTitle").textContent=diffName+" · "+modeName;
 
   lsdClutches.setAttribute("opacity",differentialType==="lsd"?"1":"0");
+  helicalGears.setAttribute("opacity",differentialType==="helical"?"1":"0");
+  electronicBrake.setAttribute("opacity",d.brakeApplied?"1":"0");
   lockDogs.setAttribute("opacity",differentialType==="locked"?"1":"0");
 
   document.getElementById("diffHelp").innerHTML={
-    open:"<b>Open differential:</b> allows unrestricted wheel-speed difference. Torque is approximately equal on both outputs and is limited by the low-grip side.",
-    lsd:"<b>Clutch LSD:</b> still allows differentiation. It does not stop the slipping wheel; clutch friction limits relative speed and biases more torque to the wheel with grip.",
-    locked:"<b>Locked differential:</b> mechanically forces both outputs to the same speed. This maximises traction but causes tyre scrub during cornering."
+    open:"<b>Open differential:</b> allows unrestricted speed difference. Both outputs receive approximately equal torque, so usable drive is limited by the wheel with least grip.",
+    lsd:"<b>Clutch LSD:</b> clutch packs resist relative sun-gear movement and bias more torque toward the wheel with grip. The slipping wheel is slowed, not stopped.",
+    helical:"<b>Helical LSD:</b> helical gears create internal thrust and torque bias while both outputs have some resistance. A fully airborne wheel may require preload or brake intervention.",
+    electronic:"<b>Electronic LSD:</b> uses an open differential plus selective braking of the spinning wheel so more reaction torque reaches the wheel with grip.",
+    locked:"<b>Locked differential:</b> mechanically couples both outputs to the carrier, forcing equal wheel speeds and preventing normal differentiation."
   }[differentialType];
 
   const status=document.getElementById("status");
   status.className="status";
-
-  if(differentialType==="locked" && mode!=="straight"){
+  if(differentialType==="locked" && mode!=="straight" && mode!=="rollers"){
     status.classList.add("warn");
-    status.innerHTML=
-      "<b>Locked differential while cornering:</b> both wheels are forced to the same speed. The inside tyre must scrub or the driveline will wind up because normal differentiation is prevented.";
+    status.innerHTML="<b>Locked differential:</b> both wheels are forced to the same speed. During cornering the inside tyre must scrub and driveline wind-up may occur.";
   }else if(mode==="straight"){
     status.classList.add("good");
-    status.innerHTML="<b>Straight ahead:</b> the carrier, side gears and wheels rotate together. Spider gears orbit with the carrier but do not spin on their own shafts.";
-  }else if(mode==="left"){
+    status.innerHTML="<b>Straight ahead:</b> the crown wheel and carrier rotate together. Planet gears orbit with the carrier but do not rotate on the cross pin. Both sun gears and wheels rotate at equal speed.";
+  }else if(mode==="gentleLeft" || mode==="tightLeft"){
     status.classList.add("good");
-    status.innerHTML="<b>Left turn:</b> the inside left wheel slows and the outside right wheel speeds up. Spider gears rotate to accommodate the difference.";
-  }else if(mode==="right"){
+    status.innerHTML="<b>Left turn:</b> the inside left sun gear slows and the outside right sun gear speeds up. Planet gears orbit and rotate on the cross pin.";
+  }else if(mode==="gentleRight" || mode==="tightRight"){
     status.classList.add("good");
-    status.innerHTML="<b>Right turn:</b> the inside right wheel slows and the outside left wheel speeds up. The average wheel speed remains equal to carrier speed.";
-  }else{
+    status.innerHTML="<b>Right turn:</b> the inside right sun gear slows and the outside left sun gear speeds up. Carrier speed remains the average output speed.";
+  }else if(mode==="ice"){
     status.classList.add("warn");
-    status.innerHTML={
-      open:"<b>Open differential on ice:</b> the low-grip right wheel spins rapidly. Both sides receive similar torque, so usable drive is limited.",
-      lsd:"<b>LSD on ice:</b> the right wheel still spins, but more slowly. Clutch friction biases more torque toward the left wheel with grip.",
-      locked:"<b>Locked differential on ice:</b> both wheels are forced to the same speed."
-    }[differentialType];
+    status.innerHTML={open:"<b>Open differential on ice:</b> the right wheel spins rapidly and usable torque is limited by its low grip.",lsd:"<b>Clutch LSD on ice:</b> clutch friction limits relative motion and biases more torque to the left wheel.",helical:"<b>Helical LSD on ice:</b> helical thrust creates torque bias while the low-grip wheel retains some reaction torque.",electronic:"<b>Electronic LSD on ice:</b> the right brake is applied to create reaction torque and redirect useful drive to the left wheel.",locked:"<b>Locked differential on ice:</b> both wheels remain at equal speed."}[differentialType];
+  }else if(mode==="lifted"){
+    status.classList.add("warn");
+    status.innerHTML={open:"<b>One wheel lifted:</b> an open differential can send almost all speed to the airborne wheel while both sides carry very little usable torque.",lsd:"<b>Clutch LSD:</b> clutch preload can continue to transfer some torque to the grounded wheel.",helical:"<b>Helical LSD:</b> without preload, torque bias may reduce sharply because the airborne side offers almost no resistance.",electronic:"<b>Electronic LSD:</b> braking the airborne wheel creates reaction torque to drive the grounded wheel.",locked:"<b>Locked differential:</b> both outputs remain coupled."}[differentialType];
+  }else if(mode==="jacked"){
+    status.classList.add("warn");
+    status.innerHTML="<b>Vehicle jacked up:</b> outputs are lightly loaded, so small drag differences can produce large opposite sun-gear speed changes.";
+  }else{
+    status.classList.add("good");
+    status.innerHTML="<b>Both wheels on rollers:</b> with similar resistance, both outputs rotate at similar speed and the planet gears mainly orbit with the carrier.";
   }
 
-  const banner=document.getElementById("faultBanner");
-  if(d.fault==="good"){
-    banner.className="fault-banner";
-    banner.innerHTML="<b>No active fault</b><br>The final drive is operating normally.";
-  }else{
-    banner.className="fault-banner active";
-    banner.innerHTML=hiddenFaultMode
-      ? "<b>Hidden fault active</b><br>Use the behaviour and readings to identify the fault."
-      : "<b>"+faultName(d.fault)+"</b><br>"+faultDescription(d.fault);
-  }
+  updateFaultInformation();
 }
 
 function faultName(f){
   return {
     good:"Known good differential",
-    bearing:"Noisy pinion bearing",
+    bearing:"Noisy bevel-bevel-pinion bearing",
     backlash:"Excessive crown-wheel backlash",
-    spider:"Worn spider gears",
+    spider:"Worn planet gears",
     shaft:"Bent half shaft",
     locked:"Differential seized",
     lsd:"Worn LSD clutch plates"
@@ -901,31 +957,14 @@ function faultName(f){
 function faultDescription(f){
   return {
     good:"The final drive operates normally.",
-    bearing:"A worn pinion bearing commonly produces a speed-related whine or rumble.",
+    bearing:"A worn bevel-pinion bearing commonly produces a speed-related whine or rumble.",
     backlash:"Excessive backlash can cause clunks during drive take-up and overrun.",
-    spider:"Worn spider gears can cause clicking, rough differential action and uneven speed behaviour.",
+    spider:"Worn planet gears or a worn cross pin can cause clicking, rough differential action and excessive internal backlash.",
     shaft:"A bent half shaft can cause vibration and wheel run-out.",
     locked:"A seized differential prevents normal wheel-speed difference.",
     lsd:"Worn LSD clutch plates reduce torque bias so the unit behaves more like an open differential."
   }[f];
 }
-
-document.getElementById("submitDiagnosis").onclick=()=>{
-  const choice=document.getElementById("diagnosisSelect").value;
-  const result=document.getElementById("diagnosisResult");
-  const correct=activeFault();
-
-  if(!choice){
-    result.textContent="Select a diagnosis first.";
-    return;
-  }
-
-  if(choice===correct){
-    result.innerHTML="✅ <b>Correct.</b> "+faultDescription(correct);
-  }else{
-    result.innerHTML="❌ <b>Incorrect.</b> Review the readings and internal gear behaviour, then try again.";
-  }
-};
 
 function animate(now){
   const dt=Math.min(.05,(now-lastFrame)/1000);
@@ -934,50 +973,30 @@ function animate(now){
   if(running){
     const d=calculate();
     const k=.28;
-
     propAngle=(propAngle+d.propRpm*6*dt*k)%360;
     pinionAngle=(pinionAngle+d.propRpm*6*dt*k)%360;
     carrierAngle=(carrierAngle+d.carrier*6*dt*k)%360;
     leftAngle=(leftAngle+d.left*6*dt*k)%360;
     rightAngle=(rightAngle+d.right*6*dt*k)%360;
-
-    const relative=(d.right-d.left)/2;
-    if(d.spiderAction!=="None" && d.spiderAction!=="Locked" && d.spiderAction!=="Seized"){
-      spiderSpin=(spiderSpin+relative*6*dt*k)%360;
-    }
+    spiderSpin=(spiderSpin+d.delta*6*dt*k)%360;
 
     propshaftMarker.setAttribute("transform",`rotate(${propAngle} 560 102)`);
     pinionMarker.setAttribute("transform",`rotate(${pinionAngle} 560 205)`);
-
-    // Pinion and crown wheel are meshed, so the visible directions oppose.
     crownMarker.setAttribute("transform",`rotate(${-carrierAngle} 560 330)`);
-
-    /*
-      The side gears are carried by the rotating differential case.
-      In this front-facing teaching view they rotate in the same visible
-      direction as the crown wheel/carrier, with their individual speeds
-      increasing or decreasing during differentiation.
-    */
     leftSideMarker.setAttribute("transform",`rotate(${-leftAngle} 500 330)`);
     rightSideMarker.setAttribute("transform",`rotate(${-rightAngle} 620 330)`);
-
-    // Spider gears orbit with the carrier, then counter-rotate on their own axes.
     spiderMarker.setAttribute("transform",`rotate(${-carrierAngle} 560 330)`);
-    topSpiderGear.setAttribute(
-      "transform",
-      `rotate(${-carrierAngle} 560 330) rotate(${spiderSpin} 560 275)`
-    );
-    bottomSpiderGear.setAttribute(
-      "transform",
-      `rotate(${-carrierAngle} 560 330) rotate(${-spiderSpin} 560 385)`
-    );
 
-    // Reverse the visible wheel rotation so both road wheels roll
-    // forwards in the direction represented by the simulator.
+    const phase=spiderSpin*Math.PI/180;
+    const topScale=Math.cos(phase);
+    const bottomScale=Math.cos(phase+Math.PI);
+    topSpiderGear.setAttribute("transform",`rotate(${-carrierAngle} 560 330) translate(560 275) scale(${topScale} 1) translate(-560 -275)`);
+    bottomSpiderGear.setAttribute("transform",`rotate(${-carrierAngle} 560 330) translate(560 385) scale(${bottomScale} 1) translate(-560 -385)`);
+
     leftWheelMarker.setAttribute("transform",`rotate(${-leftAngle} 130 330)`);
     rightWheelMarker.setAttribute("transform",`rotate(${-rightAngle} 990 330)`);
-  }
 
+  }
   requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
@@ -986,8 +1005,6 @@ resetBtn.onclick=()=>{
   running=false;
   differentialType="open";
   mode="straight";
-  hiddenFaultMode=false;
-  hiddenFaultValue="good";
   propAngle=pinionAngle=carrierAngle=leftAngle=rightAngle=spiderSpin=0;
 
   startBtn.textContent="▶ Start";
@@ -1004,10 +1021,7 @@ resetBtn.onclick=()=>{
   speedSlider.value=1500;
   ratioSlider.value=3.9;
   faultSelect.value="good";
-  faultSelect.disabled=false;
-  hiddenFaultBtn.textContent="🎲 New Hidden Fault";
-  document.getElementById("diagnosisSelect").value="";
-  document.getElementById("diagnosisResult").innerHTML="";
+  updateFaultInformation();
   document.getElementById("popup").classList.remove("show");
 
   document.querySelectorAll("[data-diff]").forEach(b=>b.classList.toggle("active",b.dataset.diff==="open"));
@@ -1018,11 +1032,14 @@ resetBtn.onclick=()=>{
     .forEach(el=>el.removeAttribute("transform"));
 
   lsdClutches.setAttribute("opacity","0");
+  helicalGears.setAttribute("opacity","0");
+  electronicBrake.setAttribute("opacity","0");
   lockDogs.setAttribute("opacity","0");
 
   updateSystem();
 };
 
+updateFaultInformation();
 updateSystem();
 
 })();
