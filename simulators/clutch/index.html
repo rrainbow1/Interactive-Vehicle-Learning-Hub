@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Interactive automotive clutch cutaway simulator.">
+<title>Clutch Operation Simulator</title>
+<style>
+:root{
+  --bg:#eef2f6;
+  --panel:#fff;
+  --line:#d8e0e8;
+  --text:#17212b;
+  --muted:#64748b;
+  --navy:#101820;
+  --blue:#2563eb;
+  --green:#16a34a;
+  --red:#dc2626;
+  --amber:#d97706;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif}
+button,select,input{font:inherit}
+button{cursor:pointer}
+header{background:var(--navy);color:#fff;padding:16px 20px}
+.header-row{max-width:1600px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:18px}
+header h1{margin:0;font-size:25px}
+header p{margin:5px 0 0;color:#cbd5e1;font-size:13px}
+.header-actions{display:flex;flex-wrap:wrap;gap:8px}
+.wrap{max-width:1600px;margin:auto;padding:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:14px;align-items:start}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.07)}
+.card-title{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;background:#f8fafc;border-bottom:1px solid var(--line);font-size:14px;font-weight:900}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+button,select{border:1px solid #cbd5e1;border-radius:8px;padding:9px 11px;font-weight:800;background:#fff;color:#17212b}
+button:hover{background:#f8fafc}
+button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+button.warn{background:#b45309;color:#fff;border-color:#b45309}
+button.active{box-shadow:0 0 0 3px rgba(37,99,235,.14);border-color:#2563eb}
+
+.stage-wrap{padding:12px}
+.stage{position:relative;min-height:620px;overflow:hidden;border-radius:12px;background:
+linear-gradient(rgba(71,85,105,.15) 1px,transparent 1px),
+linear-gradient(90deg,rgba(71,85,105,.15) 1px,transparent 1px),
+radial-gradient(circle at 50% 45%,#1c2c42,#07111f);
+background-size:36px 36px,36px 36px,auto}
+.stage svg{display:block;width:100%;height:auto;min-height:620px}
+
+.marker{display:none;cursor:pointer}
+.show-labels .marker{display:block}
+.marker circle{fill:#2563eb;stroke:#fff;stroke-width:4}
+.marker text{fill:#fff;font-size:14px;font-weight:900;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+.marker line{stroke:#93c5fd;stroke-width:3;stroke-linecap:round}
+
+.popup{display:none;position:absolute;right:18px;bottom:18px;width:min(400px,calc(100% - 36px));padding:16px 18px;border-radius:12px;background:rgba(15,23,42,.97);color:#e5edf8;border:1px solid #60a5fa;box-shadow:0 20px 50px rgba(0,0,0,.38);z-index:10}
+.popup.show{display:block}
+.popup h3{margin:0 34px 7px 0;font-size:17px}
+.popup p{margin:0;color:#cbd5e1;font-size:13px;line-height:1.55}
+.popup-close{position:absolute;top:9px;right:9px;width:28px;height:28px;padding:0;border-radius:50%;background:#1e293b;color:#fff;border:1px solid #64748b;font-size:18px}
+
+.metrics{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid #31425d;background:#111b2d}
+.metric{padding:11px 13px;border-right:1px solid #31425d}
+.metric:last-child{border-right:0}
+.metric small{display:block;color:#9fb0c6;font-size:10px;font-weight:900;text-transform:uppercase}
+.metric strong{display:block;margin-top:4px;color:#fff;font-size:18px}
+
+.side{display:flex;flex-direction:column;gap:10px}
+.side-content{padding:12px}
+.range-wrap{padding:10px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}
+.range-wrap label{display:flex;justify-content:space-between;font-weight:800;font-size:13px}
+.range-wrap input{width:100%;margin-top:8px}
+.status{margin-top:9px;padding:11px;border-radius:10px;border:1px solid var(--line);background:#f8fafc;color:#334155;font-size:13px;line-height:1.5}
+.status.good{background:#ecfdf3;border-color:#86efac}
+.status.warn{background:#fffbeb;border-color:#fcd34d}
+.status.bad{background:#fef2f2;border-color:#fca5a5}
+.readouts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.readout{padding:11px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}
+.readout small{display:block;color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase}
+.readout strong{display:block;margin-top:5px;font-size:21px;color:#0f172a}
+
+@keyframes shake{0%,100%{transform:translate(0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-1px)}}
+.shake{animation:shake .15s linear infinite}
+.highlight{filter:drop-shadow(0 0 12px rgba(239,68,68,.95));stroke:#ef4444!important}
+.power-flow{
+  stroke-dasharray:12 10;
+  animation:flow .8s linear infinite;
+  stroke-linecap:round;
+}
+.power-flow-label{
+  fill:#bbf7d0;
+  font-size:13px;
+  font-weight:900;
+  paint-order:stroke;
+  stroke:#07111f;
+  stroke-width:4px;
+}
+@keyframes flow{to{stroke-dashoffset:-44}}
+
+footer{margin-top:18px;padding:18px 14px 24px;text-align:center;color:#64748b;font-size:12px}
+@media(max-width:1200px){.layout{grid-template-columns:1fr}}
+@media(max-width:900px){.metrics{grid-template-columns:repeat(2,1fr)}.readouts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>Clutch Operation Simulator</h1>
+      <p>Realistic sandwich-style cutaway showing engagement, disengagement, slip, heat and faults.</p>
+    </div>
+    <div class="header-actions">
+      <button id="startBtn" class="primary">▶ Start Engine</button>
+      <button id="labelsBtn">Show Labels</button>
+      <button id="explodeBtn">Explode Components</button>
+      <button id="flowBtn">Show Power Flow</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+<section class="card">
+  <div class="card-title">
+    <span>Clutch Assembly Cutaway</span>
+    <span id="stateTitle">Pedal Released · Clutch Engaged</span>
+  </div>
+
+  <div class="toolbar">
+    <select id="loadSelect">
+      <option value="idle">Idle / No Road Load</option>
+      <option value="light">1st Gear · Light Pull Away</option>
+      <option value="accel">3rd Gear · Acceleration</option>
+      <option value="highGear">5th Gear · High-Load Test</option>
+      <option value="uphill">5th Gear · Uphill Full Load</option>
+    </select>
+
+    <select id="faultSelect">
+      <option value="good">No Fault</option>
+      <option value="slip">Clutch Slip</option>
+      <option value="drag">Clutch Drag</option>
+      <option value="oil">Oil Contamination</option>
+      <option value="damper">Broken Damper Spring</option>
+      <option value="worn">Worn Friction Plate</option>
+      <option value="weak">Weak Diaphragm Spring</option>
+      <option value="release">Noisy Release Bearing</option>
+      <option value="pilot">Worn Pilot Bearing</option>
+      <option value="fork">Bent Release Fork</option>
+      <option value="master">Master Cylinder Leak</option>
+      <option value="slave">Slave Cylinder Leak</option>
+    </select>
+    <button id="abuseBtn" class="warn">Simulate Clutch Abuse</button>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+      <svg viewBox="0 0 1220 640" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="steel">
+            <stop offset="0" stop-color="#d6dde2"/>
+            <stop offset=".55" stop-color="#7c8891"/>
+            <stop offset="1" stop-color="#39434b"/>
+          </radialGradient>
+          <linearGradient id="lining" x1="0" x2="1">
+            <stop offset="0" stop-color="#6f4326"/>
+            <stop offset=".5" stop-color="#c78c52"/>
+            <stop offset="1" stop-color="#6f4326"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Engine -->
+        <rect x="55" y="220" width="165" height="180" rx="18" fill="#263442" stroke="#94a3b8" stroke-width="7"/>
+        <text x="138" y="315" text-anchor="middle" fill="#fff" font-size="22" font-weight="900">ENGINE</text>
+        <line x1="220" y1="310" x2="275" y2="310" stroke="#cbd5e1" stroke-width="18"/>
+
+        <!-- Gearbox casing -->
+        <rect x="985" y="220" width="175" height="180" rx="18" fill="#263442" stroke="#94a3b8" stroke-width="7"/>
+        <text x="1072" y="315" text-anchor="middle" fill="#fff" font-size="21" font-weight="900">GEARBOX</text>
+
+        <!-- Input shaft -->
+        <line x1="500" y1="310" x2="1015" y2="310" stroke="#aab4bd" stroke-width="18"/>
+        <line x1="500" y1="310" x2="1015" y2="310" stroke="#475569" stroke-width="6"/>
+        <g id="inputShaftMarker">
+          <line x1="930" y1="285" x2="930" y2="335" stroke="#facc15" stroke-width="8"/>
+        </g>
+
+        <!-- Sandwich assembly -->
+        <g id="assemblyGroup">
+
+          <!-- Flywheel -->
+          <g id="flywheelGroup">
+            <rect x="280" y="190" width="62" height="240" rx="16" fill="url(#steel)" stroke="#d1d5db" stroke-width="7"/>
+            <g stroke="#9ca3af" stroke-width="5">
+              <line x1="283" y1="205" x2="270" y2="205"/>
+              <line x1="283" y1="230" x2="270" y2="230"/>
+              <line x1="283" y1="255" x2="270" y2="255"/>
+              <line x1="283" y1="280" x2="270" y2="280"/>
+              <line x1="283" y1="305" x2="270" y2="305"/>
+              <line x1="283" y1="330" x2="270" y2="330"/>
+              <line x1="283" y1="355" x2="270" y2="355"/>
+              <line x1="283" y1="380" x2="270" y2="380"/>
+              <line x1="283" y1="405" x2="270" y2="405"/>
+            </g>
+            <g id="flywheelMarker">
+              <line x1="311" y1="210" x2="311" y2="245" stroke="#facc15" stroke-width="8"/>
+            </g>
+          </g>
+
+          <!-- Pilot bearing -->
+          <g id="pilotGroup">
+            <circle cx="342" cy="310" r="18" fill="#111827" stroke="#f59e0b" stroke-width="6"/>
+          </g>
+
+          <!-- Friction plate -->
+          <g id="frictionGroup">
+            <rect x="347" y="205" width="40" height="210" rx="12" fill="url(#lining)" stroke="#f3c98f" stroke-width="6"/>
+            <rect x="359" y="238" width="16" height="144" rx="8" fill="#374151" stroke="#cbd5e1" stroke-width="4"/>
+            <g fill="#f59e0b" stroke="#fde68a" stroke-width="2">
+              <rect x="354" y="255" width="26" height="22" rx="5"/>
+              <rect x="354" y="287" width="26" height="22" rx="5"/>
+              <rect x="354" y="319" width="26" height="22" rx="5"/>
+              <rect x="354" y="351" width="26" height="22" rx="5"/>
+            </g>
+            <g id="frictionMarker">
+              <line x1="367" y1="220" x2="367" y2="248" stroke="#fff" stroke-width="7"/>
+            </g>
+          </g>
+
+          <!-- Pressure plate and clutch cover -->
+          <g id="pressureGroup">
+            <rect x="390" y="205" width="54" height="210" rx="14"
+                  fill="url(#steel)" stroke="#d1d5db" stroke-width="7"/>
+            <rect x="396" y="226" width="42" height="168" rx="10"
+                  fill="#4b5563" stroke="#94a3b8" stroke-width="4"/>
+            <g id="pressureMarker">
+              <line x1="417" y1="220" x2="417" y2="248"
+                    stroke="#facc15" stroke-width="7"/>
+            </g>
+          </g>
+
+          <g id="coverGroup">
+            <path d="M442 205 H510 Q535 205 548 230 V390
+                     Q535 415 510 415 H442 Z"
+                  fill="#374151" stroke="#9ca3af" stroke-width="7"/>
+            <line x1="456" y1="220" x2="456" y2="400"
+                  stroke="#64748b" stroke-width="5"/>
+          </g>
+
+          <!-- Diaphragm spring mounted directly to the pressure-plate cover -->
+          <g id="diaphragmGroup">
+            <!-- outer spring ring / fulcrum -->
+            <ellipse cx="466" cy="310" rx="24" ry="98"
+                     fill="none" stroke="#d1d5db" stroke-width="8"/>
+            <ellipse cx="474" cy="310" rx="12" ry="82"
+                     fill="none" stroke="#94a3b8" stroke-width="4"/>
+
+            <!-- spring fingers taper inward toward the release bearing -->
+            <g stroke="#e2e8f0" stroke-width="8" stroke-linecap="round">
+              <line x1="470" y1="238" x2="515" y2="286"/>
+              <line x1="470" y1="382" x2="515" y2="334"/>
+              <line x1="468" y1="258" x2="515" y2="294"/>
+              <line x1="468" y1="362" x2="515" y2="326"/>
+              <line x1="466" y1="280" x2="515" y2="302"/>
+              <line x1="466" y1="340" x2="515" y2="318"/>
+            </g>
+
+            <circle cx="516" cy="310" r="20"
+                    fill="none" stroke="#cbd5e1" stroke-width="7"/>
+          </g>
+
+          <!-- Release bearing sits immediately beside the diaphragm fingers -->
+          <g id="releaseBearingGroup">
+            <rect x="522" y="266" width="36" height="88" rx="14"
+                  fill="#64748b" stroke="#e2e8f0" stroke-width="7"/>
+            <rect x="532" y="282" width="16" height="56" rx="7"
+                  fill="#111827"/>
+          </g>
+
+          <!-- Release fork -->
+          <g id="forkGroup">
+            <path d="M565 245 L608 310 L565 375"
+                  fill="none" stroke="#cbd5e1" stroke-width="15"
+                  stroke-linecap="round"/>
+            <circle cx="608" cy="310" r="12" fill="#f59e0b"/>
+          </g>
+
+        </g>
+<!-- Animated torque flow through each part of the drivetrain -->
+        <g id="flowGroup" opacity="0" filter="url(#glow)">
+          <path id="flowEngine" class="power-flow"
+                d="M135 310 H280"
+                fill="none" stroke="#22c55e" stroke-width="9"/>
+          <path id="flowClutch" class="power-flow"
+                d="M280 310 H445"
+                fill="none" stroke="#22c55e" stroke-width="9"/>
+          <path id="flowShaft" class="power-flow"
+                d="M445 310 H1010"
+                fill="none" stroke="#22c55e" stroke-width="9"/>
+          <path id="flowWheel" class="power-flow"
+                d="M1010 335 C1042 395 1065 440 1080 455"
+                fill="none" stroke="#22c55e" stroke-width="9"/>
+
+          <circle id="flowEngineDot" cx="220" cy="310" r="8" fill="#86efac"/>
+          <circle id="flowClutchDot" cx="365" cy="310" r="8" fill="#86efac"/>
+          <circle id="flowShaftDot" cx="785" cy="310" r="8" fill="#86efac"/>
+
+          <text class="power-flow-label" x="145" y="285">ENGINE TORQUE</text>
+          <text class="power-flow-label" x="318" y="285">CLAMPED FRICTION FACES</text>
+          <text class="power-flow-label" x="700" y="285">GEARBOX INPUT SHAFT</text>
+        </g>
+
+        <!-- Direct speed comparison for diagnosing clutch slip -->
+        <g id="movementPanel">
+          <rect x="225" y="490" width="310" height="92" rx="12"
+                fill="#0f172a" stroke="#64748b" stroke-width="3"/>
+          <text x="380" y="516" text-anchor="middle"
+                fill="#cbd5e1" font-size="12" font-weight="900">
+            ENGINE / FLYWHEEL SPEED
+          </text>
+          <text id="engineMovementText" x="380" y="550" text-anchor="middle"
+                fill="#22c55e" font-size="25" font-weight="900">0 RPM</text>
+          <text id="clutchMovementText" x="380" y="572" text-anchor="middle"
+                fill="#94a3b8" font-size="12" font-weight="800">100% torque transfer</text>
+
+          <rect x="650" y="490" width="310" height="92" rx="12"
+                fill="#0f172a" stroke="#64748b" stroke-width="3"/>
+          <text x="805" y="516" text-anchor="middle"
+                fill="#cbd5e1" font-size="12" font-weight="900">
+            GEARBOX INPUT-SHAFT SPEED
+          </text>
+          <text id="gearboxMovementText" x="805" y="550" text-anchor="middle"
+                fill="#22c55e" font-size="25" font-weight="900">0 RPM</text>
+          <text id="movementLossText" x="805" y="572" text-anchor="middle"
+                fill="#94a3b8" font-size="12" font-weight="800">0% movement loss</text>
+        </g>
+
+        <!-- Small road wheel -->
+        <g id="wheelGroup">
+          <circle cx="1080" cy="510" r="58" fill="#111827" stroke="#94a3b8" stroke-width="8"/>
+          <circle cx="1080" cy="510" r="30" fill="#475569" stroke="#cbd5e1" stroke-width="6"/>
+          <g id="wheelMarker">
+            <line x1="1080" y1="459" x2="1080" y2="478" stroke="#facc15" stroke-width="8"/>
+            <line x1="1080" y1="542" x2="1080" y2="561" stroke="#facc15" stroke-width="8"/>
+          </g>
+          <path d="M1015 340 C1045 400 1065 450 1080 452" fill="none" stroke="#94a3b8" stroke-width="8"/>
+        </g>
+
+        <!-- Markers -->
+        <g class="marker" data-part="flywheel"><line x1="300" y1="135" x2="310" y2="185"/><circle cx="296" cy="117" r="18"/><text x="296" y="118">1</text></g>
+        <g class="marker" data-part="friction"><line x1="360" y1="135" x2="367" y2="198"/><circle cx="358" cy="117" r="18"/><text x="358" y="118">2</text></g>
+        <g class="marker" data-part="pressure"><line x1="420" y1="135" x2="418" y2="198"/><circle cx="420" cy="117" r="18"/><text x="420" y="118">3</text></g>
+        <g class="marker" data-part="diaphragm"><line x1="472" y1="135" x2="472" y2="205"/><circle cx="472" cy="117" r="18"/><text x="472" y="118">4</text></g>
+        <g class="marker" data-part="release"><line x1="540" y1="135" x2="540" y2="255"/><circle cx="540" cy="117" r="18"/><text x="540" y="118">5</text></g>
+        <g class="marker" data-part="fork"><line x1="603" y1="135" x2="585" y2="235"/><circle cx="606" cy="117" r="18"/><text x="606" y="118">6</text></g>
+        <g class="marker" data-part="pilot"><line x1="342" y1="455" x2="342" y2="330"/><circle cx="342" cy="475" r="18"/><text x="342" y="476">7</text></g>
+      </svg>
+
+      <div id="popup" class="popup">
+        <button id="popupClose" class="popup-close">×</button>
+        <h3 id="popupTitle">Component</h3>
+        <p id="popupText"></p>
+      </div>
+    </div>
+
+    <div id="status" class="status good">
+      Pedal released: the friction plate is clamped tightly between the flywheel and pressure plate.
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><small>Engine RPM</small><strong id="engineRpm">1200</strong></div>
+    <div class="metric"><small>Input shaft RPM</small><strong id="shaftRpm">1200</strong></div>
+    <div class="metric"><small>Pedal</small><strong id="pedalRead">0%</strong></div>
+    <div class="metric"><small>Slip</small><strong id="slipRead">0%</strong></div>
+    <div class="metric"><small>Torque transfer</small><strong id="torqueRead">100%</strong></div>
+    <div class="metric"><small>Clamp force</small><strong id="clampRead">100%</strong></div>
+    <div class="metric"><small>Temperature</small><strong id="tempRead">60°C</strong></div>
+  </div>
+</section>
+
+<aside class="side">
+
+<section class="card">
+  <div class="card-title">Clutch Pedal</div>
+  <div class="side-content">
+    <div class="range-wrap">
+      <label><span>Pedal position</span><span id="pedalValue">0%</span></label>
+      <input id="pedalSlider" type="range" min="0" max="100" value="0">
+      <div style="display:flex;justify-content:space-between;color:#64748b;font-size:11px;margin-top:4px">
+        <span>Engaged</span><span>Bite point</span><span>Disengaged</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">Engine Speed</div>
+  <div class="side-content">
+    <div class="range-wrap">
+      <label><span>Engine RPM</span><span id="rpmValue">1200 rpm</span></label>
+      <input id="rpmSlider" type="range" min="700" max="5000" step="100" value="1200">
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">Hydraulic Operation</div>
+  <div class="side-content">
+    <div class="status" id="hydraulicStatus">
+      Pedal movement is transferred through the master cylinder, hydraulic line and slave cylinder to the release fork.
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">Fault Information</div>
+  <div class="side-content">
+    <div id="faultInfo" class="status good">
+      <b>No fault selected.</b><br>The clutch is operating normally.
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">Live Diagnosis</div>
+  <div class="side-content">
+    <div class="readouts">
+      <div class="readout"><small>Bite point</small><strong id="biteRead">45%</strong></div>
+      <div class="readout"><small>Release travel</small><strong id="travelRead">0.0 mm</strong></div>
+      <div class="readout"><small>Heat state</small><strong id="heatRead">Normal</strong></div>
+      <div class="readout"><small>Assembly view</small><strong id="viewRead">Assembled</strong></div>
+      <div class="readout"><small>Driving load</small><strong id="loadRead">Idle</strong></div>
+      <div class="readout"><small>Movement loss</small><strong id="lossRead">0%</strong></div>
+    </div>
+  </div>
+</section>
+
+</aside>
+</div>
+</div>
+
+<footer>
+© 2026 RRainbow. All Rights Reserved. Educational simulation only — always follow manufacturer information and safe workshop procedures.
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+const stage=document.getElementById("stage");
+const startBtn=document.getElementById("startBtn");
+const labelsBtn=document.getElementById("labelsBtn");
+const explodeBtn=document.getElementById("explodeBtn");
+const flowBtn=document.getElementById("flowBtn");
+const resetBtn=document.getElementById("resetBtn");
+const pedalSlider=document.getElementById("pedalSlider");
+const rpmSlider=document.getElementById("rpmSlider");
+const faultSelect=document.getElementById("faultSelect");
+const loadSelect=document.getElementById("loadSelect");
+const abuseBtn=document.getElementById("abuseBtn");
+const engineMovementText=document.getElementById("engineMovementText");
+const clutchMovementText=document.getElementById("clutchMovementText");
+const gearboxMovementText=document.getElementById("gearboxMovementText");
+const movementLossText=document.getElementById("movementLossText");
+
+const flywheelGroup=document.getElementById("flywheelGroup");
+const frictionGroup=document.getElementById("frictionGroup");
+const pressureGroup=document.getElementById("pressureGroup");
+const coverGroup=document.getElementById("coverGroup");
+const diaphragmGroup=document.getElementById("diaphragmGroup");
+const releaseBearingGroup=document.getElementById("releaseBearingGroup");
+const forkGroup=document.getElementById("forkGroup");
+const pilotGroup=document.getElementById("pilotGroup");
+const flywheelMarker=document.getElementById("flywheelMarker");
+const frictionMarker=document.getElementById("frictionMarker");
+const pressureMarker=document.getElementById("pressureMarker");
+const inputShaftMarker=document.getElementById("inputShaftMarker");
+const wheelMarker=document.getElementById("wheelMarker");
+const flowGroup=document.getElementById("flowGroup");
+const flowEngine=document.getElementById("flowEngine");
+const flowClutch=document.getElementById("flowClutch");
+const flowShaft=document.getElementById("flowShaft");
+const flowWheel=document.getElementById("flowWheel");
+
+let running=false;
+let exploded=false;
+let abuse=false;
+let flowVisible=false;
+let engineAngle=0;
+let shaftAngle=0;
+let wheelAngle=0;
+let temperature=60;
+let lastFrame=performance.now();
+
+const info={
+  flywheel:{title:"Flywheel",purpose:"Bolted to the crankshaft. It provides the engine-side friction surface and stores rotational energy."},
+  friction:{title:"Friction Plate",purpose:"Splined to the gearbox input shaft. It is clamped between the flywheel and pressure plate to transmit torque."},
+  pressure:{title:"Pressure Plate",purpose:"Applies clamp force to the friction plate. It only lifts a few millimetres when the clutch is released."},
+  diaphragm:{title:"Diaphragm Spring",purpose:"Creates clamp force. The release bearing pushes the spring fingers to lift the pressure plate."},
+  release:{title:"Release Bearing",purpose:"Moves towards the engine and presses the rotating diaphragm spring fingers."},
+  fork:{title:"Release Fork",purpose:"Transfers cable or slave-cylinder movement to the release bearing."},
+  pilot:{title:"Pilot Bearing",purpose:"Supports the gearbox input shaft in the centre of the crankshaft or flywheel."}
+};
+
+const faults={
+  good:{title:"No fault selected",text:"The friction plate clamps and releases correctly.",target:null},
+  slip:{title:"Clutch Slip",text:"Engine speed rises faster than input-shaft speed because torque capacity is reduced.",target:"frictionGroup"},
+  drag:{title:"Clutch Drag",text:"The pressure plate does not lift far enough, so the input shaft continues rotating with the pedal pressed.",target:"pressureGroup"},
+  oil:{title:"Oil Contamination",text:"Oil on the lining causes slip, shudder and uneven engagement.",target:"frictionGroup"},
+  damper:{title:"Broken Damper Spring",text:"A broken torsional spring can produce rattles, vibration and harsh engagement.",target:"frictionGroup"},
+  worn:{title:"Worn Friction Plate",text:"Reduced lining thickness raises the bite point and lowers torque capacity.",target:"frictionGroup"},
+  weak:{title:"Weak Diaphragm Spring",text:"Reduced clamp force causes slip under load.",target:"diaphragmGroup"},
+  release:{title:"Noisy Release Bearing",text:"Noise appears when the pedal is pressed and the bearing is loaded.",target:"releaseBearingGroup"},
+  pilot:{title:"Worn Pilot Bearing",text:"Can cause noise, misalignment and difficult gear selection.",target:"pilotGroup"},
+  fork:{title:"Bent Release Fork",text:"Reduces release travel and can cause clutch drag.",target:"forkGroup"},
+  master:{title:"Master Cylinder Leak",text:"Hydraulic pressure is lost, reducing release travel.",target:"forkGroup"},
+  slave:{title:"Slave Cylinder Leak",text:"Slave-cylinder travel is reduced, causing incomplete disengagement.",target:"forkGroup"}
+};
+
+document.querySelectorAll(".marker").forEach(marker=>{
+  marker.onclick=()=>{
+    const item=info[marker.dataset.part];
+    document.getElementById("popupTitle").textContent=item.title;
+    document.getElementById("popupText").textContent=item.purpose;
+    document.getElementById("popup").classList.add("show");
+  };
+});
+document.getElementById("popupClose").onclick=()=>document.getElementById("popup").classList.remove("show");
+
+startBtn.onclick=()=>{
+  running=!running;
+  startBtn.textContent=running?"⏸ Stop Engine":"▶ Start Engine";
+  startBtn.classList.toggle("active",running);
+};
+
+labelsBtn.onclick=()=>{
+  stage.classList.toggle("show-labels");
+  const visible=stage.classList.contains("show-labels");
+  labelsBtn.textContent=visible?"Hide Labels":"Show Labels";
+  labelsBtn.classList.toggle("active",visible);
+};
+
+explodeBtn.onclick=()=>{
+  exploded=!exploded;
+  explodeBtn.textContent=exploded?"Assemble Components":"Explode Components";
+  explodeBtn.classList.toggle("active",exploded);
+  updateSystem();
+};
+
+flowBtn.onclick=()=>{
+  flowVisible=!flowVisible;
+  flowGroup.setAttribute("opacity",flowVisible?"1":"0");
+  flowBtn.textContent=flowVisible?"Hide Power Flow":"Show Power Flow";
+  flowBtn.classList.toggle("active",flowVisible);
+  updateSystem();
+};
+
+abuseBtn.onclick=()=>{
+  abuse=!abuse;
+  abuseBtn.classList.toggle("active",abuse);
+  abuseBtn.textContent=abuse?"Stop Clutch Abuse":"Simulate Clutch Abuse";
+};
+
+pedalSlider.oninput=updateSystem;
+rpmSlider.oninput=updateSystem;
+faultSelect.onchange=updateSystem;
+loadSelect.onchange=updateSystem;
+
+function calculate(){
+  const pedal=Number(pedalSlider.value);
+  const rpm=running?Number(rpmSlider.value):0;
+  const fault=faultSelect.value;
+  const loadMode=loadSelect.value;
+
+  const loads={
+    idle:{name:"Idle",factor:.05},
+    light:{name:"1st · Light",factor:.28},
+    accel:{name:"3rd · Acceleration",factor:.62},
+    highGear:{name:"5th · High Load",factor:.90},
+    uphill:{name:"5th · Uphill",factor:1.00}
+  };
+  const load=loads[loadMode];
+
+  let bite=45;
+  let releaseTravel=pedal*.14;
+  let clamp=Math.max(0,100-pedal*1.18);
+
+  // Normal controlled slip only while the pedal passes through the bite point.
+  let slip=Math.max(0,(pedal-bite)*1.75);
+  let torque=Math.max(0,100-slip);
+
+  if(pedal>=88){
+    torque=0;
+    slip=100;
+  }
+
+  /*
+    A worn or weak clutch should not continuously slip at idle.
+    Slip becomes apparent when transmitted engine torque exceeds clutch
+    capacity—most clearly in a high gear under heavy acceleration or uphill.
+  */
+  let clutchCapacity=1.0;
+
+  if(fault==="slip") clutchCapacity=.54;
+  if(fault==="oil") clutchCapacity=.46;
+  if(fault==="worn"){
+    bite=70;
+    clutchCapacity=.62;
+  }
+  if(fault==="weak"){
+    clamp*=.55;
+    clutchCapacity=.58;
+  }
+
+  if(pedal<30 && running && clutchCapacity<1){
+    const overload=Math.max(0,load.factor-clutchCapacity);
+
+    if(overload>0){
+      /*
+        The clutch alternately loses and regains grip under load.
+        This produces the familiar engine-speed flare while road/gearbox
+        movement falls behind, then partially catches up.
+      */
+      const gripCycle=.5+.5*Math.sin(performance.now()/430);
+      const faultSlip=Math.min(72,overload*115*(.55+.45*gripCycle));
+      slip=Math.max(slip,faultSlip);
+      torque=Math.max(18,100-slip);
+    }else{
+      slip=0;
+      torque=100;
+    }
+  }
+
+  if(fault==="drag" && pedal>85){
+    torque=18;
+    slip=82;
+  }
+
+  if((fault==="master"||fault==="slave"||fault==="fork") && pedal>70){
+    releaseTravel*=.48;
+    torque=22;
+    slip=78;
+  }
+
+  let shaftRpm=rpm*(torque/100);
+
+  // Drag keeps the input shaft turning even with the pedal fully pressed.
+  if(fault==="drag" && pedal>85) shaftRpm=rpm*.18;
+  if((fault==="master"||fault==="slave"||fault==="fork") && pedal>70){
+    shaftRpm=rpm*.22;
+  }
+
+  const movement=rpm>0?(shaftRpm/rpm)*100:0;
+  const movementLoss=Math.max(0,100-movement);
+
+  return {
+    pedal,
+    rpm,
+    bite,
+    releaseTravel,
+    clamp,
+    slip,
+    torque,
+    shaftRpm,
+    movement,
+    movementLoss,
+    loadName:load.name,
+    loadFactor:load.factor,
+    fault
+  };
+}
+
+function updateSystem(){
+  const d=calculate();
+
+  document.getElementById("pedalValue").textContent=d.pedal+"%";
+  document.getElementById("rpmValue").textContent=d.rpm+" rpm";
+  document.getElementById("engineRpm").textContent=Math.round(d.rpm);
+  document.getElementById("shaftRpm").textContent=Math.round(d.shaftRpm);
+  document.getElementById("pedalRead").textContent=d.pedal+"%";
+  document.getElementById("slipRead").textContent=Math.round(d.slip)+"%";
+  document.getElementById("torqueRead").textContent=Math.round(d.torque)+"%";
+  document.getElementById("clampRead").textContent=Math.round(d.clamp)+"%";
+  document.getElementById("tempRead").textContent=Math.round(temperature)+"°C";
+  document.getElementById("biteRead").textContent=Math.round(d.bite)+"%";
+  document.getElementById("travelRead").textContent=d.releaseTravel.toFixed(1)+" mm";
+  document.getElementById("viewRead").textContent=exploded?"Exploded":"Assembled";
+  document.getElementById("loadRead").textContent=d.loadName;
+  document.getElementById("lossRead").textContent=Math.round(d.movementLoss)+"%";
+
+  const movementColour=
+    d.movement>85?"#22c55e":
+    d.movement>40?"#f59e0b":"#ef4444";
+
+  engineMovementText.textContent=Math.round(d.rpm)+" RPM";
+  gearboxMovementText.textContent=Math.round(d.shaftRpm)+" RPM";
+  clutchMovementText.textContent=Math.round(d.torque)+"% torque transfer";
+  movementLossText.textContent=Math.round(d.movementLoss)+"% movement loss";
+
+  engineMovementText.setAttribute("fill","#22c55e");
+  gearboxMovementText.setAttribute("fill",movementColour);
+  clutchMovementText.setAttribute(
+    "fill",
+    d.torque>80?"#86efac":d.torque>35?"#fbbf24":"#fca5a5"
+  );
+  movementLossText.setAttribute(
+    "fill",
+    d.movementLoss<15?"#94a3b8":d.movementLoss<50?"#fbbf24":"#fca5a5"
+  );
+
+  const release=d.releaseTravel;
+  const pressureLift=Math.max(0,(d.pedal-42)/58)*8;
+
+  if(exploded){
+    flywheelGroup.setAttribute("transform","translate(-35 0)");
+    pilotGroup.setAttribute("transform","translate(-12 0)");
+    frictionGroup.setAttribute("transform","translate(42 0)");
+    pressureGroup.setAttribute("transform","translate(105 0)");
+    coverGroup.setAttribute("transform","translate(165 0)");
+    diaphragmGroup.setAttribute("transform","translate(165 0)");
+    releaseBearingGroup.setAttribute("transform","translate(220 0)");
+    forkGroup.setAttribute("transform","translate(260 0)");
+  }else{
+    flywheelGroup.removeAttribute("transform");
+    pilotGroup.removeAttribute("transform");
+    frictionGroup.setAttribute("transform","translate(0 0)");
+    pressureGroup.setAttribute("transform",`translate(${pressureLift} 0)`);
+    coverGroup.removeAttribute("transform");
+
+    /*
+      All parts remain on the gearbox-input-shaft centreline.
+      The diaphragm remains attached to the cover and flexes about its
+      own centre rather than scaling from the SVG page origin.
+    */
+    const fingerFlex=Math.max(0,(d.pedal-5)/95);
+    diaphragmGroup.setAttribute(
+      "transform",
+      `translate(466 310) `+
+      `scale(${1-fingerFlex*.018} ${1+fingerFlex*.028}) `+
+      `translate(-466 -310)`
+    );
+
+    // Release bearing travels a realistic short distance towards the spring.
+    const bearingTravel=-release*1.18;
+    releaseBearingGroup.setAttribute(
+      "transform",
+      `translate(${bearingTravel} 0)`
+    );
+
+    /*
+      Keep the fork visually aligned with the bearing. A small pivot is shown,
+      but excessive rotation that pulls it off-centre is avoided.
+    */
+    forkGroup.setAttribute(
+      "transform",
+      `translate(${bearingTravel*.72} 0) rotate(${-d.pedal*.035} 608 310)`
+    );
+  }
+
+  document.getElementById("stateTitle").textContent=
+    exploded?"Exploded Component View":
+    d.pedal<30?"Pedal Released · Clutch Engaged":
+    d.pedal<78?"Bite Point · Clutch Slipping":"Pedal Pressed · Clutch Disengaged";
+
+  const status=document.getElementById("status");
+  if(
+    !exploded &&
+    d.pedal<30 &&
+    ["slip","oil","worn","weak"].includes(d.fault) &&
+    d.slip>5
+  ){
+    status.className="status bad";
+    status.innerHTML=
+      "<b>Clutch slipping under load.</b><br>"+
+      "Engine speed is not being fully transferred to the gearbox. "+
+      "This is most noticeable in a high gear during heavy acceleration or while climbing.";
+  }else if(exploded){
+    status.className="status";
+    status.innerHTML="<b>Exploded view.</b><br>The clutch components are separated for identification. Assemble them to operate the clutch.";
+  }else if(d.pedal<30){
+    status.className="status good";
+    status.innerHTML="<b>Clutch engaged.</b><br>The friction plate is clamped tightly between the flywheel and pressure plate.";
+  }else if(d.pedal<78){
+    status.className="status warn";
+    status.innerHTML="<b>Bite point.</b><br>The pressure plate is beginning to release, so the friction plate slips and generates heat.";
+  }else{
+    status.className=d.shaftRpm>100?"status bad":"status good";
+    status.innerHTML=d.shaftRpm>100
+      ?"<b>Clutch drag.</b><br>The input shaft continues rotating even though the pedal is fully pressed."
+      :"<b>Clutch disengaged.</b><br>The pressure plate has lifted only a few millimetres and the friction plate is no longer clamped.";
+  }
+
+  document.querySelectorAll(".highlight").forEach(el=>el.classList.remove("highlight"));
+  const f=faults[d.fault];
+  document.getElementById("faultInfo").className="status "+(d.fault==="good"?"good":"bad");
+  document.getElementById("faultInfo").innerHTML="<b>"+f.title+"</b><br>"+f.text;
+  if(f.target)document.getElementById(f.target).classList.add("highlight");
+
+  document.getElementById("hydraulicStatus").className="status "+(
+    d.fault==="master"||d.fault==="slave"?"bad":"good"
+  );
+  document.getElementById("hydraulicStatus").innerHTML=
+    d.fault==="master"||d.fault==="slave"
+      ?"<b>Hydraulic pressure loss.</b><br>Release travel is reduced and the clutch may drag."
+      :"<b>Hydraulic operation normal.</b><br>Pedal movement is transferred to the release fork.";
+
+  /*
+    Make power flow visually meaningful:
+    green = torque being transferred;
+    amber = partial transfer/slip;
+    grey = clutch disengaged/no torque after the clutch.
+  */
+  const transfer=Math.max(0,Math.min(100,d.torque));
+  const clutchColour=transfer>80?"#22c55e":transfer>5?"#f59e0b":"#64748b";
+  const outputColour=transfer>5?"#22c55e":"#64748b";
+  const clutchWidth=4+(transfer/100)*7;
+  const outputWidth=3+(transfer/100)*7;
+
+  flowEngine.setAttribute("stroke","#22c55e");
+  flowEngine.setAttribute("stroke-width","10");
+  flowClutch.setAttribute("stroke",clutchColour);
+  flowClutch.setAttribute("stroke-width",String(clutchWidth));
+  flowShaft.setAttribute("stroke",outputColour);
+  flowShaft.setAttribute("stroke-width",String(outputWidth));
+  flowWheel.setAttribute("stroke",outputColour);
+  flowWheel.setAttribute("stroke-width",String(outputWidth));
+
+  flowGroup.setAttribute("opacity",flowVisible?"1":"0");
+
+  const heatState=temperature<90?"Normal":temperature<160?"High":"Overheated";
+  document.getElementById("heatRead").textContent=heatState;
+  frictionGroup.classList.toggle("shake",d.fault==="damper"&&running);
+}
+
+function animate(now){
+  const dt=Math.min(.05,(now-lastFrame)/1000);
+  lastFrame=now;
+  const d=calculate();
+
+  if(running && !exploded){
+    engineAngle=(engineAngle+d.rpm*6*dt*.22)%360;
+    shaftAngle=(shaftAngle+d.shaftRpm*6*dt*.22)%360;
+    wheelAngle=(wheelAngle+d.shaftRpm*2.2*dt*.22)%360;
+
+    flywheelMarker.setAttribute("transform",`rotate(${engineAngle} 311 310)`);
+    pressureMarker.setAttribute("transform",`rotate(${engineAngle} 418 310)`);
+    frictionMarker.setAttribute("transform",`rotate(${shaftAngle} 367 310)`);
+    inputShaftMarker.setAttribute("transform",`rotate(${shaftAngle} 930 310)`);
+    wheelMarker.setAttribute("transform",`rotate(${-wheelAngle} 1080 510)`);
+
+    const heatInput=(d.slip/100)*(d.rpm/1000)*18+(abuse?20:0);
+    temperature+=heatInput*dt;
+    temperature-=Math.max(0,temperature-60)*.03*dt;
+    temperature=Math.max(60,Math.min(280,temperature));
+  }else{
+    temperature-=Math.max(0,temperature-40)*.05*dt;
+  }
+
+  updateSystem();
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+resetBtn.onclick=()=>{
+  running=false;
+  exploded=false;
+  abuse=false;
+  engineAngle=shaftAngle=wheelAngle=0;
+  temperature=60;
+
+  startBtn.textContent="▶ Start Engine";
+  startBtn.classList.remove("active");
+  explodeBtn.textContent="Explode Components";
+  explodeBtn.classList.remove("active");
+  abuseBtn.textContent="Simulate Clutch Abuse";
+  abuseBtn.classList.remove("active");
+
+  stage.classList.remove("show-labels");
+  labelsBtn.textContent="Show Labels";
+  labelsBtn.classList.remove("active");
+
+  flowVisible=false;
+  flowGroup.setAttribute("opacity","0");
+  flowBtn.textContent="Show Power Flow";
+  flowBtn.classList.remove("active");
+
+  pedalSlider.value=0;
+  rpmSlider.value=1200;
+  loadSelect.value="idle";
+  faultSelect.value="good";
+  document.getElementById("popup").classList.remove("show");
+
+  [flywheelGroup,pilotGroup,frictionGroup,pressureGroup,coverGroup,diaphragmGroup,
+   releaseBearingGroup,forkGroup,flywheelMarker,pressureMarker,frictionMarker,
+   inputShaftMarker,wheelMarker].forEach(el=>el.removeAttribute("transform"));
+
+  updateSystem();
+};
+
+updateSystem();
+})();
+</script>
+</body>
+</html>
