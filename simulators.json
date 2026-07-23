@@ -81,7 +81,7 @@
   },
   {
     "title": "CAN Bus Fault Simulator",
-    "category": "Electrical",
+    "category": "Oscilloscope",
     "icon": "🚌",
     "image": "images/can-bus-diagnostics.png",
     "description": "Investigate CAN High, CAN Low, termination resistance and network faults.",
