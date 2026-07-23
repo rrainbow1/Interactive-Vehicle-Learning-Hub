@@ -195,5 +195,18 @@
     "duration": "25 mins",
     "level": "Level 3",
     "new": true
-  }
+  },
+  {
+  "title": "Clutch Operation Simulator",
+  "category": "Transmission",
+  "icon": "⚙️",
+  "image": "images/clutch.png",
+  "description": "Explore clutch operation, torque transfer, diaphragm spring movement, release bearing action and common clutch faults using a realistic cutaway animation.",
+  "folder": "clutch",
+  "difficulty": "Intermediate",
+  "duration": "25–35 mins",
+  "level": "Level 2–3",
+  "featured": true,
+  "new": true
+}
 ]
