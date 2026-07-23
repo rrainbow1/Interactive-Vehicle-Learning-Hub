@@ -208,5 +208,18 @@
   "level": "Level 2–3",
   "featured": true,
   "new": true
+},
+  {
+  "title": "Dual Mass Flywheel Simulator",
+  "category": "Transmission",
+  "icon": "⚙️",
+  "image": "images/dmf.png",
+  "description": "Explore how a dual mass flywheel absorbs torsional vibration using a realistic front view and cutaway animation. Investigate wear, damping, arc spring operation and common DMF faults.",
+  "folder": "dmf",
+  "difficulty": "Advanced",
+  "duration": "25–35 mins",
+  "level": "Level 3",
+  "featured": true,
+  "new": true
 }
 ]
