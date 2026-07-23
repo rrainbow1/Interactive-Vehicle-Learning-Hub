@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Interactive dual mass flywheel training simulator.">
+<title>Dual Mass Flywheel Simulator</title>
+<style>
+:root{
+  --bg:#eef2f6;--panel:#fff;--line:#d8e0e8;--text:#17212b;--muted:#64748b;
+  --navy:#101820;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--amber:#d97706;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif}
+button,select,input{font:inherit}
+button{cursor:pointer}
+header{background:var(--navy);color:#fff;padding:16px 20px}
+.header-row{max-width:1600px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:18px}
+header h1{margin:0;font-size:25px}
+header p{margin:5px 0 0;color:#cbd5e1;font-size:13px}
+.header-actions{display:flex;flex-wrap:wrap;gap:8px}
+.wrap{max-width:1600px;margin:auto;padding:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:14px;align-items:start}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.07)}
+.card-title{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;background:#f8fafc;border-bottom:1px solid var(--line);font-size:14px;font-weight:900}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+button,select{border:1px solid #cbd5e1;border-radius:8px;padding:9px 11px;font-weight:800;background:#fff;color:#17212b}
+button:hover{background:#f8fafc}
+button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+button.warn{background:#b45309;color:#fff;border-color:#b45309}
+button.active{box-shadow:0 0 0 3px rgba(37,99,235,.14);border-color:#2563eb}
+.stage-wrap{padding:12px}
+.stage{position:relative;min-height:680px;overflow:hidden;border-radius:12px;background:
+linear-gradient(rgba(71,85,105,.15) 1px,transparent 1px),
+linear-gradient(90deg,rgba(71,85,105,.15) 1px,transparent 1px),
+radial-gradient(circle at 50% 45%,#1c2c42,#07111f);
+background-size:36px 36px,36px 36px,auto}
+.stage svg{display:block;width:100%;height:auto;min-height:680px}
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid #31425d;background:#111b2d}
+.metric{padding:11px 13px;border-right:1px solid #31425d}
+.metric:last-child{border-right:0}
+.metric small{display:block;color:#9fb0c6;font-size:10px;font-weight:900;text-transform:uppercase}
+.metric strong{display:block;margin-top:4px;color:#fff;font-size:18px}
+.side{display:flex;flex-direction:column;gap:10px}
+.side-content{padding:12px}
+.range-wrap{padding:10px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}
+.range-wrap label{display:flex;justify-content:space-between;font-weight:800;font-size:13px}
+.range-wrap input{width:100%;margin-top:8px}
+.status{margin-top:9px;padding:11px;border-radius:10px;border:1px solid var(--line);background:#f8fafc;color:#334155;font-size:13px;line-height:1.5}
+.status.good{background:#ecfdf3;border-color:#86efac}
+.status.warn{background:#fffbeb;border-color:#fcd34d}
+.status.bad{background:#fef2f2;border-color:#fca5a5}
+.readouts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.readout{padding:11px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}
+.readout small{display:block;color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase}
+.readout strong{display:block;margin-top:5px;font-size:21px;color:#0f172a}
+.marker{display:none;cursor:pointer}
+.show-labels .marker{display:block}
+.marker circle{fill:#2563eb;stroke:#fff;stroke-width:4}
+.marker text{fill:#fff;font-size:14px;font-weight:900;text-anchor:middle;dominant-baseline:middle}
+.marker line{stroke:#93c5fd;stroke-width:3;stroke-linecap:round}
+.popup{display:none;position:absolute;right:18px;bottom:18px;width:min(400px,calc(100% - 36px));padding:16px 18px;border-radius:12px;background:rgba(15,23,42,.97);color:#e5edf8;border:1px solid #60a5fa;box-shadow:0 20px 50px rgba(0,0,0,.38);z-index:10}
+.popup.show{display:block}
+.popup h3{margin:0 34px 7px 0;font-size:17px}
+.popup p{margin:0;color:#cbd5e1;font-size:13px;line-height:1.55}
+.popup-close{position:absolute;top:9px;right:9px;width:28px;height:28px;padding:0;border-radius:50%;background:#1e293b;color:#fff;border:1px solid #64748b;font-size:18px}
+.highlight{filter:drop-shadow(0 0 12px rgba(239,68,68,.95))}
+@keyframes shake{0%,100%{transform:translate(0)}25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}75%{transform:translate(-2px,-1px)}}
+@keyframes torqueFlow{to{stroke-dashoffset:-50}}
+#torquePath{animation:torqueFlow .9s linear infinite}
+.shake{animation:shake .14s linear infinite}
+.graph{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#061018}
+.graph svg{display:block;width:100%;height:auto}
+footer{margin-top:18px;padding:18px 14px 24px;text-align:center;color:#64748b;font-size:12px}
+@media(max-width:1200px){.layout{grid-template-columns:1fr}}
+@media(max-width:900px){.metrics{grid-template-columns:repeat(2,1fr)}.readouts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-row">
+    <div>
+      <h1>Dual Mass Flywheel Simulator</h1>
+      <p>Front view and cutaway view showing torsional damping, arc-spring movement and common DMF faults.</p>
+    </div>
+    <div class="header-actions">
+      <button id="startBtn" class="primary">▶ Start</button>
+      <button id="labelsBtn">Show Labels</button>
+      <button id="vibrationBtn">Show Torsional Vibration</button>
+      <button id="torqueBtn">Show Torque Path</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+<section class="card">
+  <div class="card-title">
+    <span>Dual Mass Flywheel — Front &amp; Cutaway Views</span>
+    <span id="modeTitle">Idle</span>
+  </div>
+
+  <div class="toolbar">
+    <select id="scenarioSelect">
+      <option value="off">Engine Off</option>
+      <option value="idle" selected>Idle</option>
+      <option value="accel">Hard Acceleration</option>
+      <option value="cruise">Steady Cruise</option>
+      <option value="shutdown">Engine Shutdown</option>
+    </select>
+
+    <select id="faultSelect">
+      <option value="good">Healthy DMF</option>
+      <option value="weak">Weak Arc Springs</option>
+      <option value="broken">Broken Arc Spring</option>
+      <option value="freeplay">Excessive Rotational Free Play</option>
+      <option value="seized">Seized DMF</option>
+      <option value="grease">Grease Leakage</option>
+      <option value="overheat">Overheated DMF</option>
+      <option value="ring">Starter Ring-Gear Damage</option>
+    </select>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+      <svg viewBox="0 0 1220 700" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="steel"><stop offset="0" stop-color="#d7dde1"/><stop offset=".55" stop-color="#7b8790"/><stop offset="1" stop-color="#39434b"/></radialGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+
+        <text x="310" y="40" text-anchor="middle" fill="#fff" font-size="20" font-weight="900">FRONT VIEW</text>
+        <text x="900" y="40" text-anchor="middle" fill="#fff" font-size="20" font-weight="900">CUTAWAY VIEW</text>
+
+        <!-- FRONT VIEW -->
+        <g id="frontAssembly">
+          <circle cx="310" cy="285" r="182" fill="#2f3942" stroke="#cbd5e1" stroke-width="10"/>
+          <circle cx="310" cy="285" r="145" fill="url(#steel)" stroke="#94a3b8" stroke-width="8"/>
+          <circle cx="310" cy="285" r="82" fill="#29333d" stroke="#cbd5e1" stroke-width="6"/>
+          <circle cx="310" cy="285" r="28" fill="#111827" stroke="#f59e0b" stroke-width="6"/>
+          <g id="frontRingTeeth" stroke="#d1d5db" stroke-width="8">
+            <line x1="310" y1="90" x2="310" y2="72"/>
+            <line x1="447" y1="148" x2="460" y2="135"/>
+            <line x1="505" y1="285" x2="523" y2="285"/>
+            <line x1="447" y1="422" x2="460" y2="435"/>
+            <line x1="310" y1="480" x2="310" y2="498"/>
+            <line x1="173" y1="422" x2="160" y2="435"/>
+            <line x1="115" y1="285" x2="97" y2="285"/>
+            <line x1="173" y1="148" x2="160" y2="135"/>
+          </g>
+          <g id="primaryMarker">
+            <line x1="310" y1="112" x2="310" y2="145" stroke="#facc15" stroke-width="10"/>
+          </g>
+          <g id="secondaryMarker">
+            <line x1="310" y1="168" x2="310" y2="200" stroke="#22c55e" stroke-width="9"/>
+          </g>
+          <g fill="#111827" stroke="#cbd5e1" stroke-width="4">
+            <circle cx="310" cy="185" r="10"/><circle cx="390" cy="220" r="10"/><circle cx="390" cy="350" r="10"/><circle cx="310" cy="385" r="10"/><circle cx="230" cy="350" r="10"/><circle cx="230" cy="220" r="10"/>
+          </g>
+        </g>
+
+        <!-- CUTAWAY -->
+        <g id="cutawayAssembly">
+          <g id="cutPrimaryMass">
+            <rect x="680" y="135" width="62" height="300" rx="18"
+                  fill="url(#steel)" stroke="#cbd5e1" stroke-width="8"/>
+            <text x="711" y="470" text-anchor="middle"
+                  fill="#cbd5e1" font-size="13" font-weight="900">PRIMARY MASS</text>
+          </g>
+
+          <g id="cutSecondaryMass">
+            <rect x="970" y="135" width="62" height="300" rx="18"
+                  fill="url(#steel)" stroke="#cbd5e1" stroke-width="8"/>
+            <text x="1001" y="470" text-anchor="middle"
+                  fill="#cbd5e1" font-size="13" font-weight="900">SECONDARY MASS</text>
+          </g>
+
+          <line x1="742" y1="285" x2="970" y2="285" stroke="#64748b" stroke-width="20"/>
+          <line x1="742" y1="285" x2="970" y2="285" stroke="#1f2937" stroke-width="7"/>
+
+          <g id="springPack">
+            <path id="springTop" d="M760 215 C780 180 800 250 820 215 C840 180 860 250 880 215 C900 180 920 250 940 215"
+                  fill="none" stroke="#f59e0b" stroke-width="14" stroke-linecap="round"/>
+            <path id="springBottom" d="M760 355 C780 320 800 390 820 355 C840 320 860 390 880 355 C900 320 920 390 940 355"
+                  fill="none" stroke="#f59e0b" stroke-width="14" stroke-linecap="round"/>
+          </g>
+
+          <g id="frictionWasher">
+            <rect x="830" y="255" width="42" height="60" rx="10" fill="#8b5e3c" stroke="#f3c98f" stroke-width="5"/>
+          </g>
+
+          <g id="bearingGroup">
+            <circle cx="856" cy="285" r="31" fill="#111827" stroke="#60a5fa" stroke-width="6"/>
+            <circle cx="856" cy="285" r="14" fill="#64748b"/>
+          </g>
+
+          <g id="greaseGroup">
+            <ellipse cx="856" cy="215" rx="105" ry="42" fill="none" stroke="#38bdf8" stroke-width="5" stroke-dasharray="10 8"/>
+            <text x="856" y="165" text-anchor="middle" fill="#7dd3fc" font-size="13" font-weight="900">GREASE CHAMBER</text>
+          </g>
+
+          <g id="cutPrimaryMarker">
+            <line x1="686" y1="112" x2="730" y2="112"
+                  stroke="#facc15" stroke-width="8" stroke-linecap="round"/>
+            <path d="M730 112 L716 102 M730 112 L716 122"
+                  fill="none" stroke="#facc15" stroke-width="7"
+                  stroke-linecap="round"/>
+            <text x="708" y="92" text-anchor="middle"
+                  fill="#fde68a" font-size="12" font-weight="900">PRIMARY TWIST</text>
+          </g>
+
+          <g id="cutSecondaryMarker">
+            <line x1="978" y1="112" x2="1018" y2="112"
+                  stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
+            <path d="M1018 112 L1004 102 M1018 112 L1004 122"
+                  fill="none" stroke="#22c55e" stroke-width="7"
+                  stroke-linecap="round"/>
+            <text x="998" y="92" text-anchor="middle"
+                  fill="#86efac" font-size="12" font-weight="900">SMOOTHED OUTPUT</text>
+          </g>
+
+          <text x="856" y="510" text-anchor="middle"
+                fill="#cbd5e1" font-size="13" font-weight="800">
+            Side cutaway shows relative twist and spring compression — not full circular rotation.
+          </text>
+        </g>
+
+        <!-- Torsional vibration overlay -->
+        <g id="vibrationOverlay" opacity="0">
+          <path d="M650 105 C675 85 700 125 725 105 C750 85 775 125 800 105"
+                fill="none" stroke="#f59e0b" stroke-width="7" stroke-linecap="round"/>
+          <path d="M900 105 C925 95 950 115 975 105 C995 98 1015 112 1035 105"
+                fill="none" stroke="#22c55e" stroke-width="7" stroke-linecap="round"/>
+          <text x="725" y="76" text-anchor="middle" fill="#fbbf24"
+                font-size="13" font-weight="900">ENGINE TORSIONAL PULSES</text>
+          <text x="970" y="76" text-anchor="middle" fill="#86efac"
+                font-size="13" font-weight="900">SMOOTHER GEARBOX INPUT</text>
+        </g>
+
+        <!-- Torque path overlay -->
+        <g id="torqueOverlay" opacity="0" filter="url(#glow)">
+          <path id="torquePath" d="M650 285 H1045"
+                fill="none" stroke="#fde047" stroke-width="9"
+                stroke-linecap="round" stroke-dasharray="14 11"/>
+          <circle cx="705" cy="285" r="9" fill="#fef08a"/>
+          <circle cx="855" cy="285" r="9" fill="#fef08a"/>
+          <circle cx="1005" cy="285" r="9" fill="#fef08a"/>
+          <text x="700" y="255" text-anchor="middle" fill="#fef08a"
+                font-size="12" font-weight="900">PRIMARY MASS</text>
+          <text x="855" y="255" text-anchor="middle" fill="#fef08a"
+                font-size="12" font-weight="900">ARC SPRINGS</text>
+          <text x="1000" y="255" text-anchor="middle" fill="#fef08a"
+                font-size="12" font-weight="900">SECONDARY MASS</text>
+        </g>
+
+        <!-- Markers -->
+        <g class="marker" data-part="primary"><line x1="170" y1="70" x2="230" y2="130"/><circle cx="153" cy="56" r="18"/><text x="153" y="57">1</text></g>
+        <g class="marker" data-part="secondary"><line x1="395" y1="70" x2="375" y2="145"/><circle cx="402" cy="53" r="18"/><text x="402" y="54">2</text></g>
+        <g class="marker" data-part="springs"><line x1="860" y1="70" x2="860" y2="175"/><circle cx="860" cy="52" r="18"/><text x="860" y="53">3</text></g>
+        <g class="marker" data-part="grease"><line x1="770" y1="115" x2="805" y2="175"/><circle cx="758" cy="99" r="18"/><text x="758" y="100">4</text></g>
+        <g class="marker" data-part="friction"><line x1="855" y1="430" x2="855" y2="320"/><circle cx="855" cy="448" r="18"/><text x="855" y="449">5</text></g>
+        <g class="marker" data-part="bearing"><line x1="930" y1="430" x2="880" y2="320"/><circle cx="940" cy="447" r="18"/><text x="940" y="448">6</text></g>
+        <g class="marker" data-part="ring"><line x1="90" y1="210" x2="120" y2="235"/><circle cx="74" cy="197" r="18"/><text x="74" y="198">7</text></g>
+
+        <!-- Graph -->
+        <g id="graphGroup">
+          <rect x="145" y="535" width="930" height="120" rx="14" fill="#061018" stroke="#64748b" stroke-width="4"/>
+          <g stroke="#17313f">
+            <path d="M165 565H1055M165 595H1055M165 625H1055"/>
+            <path d="M265 545V645M365 545V645M465 545V645M565 545V645M665 545V645M765 545V645M865 545V645M965 545V645"/>
+          </g>
+          <polyline id="inputTrace" fill="none" stroke="#f59e0b" stroke-width="4"/>
+          <polyline id="outputTrace" fill="none" stroke="#22c55e" stroke-width="4"/>
+          <text x="190" y="560" fill="#fbbf24" font-size="12" font-weight="900">ENGINE PULSES</text>
+          <text x="190" y="640" fill="#86efac" font-size="12" font-weight="900">DMF OUTPUT</text>
+        </g>
+      </svg>
+
+      <div id="popup" class="popup">
+        <button id="popupClose" class="popup-close">×</button>
+        <h3 id="popupTitle">Component</h3>
+        <p id="popupText"></p>
+      </div>
+    </div>
+
+    <div id="status" class="status good">
+      Healthy idle: the primary mass follows uneven engine pulses while the arc springs smooth the secondary-mass output.
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><small>Engine speed</small><strong id="rpmText">850 rpm</strong></div>
+    <div class="metric"><small>Primary oscillation</small><strong id="primaryOscText">24 rpm</strong></div>
+    <div class="metric"><small>Secondary oscillation</small><strong id="secondaryOscText">5 rpm</strong></div>
+    <div class="metric"><small>Angular twist</small><strong id="twistText">12°</strong></div>
+    <div class="metric"><small>Spring compression</small><strong id="springText">14 mm</strong></div>
+    <div class="metric"><small>Vibration reduction</small><strong id="reductionText">79%</strong></div>
+  </div>
+</section>
+
+<aside class="side">
+
+<section class="card">
+  <div class="card-title">Engine Speed</div>
+  <div class="side-content">
+    <div class="range-wrap">
+      <label><span>Engine RPM</span><span id="rpmValue">850 rpm</span></label>
+      <input id="rpmSlider" type="range" min="0" max="4500" step="50" value="850">
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">Wear Level</div>
+  <div class="side-content">
+    <div class="range-wrap">
+      <label><span>DMF wear</span><span id="wearValue">0%</span></label>
+      <input id="wearSlider" type="range" min="0" max="100" value="0">
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">Live DMF Readings</div>
+  <div class="side-content">
+    <div class="readouts">
+      <div class="readout"><small>Primary speed</small><strong id="primarySpeedRead">850 rpm</strong></div>
+      <div class="readout"><small>Secondary speed</small><strong id="secondarySpeedRead">850 rpm</strong></div>
+      <div class="readout"><small>Free play</small><strong id="freePlayRead">6°</strong></div>
+      <div class="readout"><small>Damping state</small><strong id="dampingRead">Healthy</strong></div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">Fault Information</div>
+  <div class="side-content">
+    <div id="faultInfo" class="status good">
+      <b>Healthy DMF.</b><br>The arc springs and friction control are damping engine torsional vibration correctly.
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">What the Learner Should Notice</div>
+  <div class="side-content">
+    <div id="learningBox" class="status">
+      At idle, the primary mass oscillates more than the secondary mass. The arc springs absorb and release energy between them.
+    </div>
+  </div>
+</section>
+
+</aside>
+</div>
+</div>
+
+<footer>
+© 2026 RRainbow. All Rights Reserved. Educational simulation only — always follow manufacturer information and safe workshop procedures.
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+const startBtn=document.getElementById("startBtn");
+const labelsBtn=document.getElementById("labelsBtn");
+const vibrationBtn=document.getElementById("vibrationBtn");
+const torqueBtn=document.getElementById("torqueBtn");
+const resetBtn=document.getElementById("resetBtn");
+const scenarioSelect=document.getElementById("scenarioSelect");
+const faultSelect=document.getElementById("faultSelect");
+const rpmSlider=document.getElementById("rpmSlider");
+const wearSlider=document.getElementById("wearSlider");
+const stage=document.getElementById("stage");
+
+const frontAssembly=document.getElementById("frontAssembly");
+const cutawayAssembly=document.getElementById("cutawayAssembly");
+const cutPrimaryMass=document.getElementById("cutPrimaryMass");
+const cutSecondaryMass=document.getElementById("cutSecondaryMass");
+const springPack=document.getElementById("springPack");
+const springTop=document.getElementById("springTop");
+const springBottom=document.getElementById("springBottom");
+const greaseGroup=document.getElementById("greaseGroup");
+const frictionWasher=document.getElementById("frictionWasher");
+const bearingGroup=document.getElementById("bearingGroup");
+const frontRingTeeth=document.getElementById("frontRingTeeth");
+const vibrationOverlay=document.getElementById("vibrationOverlay");
+const torqueOverlay=document.getElementById("torqueOverlay");
+const primaryMarker=document.getElementById("primaryMarker");
+const secondaryMarker=document.getElementById("secondaryMarker");
+const cutPrimaryMarker=document.getElementById("cutPrimaryMarker");
+const cutSecondaryMarker=document.getElementById("cutSecondaryMarker");
+const inputTrace=document.getElementById("inputTrace");
+const outputTrace=document.getElementById("outputTrace");
+
+let running=false;
+let showVibration=false;
+let showTorque=false;
+let primaryAngle=0;
+let secondaryAngle=0;
+let lastFrame=performance.now();
+
+const componentInfo={
+  primary:{title:"Primary Mass",purpose:"Bolted to the crankshaft. It receives the uneven torsional pulses from the engine."},
+  secondary:{title:"Secondary Mass",purpose:"Drives the clutch and gearbox. It rotates more smoothly because the spring system filters crankshaft vibration."},
+  springs:{title:"Arc Springs",purpose:"Compress and release as the primary mass moves relative to the secondary mass, absorbing torsional vibration."},
+  grease:{title:"Grease Chamber",purpose:"Lubricates and damps spring movement. Grease loss increases noise, wear and harsh movement."},
+  friction:{title:"Friction Control Washer",purpose:"Adds controlled friction so the masses do not oscillate freely after every torque pulse."},
+  bearing:{title:"Internal Bearing",purpose:"Supports relative rotation between the primary and secondary masses."},
+  ring:{title:"Starter Ring Gear",purpose:"Allows the starter pinion to rotate the engine during cranking."}
+};
+
+const faultInfo={
+  good:{title:"Healthy DMF",text:"The spring and friction systems reduce torsional vibration before it reaches the gearbox.",target:null},
+  weak:{title:"Weak Arc Springs",text:"Reduced spring stiffness allows larger secondary-mass oscillation, causing rattles and harsh torque transfer.",target:"springPack"},
+  broken:{title:"Broken Arc Spring",text:"One spring path no longer controls movement correctly. The masses can knock as load changes.",target:"springPack"},
+  freeplay:{title:"Excessive Rotational Free Play",text:"The primary mass moves through a larger dead zone before the secondary mass follows.",target:"frontAssembly"},
+  seized:{title:"Seized DMF",text:"The two masses behave like one solid flywheel, so engine torsional vibration passes directly into the gearbox.",target:"cutawayAssembly"},
+  grease:{title:"Grease Leakage",text:"Loss of grease reduces damping and lubrication, increasing wear and rattling.",target:"greaseGroup"},
+  overheat:{title:"Overheated DMF",text:"Excessive clutch heat can damage grease, friction surfaces and spring components.",target:"frictionWasher"},
+  ring:{title:"Starter Ring-Gear Damage",text:"Damaged teeth can cause starter engagement noise or intermittent cranking failure.",target:"frontRingTeeth"}
+};
+
+document.querySelectorAll(".marker").forEach(marker=>{
+  marker.onclick=()=>{
+    const item=componentInfo[marker.dataset.part];
+    document.getElementById("popupTitle").textContent=item.title;
+    document.getElementById("popupText").textContent=item.purpose;
+    document.getElementById("popup").classList.add("show");
+  };
+});
+document.getElementById("popupClose").onclick=()=>document.getElementById("popup").classList.remove("show");
+
+startBtn.onclick=()=>{
+  running=!running;
+  startBtn.textContent=running?"⏸ Stop":"▶ Start";
+  startBtn.classList.toggle("active",running);
+};
+
+labelsBtn.onclick=()=>{
+  stage.classList.toggle("show-labels");
+  const visible=stage.classList.contains("show-labels");
+  labelsBtn.textContent=visible?"Hide Labels":"Show Labels";
+  labelsBtn.classList.toggle("active",visible);
+};
+
+vibrationBtn.onclick=()=>{
+  showVibration=!showVibration;
+  vibrationOverlay.setAttribute("opacity",showVibration?"1":"0");
+  vibrationBtn.textContent=showVibration?"Hide Torsional Vibration":"Show Torsional Vibration";
+  vibrationBtn.classList.toggle("active",showVibration);
+};
+
+torqueBtn.onclick=()=>{
+  showTorque=!showTorque;
+  torqueOverlay.setAttribute("opacity",showTorque?"1":"0");
+  torqueBtn.textContent=showTorque?"Hide Torque Path":"Show Torque Path";
+  torqueBtn.classList.toggle("active",showTorque);
+};
+
+scenarioSelect.onchange=applyScenario;
+faultSelect.onchange=updateSystem;
+rpmSlider.oninput=updateSystem;
+wearSlider.oninput=updateSystem;
+
+function applyScenario(){
+  const s=scenarioSelect.value;
+  if(s==="off")rpmSlider.value=0;
+  if(s==="idle")rpmSlider.value=850;
+  if(s==="accel")rpmSlider.value=3200;
+  if(s==="cruise")rpmSlider.value=2100;
+  if(s==="shutdown")rpmSlider.value=650;
+  updateSystem();
+}
+
+function calculate(){
+  const rpm=Number(rpmSlider.value);
+  const wear=Number(wearSlider.value);
+  const fault=faultSelect.value;
+  const scenario=scenarioSelect.value;
+
+  let inputOsc=24;
+  if(scenario==="accel")inputOsc=42;
+  if(scenario==="cruise")inputOsc=12;
+  if(scenario==="shutdown")inputOsc=65;
+  if(scenario==="off")inputOsc=0;
+
+  inputOsc*=1+wear/170;
+
+  let reduction=79-wear*.45;
+  let freePlay=6+wear*.16;
+  let twist=12+wear*.1;
+  let compression=14+wear*.08;
+
+  if(fault==="weak"){reduction-=28;twist+=10;compression+=8}
+  if(fault==="broken"){reduction-=48;twist+=18;freePlay+=12}
+  if(fault==="freeplay"){freePlay+=25;twist+=16}
+  if(fault==="seized"){reduction=0;twist=0;compression=0;freePlay=0}
+  if(fault==="grease"){reduction-=24;freePlay+=8}
+  if(fault==="overheat"){reduction-=32;freePlay+=10}
+
+  reduction=Math.max(0,Math.min(95,reduction));
+  const outputOsc=inputOsc*(1-reduction/100);
+
+  return {rpm,wear,fault,scenario,inputOsc,outputOsc,reduction,freePlay,twist,compression};
+}
+
+function updateGraph(d){
+  const inPts=[];
+  const outPts=[];
+  for(let x=0;x<=890;x+=8){
+    const base=595;
+    const inY=base-Math.sin(x*.12)*(d.inputOsc*.45)-Math.sin(x*.34)*(d.inputOsc*.16);
+    const outY=base-Math.sin(x*.12)*(d.outputOsc*.45)-Math.sin(x*.34)*(d.outputOsc*.12);
+    inPts.push((165+x)+","+inY);
+    outPts.push((165+x)+","+outY);
+  }
+  inputTrace.setAttribute("points",inPts.join(" "));
+  outputTrace.setAttribute("points",outPts.join(" "));
+}
+
+function updateSystem(){
+  const d=calculate();
+
+  document.getElementById("modeTitle").textContent=scenarioSelect.options[scenarioSelect.selectedIndex].text;
+  document.getElementById("rpmValue").textContent=d.rpm+" rpm";
+  document.getElementById("wearValue").textContent=d.wear+"%";
+  document.getElementById("rpmText").textContent=d.rpm+" rpm";
+  document.getElementById("primaryOscText").textContent=Math.round(d.inputOsc)+" rpm";
+  document.getElementById("secondaryOscText").textContent=Math.round(d.outputOsc)+" rpm";
+  document.getElementById("twistText").textContent=Math.round(d.twist)+"°";
+  document.getElementById("springText").textContent=Math.round(d.compression)+" mm";
+  document.getElementById("reductionText").textContent=Math.round(d.reduction)+"%";
+  document.getElementById("primarySpeedRead").textContent=d.rpm+" rpm";
+  document.getElementById("secondarySpeedRead").textContent=Math.round(d.rpm-d.outputOsc*.15)+" rpm";
+  document.getElementById("freePlayRead").textContent=Math.round(d.freePlay)+"°";
+  document.getElementById("dampingRead").textContent=d.reduction>65?"Healthy":d.reduction>35?"Reduced":"Poor";
+
+  document.querySelectorAll(".highlight").forEach(el=>el.classList.remove("highlight"));
+  const f=faultInfo[d.fault];
+  document.getElementById("faultInfo").className="status "+(d.fault==="good"?"good":"bad");
+  document.getElementById("faultInfo").innerHTML="<b>"+f.title+"</b><br>"+f.text;
+  if(f.target)document.getElementById(f.target).classList.add("highlight");
+
+  springTop.style.opacity=d.fault==="broken"?.35:1;
+  greaseGroup.style.opacity=d.fault==="grease"?.25:1;
+  frontAssembly.classList.toggle("shake",running&&(d.fault==="broken"||d.fault==="freeplay"));
+  cutawayAssembly.classList.toggle("shake",running&&d.fault==="broken");
+  cutawayAssembly.removeAttribute("transform");
+  frictionWasher.removeAttribute("transform");
+  bearingGroup.removeAttribute("transform");
+  greaseGroup.removeAttribute("transform");
+  vibrationOverlay.setAttribute("opacity",showVibration?"1":"0");
+  torqueOverlay.setAttribute("opacity",showTorque?"1":"0");
+
+  const status=document.getElementById("status");
+  if(d.scenario==="off"){
+    status.className="status";
+    status.innerHTML="<b>Engine off.</b><br>Both masses are stationary.";
+  }else if(d.scenario==="shutdown"){
+    status.className=d.fault==="good"?"status warn":"status bad";
+    status.innerHTML="<b>Engine shutdown.</b><br>The primary mass rocks as compression pulses slow the engine. A worn DMF will knock more noticeably.";
+  }else if(d.fault==="seized"){
+    status.className="status bad";
+    status.innerHTML="<b>DMF seized.</b><br>The masses rotate together with no spring movement, so torsional vibration passes directly into the gearbox.";
+  }else{
+    status.className=d.reduction>60?"status good":d.reduction>30?"status warn":"status bad";
+    status.innerHTML="<b>"+f.title+".</b><br>Primary oscillation is "+Math.round(d.inputOsc)+" rpm and secondary oscillation is "+Math.round(d.outputOsc)+" rpm.";
+  }
+
+  document.getElementById("learningBox").innerHTML=
+    d.fault==="good"
+      ?"<b>Observe:</b><br>The primary mass oscillates more than the secondary mass. The springs compress and release to smooth gearbox input."
+      :"<b>Observe:</b><br>The secondary mass now follows more of the primary vibration, so less damping reaches the gearbox.";
+
+  updateGraph(d);
+}
+
+function animate(now){
+  const dt=Math.min(.05,(now-lastFrame)/1000);
+  lastFrame=now;
+  const d=calculate();
+
+  if(running && d.rpm>0){
+    const pulse=Math.sin(now/95)*(d.inputOsc*.05);
+    const secondaryPulse=Math.sin(now/95)*(d.outputOsc*.05);
+
+    /*
+      FRONT VIEW:
+      The complete DMF is viewed face-on, so full rotation is visible.
+    */
+    primaryAngle=(primaryAngle+(d.rpm+pulse)*6*dt*.18)%360;
+    secondaryAngle=(secondaryAngle+(d.rpm+secondaryPulse)*6*dt*.18)%360;
+
+    primaryMarker.setAttribute(
+      "transform",
+      `rotate(${primaryAngle} 310 285)`
+    );
+    secondaryMarker.setAttribute(
+      "transform",
+      `rotate(${secondaryAngle} 310 285)`
+    );
+
+    /*
+      CUTAWAY VIEW:
+      This is a side/section representation. Full circular rotation would be
+      misleading, so it shows only the relative torsional movement between
+      the two masses.
+
+      The primary mass moves first, compressing the arc springs. The secondary
+      mass follows with a smaller, smoother and slightly delayed movement.
+    */
+    let primaryTravel=Math.sin(now/120)*(d.twist*.42);
+    let secondaryTravel=Math.sin((now-65)/120)*(d.outputOsc*.16);
+
+    if(d.fault==="seized"){
+      secondaryTravel=primaryTravel;
+    }
+
+    if(d.fault==="freeplay"){
+      const deadZone=Math.abs(primaryTravel)<d.freePlay*.22;
+      secondaryTravel=deadZone?0:Math.sign(primaryTravel)*(Math.abs(primaryTravel)-d.freePlay*.22)*.55;
+    }
+
+    if(d.fault==="broken"){
+      secondaryTravel+=Math.sin(now/52)*3.5;
+    }
+
+    cutPrimaryMass.setAttribute(
+      "transform",
+      `translate(${primaryTravel} 0)`
+    );
+    cutSecondaryMass.setAttribute(
+      "transform",
+      `translate(${secondaryTravel} 0)`
+    );
+
+    cutPrimaryMarker.setAttribute(
+      "transform",
+      `translate(${primaryTravel} 0)`
+    );
+    cutSecondaryMarker.setAttribute(
+      "transform",
+      `translate(${secondaryTravel} 0)`
+    );
+
+    /*
+      Spring length changes with the difference between the two mass
+      positions. Compression is shown horizontally without rotating the pack.
+    */
+    const relativeTravel=primaryTravel-secondaryTravel;
+    const compressionScale=Math.max(.72,1-Math.abs(relativeTravel)/120);
+    const springShift=relativeTravel*.42;
+
+    springPack.setAttribute(
+      "transform",
+      `translate(${springShift} 0) `+
+      `translate(850 285) scale(${compressionScale} 1) translate(-850 -285)`
+    );
+  }else{
+    cutPrimaryMass.removeAttribute("transform");
+    cutSecondaryMass.removeAttribute("transform");
+    cutPrimaryMarker.removeAttribute("transform");
+    cutSecondaryMarker.removeAttribute("transform");
+    springPack.removeAttribute("transform");
+  }
+
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+resetBtn.onclick=()=>{
+  running=false;
+  showVibration=false;
+  showTorque=false;
+  primaryAngle=secondaryAngle=0;
+  scenarioSelect.value="idle";
+  faultSelect.value="good";
+  rpmSlider.value=850;
+  wearSlider.value=0;
+
+  startBtn.textContent="▶ Start";
+  startBtn.classList.remove("active");
+  vibrationBtn.textContent="Show Torsional Vibration";
+  vibrationBtn.classList.remove("active");
+  torqueBtn.textContent="Show Torque Path";
+  torqueBtn.classList.remove("active");
+  vibrationOverlay.setAttribute("opacity","0");
+  torqueOverlay.setAttribute("opacity","0");
+
+  stage.classList.remove("show-labels");
+  labelsBtn.textContent="Show Labels";
+  labelsBtn.classList.remove("active");
+
+  [frontAssembly,cutawayAssembly,cutPrimaryMass,cutSecondaryMass,springPack,
+   frictionWasher,bearingGroup,greaseGroup,primaryMarker,secondaryMarker,
+   cutPrimaryMarker,cutSecondaryMarker].forEach(el=>el.removeAttribute("transform"));
+  document.getElementById("popup").classList.remove("show");
+
+  updateSystem();
+};
+
+updateSystem();
+})();
+</script>
+</body>
+</html>
