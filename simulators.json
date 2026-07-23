@@ -104,6 +104,19 @@
     "new": true
   },
   {
+  "title": "Smart Charging System Simulator",
+  "category": "Electrical",
+  "icon": "🔋",
+  "image": "images/smart-charging.png",
+  "description": "Explore how the ECU controls alternator output using battery state of charge, LIN communication and driving conditions.",
+  "folder": "smart-charging",
+  "difficulty": "Advanced",
+  "duration": "25–35 mins",
+  "level": "Level 3",
+  "featured": true,
+  "new": true
+}
+  {
     "title": "Camshaft & Crankshaft Correlation Trainer",
     "category": "Oscilloscope",
     "icon": "〽️",
